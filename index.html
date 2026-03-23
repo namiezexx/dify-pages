@@ -3,1338 +3,1106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Ladder - 럭키 래더</title>
+    <title>래더 러시 (Ladder Rush)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS 변수 정의 */
         :root {
             --primary-color: #2E86AB;
             --secondary-color: #A23B72;
             --background-start: #F18F01;
             --background-end: #FFE66D;
             --accent-color: #C73E1D;
-            --highlight-color: #FFD23F;
-            --white: #FFFFFF;
-            --text-dark: #333333;
-            --text-light: #666666;
-            --shadow-light: rgba(0, 0, 0, 0.1);
-            --shadow-medium: rgba(0, 0, 0, 0.2);
-            --border-radius-small: 8px;
-            --border-radius-medium: 10px;
-            --border-radius-large: 15px;
+            --gold-color: #FFD700;
+            --player-1-color: #FFB3BA;
+            --player-2-color: #BAFFC9;
+            --player-3-color: #BAE1FF;
+            --border-radius: 8px;
+            --border-radius-large: 16px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.2);
             --transition-fast: 0.2s ease;
-            --transition-medium: 0.3s ease;
+            --transition-normal: 0.3s ease;
             --transition-slow: 0.5s ease;
-            --font-family: 'Noto Sans KR', sans-serif;
         }
-
-        /* 기본 리셋 및 설정 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
-            font-family: var(--font-family);
+            font-family: 'Noto Sans KR', sans-serif;
             background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
             min-height: 100vh;
             overflow-x: hidden;
+            position: relative;
         }
-
-        /* 화면 전환 시스템 */
         .screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             opacity: 0;
             visibility: hidden;
-            transition: opacity var(--transition-medium), visibility var(--transition-medium);
+            transition: all var(--transition-normal);
             z-index: 1;
         }
-
         .screen.active {
             opacity: 1;
             visibility: visible;
         }
-
-        /* 컨테이너 공통 스타일 */
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
+        .screen-container {
+            width: 100%;
+            max-width: 1200px;
             padding: 20px;
-            height: 100vh;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            gap: 40px;
         }
-
-        /* === 메인 화면 (이름 입력) 스타일 === */
         .game-header {
             text-align: center;
-            margin-bottom: 40px;
-            padding-top: 40px;
+            margin-bottom: 20px;
         }
-
         .game-title {
+            font-family: 'Fredoka One', cursive;
             font-size: 48px;
-            font-weight: 700;
-            color: var(--primary-color);
+            color: white;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px var(--shadow-light);
-            animation: titleBounce 2s ease-in-out infinite alternate;
+            animation: titlePulse 2s ease-in-out infinite alternate;
         }
-
-        @keyframes titleBounce {
-            0% { transform: translateY(0px); }
-            100% { transform: translateY(-5px); }
+        @keyframes titlePulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
         }
-
-        .game-subtitle {
-            font-size: 16px;
-            color: var(--text-light);
-            font-weight: 400;
-        }
-
-        .input-section {
-            flex: 1;
+        .title-decoration {
             display: flex;
-            flex-direction: column;
             justify-content: center;
-        }
-
-        .players-input {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin-bottom: 40px;
         }
-
-        /* 7번째 입력 필드는 중앙에 배치 */
-        .players-input .input-group:nth-child(7) {
-            grid-column: 1 / -1;
-            max-width: 400px;
-            margin: 0 auto;
+        .title-decoration .star {
+            font-size: 24px;
+            animation: starTwinkle 1.5s ease-in-out infinite alternate;
         }
-
-        .input-group {
+        .title-decoration .star:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+        .title-decoration .star:nth-child(3) {
+            animation-delay: 1s;
+        }
+        @keyframes starTwinkle {
+            from { opacity: 0.5; transform: rotate(0deg); }
+            to { opacity: 1; transform: rotate(180deg); }
+        }
+        .setup-content {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            align-items: center;
+            gap: 40px;
+            width: 100%;
         }
-
-        .input-group label {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--primary-color);
+        .player-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 400px;
         }
-
-        /* JavaScript 연동용 - 참가자 이름 입력 필드 */
+        .player-input-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-large);
+            box-shadow: var(--shadow);
+            transition: all var(--transition-fast);
+        }
+        .player-input-group:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        .player-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        .player-avatar.player-1 {
+            background: var(--player-1-color);
+        }
+        .player-avatar.player-2 {
+            background: var(--player-2-color);
+        }
+        .player-avatar.player-3 {
+            background: var(--player-3-color);
+        }
         .player-input {
+            flex: 1;
             padding: 12px 16px;
             border: 2px solid var(--primary-color);
-            border-radius: var(--border-radius-small);
-            background: var(--white);
+            border-radius: var(--border-radius);
             font-size: 16px;
-            font-family: var(--font-family);
+            font-family: 'Noto Sans KR', sans-serif;
+            background: white;
             transition: all var(--transition-fast);
             outline: none;
         }
-
         .player-input:focus {
             border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.1);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 3px rgba(162, 59, 114, 0.2);
         }
-
-        .player-input:valid {
-            border-color: #28a745;
+        .player-input::placeholder {
+            color: #999;
         }
-
-        .button-section {
-            text-align: center;
-        }
-
-        /* JavaScript 연동용 - 기본 버튼 스타일 */
-        .primary-button {
+        .main-button {
             background: var(--primary-color);
-            color: var(--white);
+            color: white;
             border: none;
-            padding: 16px 32px;
+            padding: 18px 36px;
             font-size: 18px;
-            font-weight: 600;
-            border-radius: var(--border-radius-small);
+            font-weight: 700;
+            font-family: 'Noto Sans KR', sans-serif;
+            border-radius: var(--border-radius);
             cursor: pointer;
             transition: all var(--transition-fast);
-            font-family: var(--font-family);
+            box-shadow: var(--shadow);
             min-width: 200px;
-            box-shadow: 0 4px 12px var(--shadow-medium);
         }
-
-        .primary-button:hover {
-            background: #246b8a;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px var(--shadow-medium);
+        .main-button:hover {
+            background: #1E5F7A;
+            transform: scale(1.05);
+            box-shadow: var(--shadow-hover);
         }
-
-        .primary-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 8px var(--shadow-medium);
+        .main-button:active {
+            transform: scale(0.98);
         }
-
         .secondary-button {
             background: var(--secondary-color);
-            color: var(--white);
+            color: white;
             border: none;
             padding: 12px 24px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
-            border-radius: var(--border-radius-small);
+            font-family: 'Noto Sans KR', sans-serif;
+            border-radius: var(--border-radius);
             cursor: pointer;
             transition: all var(--transition-fast);
-            font-family: var(--font-family);
-            box-shadow: 0 4px 12px var(--shadow-medium);
+            box-shadow: var(--shadow);
         }
-
         .secondary-button:hover {
-            background: #8a2f5f;
-            transform: translateY(-2px);
+            background: #7A2B54;
+            transform: scale(1.05);
         }
-
-        /* === 게임 화면 스타일 === */
-        .game-info {
-            text-align: center;
-            padding: 20px 0;
+        .game-progress-header {
+            width: 100%;
+            margin-bottom: 20px;
         }
-
-        .screen-title {
-            font-size: 28px;
+        .player-names {
+            display: flex;
+            justify-content: center;
+            gap: 200px;
+            margin-bottom: 20px;
+        }
+        .player-name {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
             font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-
-        /* JavaScript 연동용 - 게임 상태 표시 */
-        .game-status {
             font-size: 16px;
-            color: var(--text-light);
-            padding: 8px 16px;
-            background: var(--white);
-            border-radius: var(--border-radius-small);
-            display: inline-block;
-            box-shadow: 0 2px 8px var(--shadow-light);
+            text-align: center;
+            min-width: 120px;
+            box-shadow: var(--shadow);
+            position: relative;
+            transition: all var(--transition-normal);
         }
-
-        .game-area {
-            flex: 1;
+        .player-name::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .player-1-name::before {
+            background: var(--player-1-color);
+        }
+        .player-2-name::before {
+            background: var(--player-2-color);
+        }
+        .player-3-name::before {
+            background: var(--player-3-color);
+        }
+        .player-name.winner {
+            animation: winnerHighlight 0.5s ease-in-out infinite alternate;
+        }
+        @keyframes winnerHighlight {
+            from { 
+                border: 3px solid var(--gold-color);
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            }
+            to { 
+                border: 3px solid transparent;
+                box-shadow: var(--shadow);
+            }
+        }
+        .ladder-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: var(--border-radius-large);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        #ladderCanvas {
+            display: block;
+            border-radius: var(--border-radius);
+        }
+        .path-marker {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            opacity: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease-in-out;
+        }
+        .path-marker.active {
+            opacity: 1;
+            animation: markerPulse 0.5s ease-in-out infinite alternate;
+        }
+        @keyframes markerPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.3); }
+        }
+        .particle-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 15;
+        }
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--gold-color);
+            border-radius: 50%;
+            opacity: 1;
+            animation: particleExplosion 2s ease-out forwards;
+        }
+        @keyframes particleExplosion {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+        }
+        .game-content {
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
-        }
-
-        /* JavaScript 연동용 - Canvas 컨테이너 */
-        .canvas-container {
-            position: relative;
-            background: var(--white);
-            border-radius: var(--border-radius-medium);
-            box-shadow: 0 8px 24px var(--shadow-medium);
-            overflow: hidden;
-            margin: 20px 0;
-        }
-
-        #ladder-canvas {
-            display: block;
-            border-radius: var(--border-radius-medium);
-        }
-
-        .game-controls {
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        /* === 결과 화면 스타일 === */
-        .result-header {
-            text-align: center;
-            padding: 40px 0 20px;
-        }
-
-        .result-subtitle {
-            font-size: 16px;
-            color: var(--text-light);
-            margin-top: 10px;
-        }
-
-        .result-content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px 0;
-        }
-
-        /* JavaScript 연동용 - 최종 결과 표시 */
-        #result-list {
-            background: var(--white);
-            border-radius: var(--border-radius-large);
-            padding: 30px;
-            box-shadow: 0 12px 32px var(--shadow-medium);
             width: 100%;
-            max-width: 500px;
         }
-
+        .game-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            gap: 40px;
+        }
+        .results-area {
+            display: flex;
+            gap: 60px;
+            align-items: center;
+        }
         .result-item {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: var(--border-radius-small);
-            border-left: 4px solid var(--primary-color);
-            transition: all var(--transition-fast);
+            gap: 8px;
+            min-width: 80px;
         }
-
-        .result-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px var(--shadow-light);
+        .result-icon {
+            font-size: 48px;
+            transition: all var(--transition-normal);
+            filter: grayscale(100%);
         }
-
-        .result-item:last-child {
-            margin-bottom: 0;
+        .result-icon.revealed {
+            filter: grayscale(0%);
+            animation: resultReveal 0.5s ease-out;
         }
-
-        .player-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .player-result {
-            font-size: 16px;
-            font-weight: 700;
-            padding: 6px 12px;
-            border-radius: var(--border-radius-small);
-        }
-
-        .player-result.success {
-            background: var(--primary-color);
-            color: var(--white);
-        }
-
-        .player-result.fail {
-            background: var(--accent-color);
-            color: var(--white);
-        }
-
-        .result-actions {
-            text-align: center;
-            padding: 20px 0;
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-        }
-
-        /* === 반응형 디자인 === */
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
+        @keyframes resultReveal {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
             }
-            
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        .result-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            text-align: center;
+        }
+        .game-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        .background-decorations {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-star {
+            position: absolute;
+            font-size: 16px;
+            opacity: 0.3;
+            animation: bgStarFloat 3s ease-in-out infinite alternate;
+        }
+        .bg-star.star-1 { top: 10%; left: 10%; animation-delay: 0s; }
+        .bg-star.star-2 { top: 20%; right: 15%; animation-delay: 0.5s; }
+        .bg-star.star-3 { top: 60%; left: 5%; animation-delay: 1s; }
+        .bg-star.star-4 { top: 70%; right: 10%; animation-delay: 1.5s; }
+        .bg-star.star-5 { top: 30%; left: 80%; animation-delay: 2s; }
+        .bg-star.star-6 { top: 80%; left: 20%; animation-delay: 2.5s; }
+        .bg-star.star-7 { top: 40%; right: 30%; animation-delay: 3s; }
+        .bg-star.star-8 { top: 90%; right: 40%; animation-delay: 3.5s; }
+        @keyframes bgStarFloat {
+            from { 
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.2;
+            }
+            to { 
+                transform: translateY(-20px) rotate(180deg);
+                opacity: 0.5;
+            }
+        }
+        @media (max-width: 768px) {
             .game-title {
                 font-size: 36px;
             }
-            
-            .players-input {
-                grid-template-columns: 1fr;
-                gap: 15px;
+            .screen-container {
+                padding: 15px;
+                gap: 30px;
             }
-            
-            .players-input .input-group:nth-child(7) {
-                grid-column: 1;
-                max-width: none;
+            .player-names {
+                gap: 100px;
+                flex-wrap: wrap;
             }
-            
-            #ladder-canvas {
+            .player-name {
+                min-width: 100px;
+                font-size: 14px;
+                padding: 10px 15px;
+            }
+            #ladderCanvas {
                 width: 100%;
                 height: auto;
+                max-width: 500px;
             }
-            
-            .result-actions {
+            .game-controls {
                 flex-direction: column;
-                align-items: center;
+                gap: 30px;
             }
-            
-            .primary-button,
-            .secondary-button {
-                width: 100%;
-                max-width: 280px;
+            .results-area {
+                gap: 40px;
+            }
+            .result-icon {
+                font-size: 36px;
             }
         }
-
         @media (max-width: 480px) {
             .game-title {
                 font-size: 28px;
             }
-            
-            .screen-title {
-                font-size: 24px;
+            .player-names {
+                gap: 60px;
             }
-        }
-
-        /* === 애니메이션 클래스 === */
-        .fade-in {
-            animation: fadeIn var(--transition-medium) ease-in;
-        }
-
-        .fade-out {
-            animation: fadeOut var(--transition-medium) ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-
-        .disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .error {
-            border-color: var(--accent-color) !important;
-            box-shadow: 0 0 0 3px rgba(199, 62, 29, 0.1) !important;
+            .player-name {
+                min-width: 80px;
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+            .results-area {
+                gap: 20px;
+            }
+            .result-icon {
+                font-size: 32px;
+            }
+            .main-button {
+                padding: 15px 30px;
+                font-size: 16px;
+                min-width: 180px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- 메인 화면 (이름 입력) -->
-    <div id="input-screen" class="screen active">
-        <div class="container">
+    <!-- 메인 화면 -->
+    <div id="setupScreen" class="screen active">
+        <div class="screen-container">
             <header class="game-header">
-                <h1 class="game-title">🎯 Lucky Ladder</h1>
-                <p class="game-subtitle">7명이 함께하는 공정한 추첨 게임</p>
+                <h1 class="game-title">래더 러시</h1>
+                <div class="title-decoration">
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                    <span class="star">⭐</span>
+                </div>
             </header>
-            
-            <main class="input-section">
-                <div class="players-input">
-                    <div class="input-group">
-                        <label for="player-1">👤 참가자 1</label>
-                        <input type="text" id="player-1" class="player-input" placeholder="참가자 1의 이름을 입력하세요" maxlength="10">
+            <main class="setup-content">
+                <div class="player-inputs">
+                    <div class="player-input-group">
+                        <div class="player-avatar player-1"></div>
+                        <input type="text" id="player1Input" class="player-input" placeholder="Player 1" maxlength="10">
                     </div>
-                    <div class="input-group">
-                        <label for="player-2">👤 참가자 2</label>
-                        <input type="text" id="player-2" class="player-input" placeholder="참가자 2의 이름을 입력하세요" maxlength="10">
+                    <div class="player-input-group">
+                        <div class="player-avatar player-2"></div>
+                        <input type="text" id="player2Input" class="player-input" placeholder="Player 2" maxlength="10">
                     </div>
-                    <div class="input-group">
-                        <label for="player-3">👤 참가자 3</label>
-                        <input type="text" id="player-3" class="player-input" placeholder="참가자 3의 이름을 입력하세요" maxlength="10">
-                    </div>
-                    <div class="input-group">
-                        <label for="player-4">👤 참가자 4</label>
-                        <input type="text" id="player-4" class="player-input" placeholder="참가자 4의 이름을 입력하세요" maxlength="10">
-                    </div>
-                    <div class="input-group">
-                        <label for="player-5">👤 참가자 5</label>
-                        <input type="text" id="player-5" class="player-input" placeholder="참가자 5의 이름을 입력하세요" maxlength="10">
-                    </div>
-                    <div class="input-group">
-                        <label for="player-6">👤 참가자 6</label>
-                        <input type="text" id="player-6" class="player-input" placeholder="참가자 6의 이름을 입력하세요" maxlength="10">
-                    </div>
-                    <div class="input-group">
-                        <label for="player-7">👤 참가자 7</label>
-                        <input type="text" id="player-7" class="player-input" placeholder="참가자 7의 이름을 입력하세요" maxlength="10">
+                    <div class="player-input-group">
+                        <div class="player-avatar player-3"></div>
+                        <input type="text" id="player3Input" class="player-input" placeholder="Player 3" maxlength="10">
                     </div>
                 </div>
-                
-                <div class="button-section">
-                    <button id="generate-ladder-btn" class="primary-button">
-                        🎲 사다리 생성하기
-                    </button>
+                <button id="startGameBtn" class="main-button">
+                    🎮 게임 시작
+                </button>
+            </main>
+        </div>
+    </div>
+
+    <!-- 게임 화면 -->
+    <div id="gameScreen" class="screen">
+        <div class="screen-container">
+            <header class="game-progress-header">
+                <div class="player-names">
+                    <div id="playerName1" class="player-name player-1-name">Player 1</div>
+                    <div id="playerName2" class="player-name player-2-name">Player 2</div>
+                    <div id="playerName3" class="player-name player-3-name">Player 3</div>
+                </div>
+            </header>
+            <main class="game-content">
+                <div class="ladder-container">
+                    <canvas id="ladderCanvas" width="600" height="400"></canvas>
+                    <div id="pathMarker1" class="path-marker player-1-marker"></div>
+                    <div id="pathMarker2" class="path-marker player-2-marker"></div>
+                    <div id="pathMarker3" class="path-marker player-3-marker"></div>
+                    <div id="particleContainer" class="particle-container"></div>
+                </div>
+                <div class="game-controls">
+                    <div class="results-area">
+                        <div id="result1" class="result-item">
+                            <div class="result-icon">❓</div>
+                            <div class="result-label">결과</div>
+                        </div>
+                        <div id="result2" class="result-item">
+                            <div class="result-icon">❓</div>
+                            <div class="result-label">결과</div>
+                        </div>
+                        <div id="result3" class="result-item">
+                            <div class="result-icon">❓</div>
+                            <div class="result-label">결과</div>
+                        </div>
+                    </div>
+                    <div class="game-buttons">
+                        <button id="revealBtn" class="main-button reveal-button">
+                            🔍 결과 보기
+                        </button>
+                        <button id="restartBtn" class="secondary-button restart-button" style="display: none;">
+                            🔄 다시하기
+                        </button>
+                    </div>
                 </div>
             </main>
         </div>
     </div>
 
-    <!-- 게임 화면 (사다리 실행) -->
-    <div id="game-screen" class="screen">
-        <div class="container">
-            <header class="game-info">
-                <h2 class="screen-title">🎯 사다리 타기 진행중...</h2>
-                <div id="game-status" class="game-status">게임 준비중</div>
-            </header>
-            
-            <main class="game-area">
-                <div class="canvas-container">
-                    <canvas id="game-canvas" width="700" height="600"></canvas>
-                </div>
-            </main>
-            
-            <footer class="game-controls">
-                <button id="reset-btn" class="secondary-button">
-                    🔄 다시하기
-                </button>
-            </footer>
-        </div>
-    </div>
-
-    <!-- 결과 화면 -->
-    <div id="result-screen" class="screen">
-        <div class="container">
-            <header class="result-header">
-                <h2 class="screen-title">🎉 게임 결과</h2>
-                <p class="result-subtitle">최종 순위가 결정되었습니다!</p>
-            </header>
-            
-            <main class="result-content">
-                <div id="result-list"></div>
-            </main>
-            
-            <footer class="result-actions">
-                <button id="new-game-btn" class="primary-button">
-                    🆕 새 게임
-                </button>
-                <button id="share-btn" class="secondary-button">
-                    📤 결과 공유
-                </button>
-            </footer>
-        </div>
+    <!-- 배경 장식 요소들 -->
+    <div class="background-decorations">
+        <span class="bg-star star-1">⭐</span>
+        <span class="bg-star star-2">⭐</span>
+        <span class="bg-star star-3">⭐</span>
+        <span class="bg-star star-4">⭐</span>
+        <span class="bg-star star-5">⭐</span>
+        <span class="bg-star star-6">⭐</span>
+        <span class="bg-star star-7">⭐</span>
+        <span class="bg-star star-8">⭐</span>
     </div>
 
     <script>
-        /**
-         * Lucky Ladder Game - 메인 게임 로직
-         * 7명이 참여하는 사다리 타기 게임
-         */
-
-        class LadderGame {
+        class LadderRushGame {
             constructor() {
-                // 게임 상태 관리
-                this.gameState = 'input'; // 'input' | 'playing' | 'result'
-                this.players = [];
-                this.ladder = [];
-                this.results = ['1등', '2등', '3등', '4등', '5등', '꽝', '꽝'];
-                this.currentAnimationIndex = 0;
-                this.animationResults = [];
+                this.state = 'SETUP';
+                this.players = ['Player1', 'Player2', 'Player3'];
+                this.ladderData = [];
+                this.results = ['🏆', '🥈', '❌'];
+                this.currentResults = [];
                 
-                // Canvas 설정
                 this.canvas = null;
                 this.ctx = null;
-                this.canvasWidth = 700;
-                this.canvasHeight = 600;
+                this.canvasWidth = 600;
+                this.canvasHeight = 400;
                 
-                // 레이아웃 상수
-                this.LADDER_CONFIG = {
-                    startY: 80,
-                    endY: 520,
-                    lineSpacing: 80, // 세로선 간격
-                    minCrosses: 15,
-                    maxCrosses: 25,
-                    verticalLineWidth: 3,
-                    horizontalLineWidth: 2,
-                    ballRadius: 8,
-                    animationSpeed: 150 // px/초
+                this.ladderConfig = {
+                    verticalLines: 3,
+                    lineSpacing: 200,
+                    minHorizontalLines: 8,
+                    maxHorizontalLines: 12,
+                    verticalLineHeight: 350,
+                    horizontalLineLength: 180,
+                    startX: 110,
+                    startY: 30
                 };
                 
-                // 색상 팔레트
-                this.COLORS = {
-                    primary: '#2E86AB',
-                    secondary: '#A23B72',
-                    background: '#F18F01',
-                    backgroundEnd: '#FFE66D',
-                    accent: '#C73E1D',
-                    white: '#FFFFFF',
-                    highlight: '#FFD23F'
+                this.animationConfig = {
+                    tracingSpeed: 200,
+                    particleCount: 12,
+                    particleDuration: 2000
+                };
+                
+                this.currentTracing = {
+                    playerIndex: -1,
+                    currentX: 0,
+                    currentY: 0,
+                    isTracing: false
                 };
                 
                 this.init();
             }
             
-            /**
-             * 게임 초기화
-             */
             init() {
-                this.setupDOM();
                 this.setupEventListeners();
-                this.loadPreviousResults();
-                this.showInputScreen();
+                this.setupCanvas();
+                this.setState('SETUP');
             }
             
-            /**
-             * DOM 요소 설정
-             */
-            setupDOM() {
-                // Canvas 생성 및 설정
-                this.canvas = document.getElementById('game-canvas');
-                if (this.canvas) {
-                    this.ctx = this.canvas.getContext('2d');
-                    this.canvas.width = this.canvasWidth;
-                    this.canvas.height = this.canvasHeight;
-                }
-            }
-            
-            /**
-             * 이벤트 리스너 설정
-             */
             setupEventListeners() {
-                // 사다리 생성 버튼
-                const generateBtn = document.getElementById('generate-ladder-btn');
-                if (generateBtn) {
-                    generateBtn.addEventListener('click', () => this.handleGenerateLadder());
+                const startBtn = document.getElementById('startGameBtn');
+                if (startBtn) {
+                    startBtn.addEventListener('click', () => this.startGame());
                 }
                 
-                // 다시하기 버튼
-                const resetBtn = document.getElementById('reset-btn');
-                if (resetBtn) {
-                    resetBtn.addEventListener('click', () => this.resetGame());
+                const revealBtn = document.getElementById('revealBtn');
+                if (revealBtn) {
+                    revealBtn.addEventListener('click', () => this.revealResults());
                 }
                 
-                // 새 게임 버튼
-                const newGameBtn = document.getElementById('new-game-btn');
-                if (newGameBtn) {
-                    newGameBtn.addEventListener('click', () => this.resetGame());
+                const restartBtn = document.getElementById('restartBtn');
+                if (restartBtn) {
+                    restartBtn.addEventListener('click', () => this.restartGame());
                 }
                 
-                // 결과 공유 버튼
-                const shareBtn = document.getElementById('share-btn');
-                if (shareBtn) {
-                    shareBtn.addEventListener('click', () => this.shareResults());
-                }
-                
-                // 입력 필드 엔터 키 처리
-                for (let i = 1; i <= 7; i++) {
-                    const input = document.getElementById(`player-${i}`);
+                for (let i = 1; i <= 3; i++) {
+                    const input = document.getElementById(`player${i}Input`);
                     if (input) {
-                        input.addEventListener('keypress', (e) => {
-                            if (e.key === 'Enter') {
-                                this.handleGenerateLadder();
-                            }
+                        input.addEventListener('input', (e) => {
+                            this.players[i-1] = e.target.value || `Player${i}`;
+                            this.updatePlayerNames();
                         });
                     }
                 }
             }
             
-            /**
-             * 입력 화면 표시
-             */
-            showInputScreen() {
-                this.gameState = 'input';
-                this.hideAllScreens();
-                
-                const inputScreen = document.getElementById('input-screen');
-                if (inputScreen) {
-                    inputScreen.classList.add('active');
-                }
-                
-                // 첫 번째 입력 필드에 포커스
-                const firstInput = document.getElementById('player-1');
-                if (firstInput) {
-                    firstInput.focus();
-                }
-            }
-            
-            /**
-             * 게임 화면 표시
-             */
-            showGameScreen() {
-                this.gameState = 'playing';
-                this.hideAllScreens();
-                
-                const gameScreen = document.getElementById('game-screen');
-                if (gameScreen) {
-                    gameScreen.classList.add('active');
-                }
-                
-                this.drawInitialLadder();
-                setTimeout(() => this.startAnimation(), 1000);
-            }
-            
-            /**
-             * 결과 화면 표시
-             */
-            showResultScreen() {
-                this.gameState = 'result';
-                this.hideAllScreens();
-                
-                const resultScreen = document.getElementById('result-screen');
-                if (resultScreen) {
-                    resultScreen.classList.add('active');
-                }
-                
-                this.displayResults();
-                this.saveResults();
-            }
-            
-            /**
-             * 모든 화면 숨기기
-             */
-            hideAllScreens() {
-                const screens = ['input-screen', 'game-screen', 'result-screen'];
-                screens.forEach(screenId => {
-                    const screen = document.getElementById(screenId);
-                    if (screen) {
-                        screen.classList.remove('active');
-                    }
-                });
-            }
-            
-            /**
-             * 사다리 생성 처리
-             */
-            handleGenerateLadder() {
-                if (!this.validatePlayerNames()) {
+            setupCanvas() {
+                this.canvas = document.getElementById('ladderCanvas');
+                if (!this.canvas) {
+                    console.error('Canvas element not found');
                     return;
                 }
                 
-                this.collectPlayerNames();
-                this.generateLadder();
-                this.shuffleResults();
-                this.showGameScreen();
+                this.ctx = this.canvas.getContext('2d');
+                this.canvas.width = this.canvasWidth;
+                this.canvas.height = this.canvasHeight;
+                
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
             }
             
-            /**
-             * 플레이어 이름 유효성 검사
-             */
-            validatePlayerNames() {
-                const names = [];
-                let hasError = false;
+            setState(newState) {
+                this.state = newState;
+                this.updateUI();
+            }
+            
+            updateUI() {
+                const setupScreen = document.getElementById('setupScreen');
+                const gameScreen = document.getElementById('gameScreen');
                 
-                for (let i = 1; i <= 7; i++) {
-                    const input = document.getElementById(`player-${i}`);
-                    if (!input) continue;
-                    
-                    const name = input.value.trim();
-                    
-                    // 빈 값 체크
-                    if (!name) {
-                        this.showError(`참가자 ${i}의 이름을 입력해주세요.`);
-                        input.focus();
-                        hasError = true;
+                [setupScreen, gameScreen].forEach(screen => {
+                    if (screen) screen.classList.remove('active');
+                });
+                
+                switch (this.state) {
+                    case 'SETUP':
+                        if (setupScreen) setupScreen.classList.add('active');
                         break;
-                    }
-                    
-                    // 중복 체크
-                    if (names.includes(name)) {
-                        this.showError(`중복된 이름이 있습니다: ${name}`);
-                        input.focus();
-                        hasError = true;
+                    case 'PLAYING':
+                    case 'REVEALING':
+                    case 'FINISHED':
+                        if (gameScreen) gameScreen.classList.add('active');
+                        if (this.state === 'PLAYING') this.drawLadder();
                         break;
-                    }
-                    
-                    names.push(name);
                 }
-                
-                return !hasError;
             }
             
-            /**
-             * 플레이어 이름 수집
-             */
+            startGame() {
+                try {
+                    this.collectPlayerNames();
+                    this.generateLadder();
+                    this.calculateResults();
+                    this.setState('PLAYING');
+                    this.playSound('start');
+                } catch (error) {
+                    console.error('게임 시작 중 오류:', error);
+                    alert('게임 시작 중 문제가 발생했습니다.');
+                }
+            }
+            
             collectPlayerNames() {
-                this.players = [];
-                for (let i = 1; i <= 7; i++) {
-                    const input = document.getElementById(`player-${i}`);
-                    if (input) {
-                        this.players.push({
-                            name: input.value.trim(),
-                            x: 50 + (i - 1) * this.LADDER_CONFIG.lineSpacing,
-                            currentX: 50 + (i - 1) * this.LADDER_CONFIG.lineSpacing,
-                            currentY: this.LADDER_CONFIG.startY,
-                            result: null
-                        });
+                for (let i = 1; i <= 3; i++) {
+                    const input = document.getElementById(`player${i}Input`);
+                    if (input && input.value.trim()) {
+                        this.players[i-1] = input.value.trim();
+                    }
+                }
+                this.updatePlayerNames();
+            }
+            
+            updatePlayerNames() {
+                for (let i = 1; i <= 3; i++) {
+                    const nameElement = document.getElementById(`playerName${i}`);
+                    if (nameElement) {
+                        nameElement.textContent = this.players[i-1];
                     }
                 }
             }
             
-            /**
-             * 사다리 구조 생성
-             */
             generateLadder() {
-                this.ladder = [];
-                const { minCrosses, maxCrosses, startY, endY, lineSpacing } = this.LADDER_CONFIG;
-                const crossCount = Math.floor(Math.random() * (maxCrosses - minCrosses + 1)) + minCrosses;
+                this.ladderData = [];
+                const { minHorizontalLines, maxHorizontalLines, verticalLines } = this.ladderConfig;
                 
-                // 각 구간별 최소 1개 보장을 위한 배열
-                const sectionHeight = (endY - startY) / 6;
-                const guaranteedCrosses = [];
+                const horizontalLineCount = Math.floor(Math.random() * (maxHorizontalLines - minHorizontalLines + 1)) + minHorizontalLines;
                 
-                // 각 구간에 최소 1개씩 배치
-                for (let section = 0; section < 6; section++) {
-                    const y = startY + section * sectionHeight + Math.random() * (sectionHeight - 20) + 10;
-                    const leftLine = Math.floor(Math.random() * 6); // 0-5 (총 6개의 가능한 가로선)
+                for (let level = 0; level < horizontalLineCount; level++) {
+                    const levelData = [];
                     
-                    guaranteedCrosses.push({
-                        leftLine,
-                        y: Math.round(y),
-                        rightLine: leftLine + 1
-                    });
-                }
-                
-                // 나머지 가로선 랜덤 배치
-                const remainingCrosses = crossCount - 6;
-                for (let i = 0; i < remainingCrosses; i++) {
-                    let attempts = 0;
-                    let validCross = null;
+                    const availablePositions = [];
+                    for (let pos = 0; pos < verticalLines - 1; pos++) {
+                        availablePositions.push(pos);
+                    }
                     
-                    while (!validCross && attempts < 50) {
-                        const y = Math.round(startY + Math.random() * (endY - startY - 40) + 20);
-                        const leftLine = Math.floor(Math.random() * 6);
-                        const newCross = {
-                            leftLine,
-                            y,
-                            rightLine: leftLine + 1
-                        };
+                    const linesInThisLevel = Math.floor(Math.random() * 3) + 2;
+                    const selectedPositions = [];
+                    
+                    for (let i = 0; i < Math.min(linesInThisLevel, availablePositions.length); i++) {
+                        const randomIndex = Math.floor(Math.random() * availablePositions.length);
+                        const position = availablePositions[randomIndex];
                         
-                        // 겹치지 않는지 검사 (같은 높이에서 ±20px 이내)
-                        const conflicts = [...guaranteedCrosses, ...this.ladder].some(cross => 
-                            Math.abs(cross.y - y) < 20 && (
-                                cross.leftLine === leftLine || 
-                                cross.rightLine === leftLine ||
-                                cross.leftLine === leftLine + 1
-                            )
-                        );
-                        
-                        if (!conflicts) {
-                            validCross = newCross;
+                        const hasAdjacent = selectedPositions.some(pos => Math.abs(pos - position) <= 1);
+                        if (!hasAdjacent || selectedPositions.length === 0) {
+                            selectedPositions.push(position);
+                            availablePositions.splice(randomIndex, 1);
                         }
-                        attempts++;
                     }
                     
-                    if (validCross) {
-                        this.ladder.push(validCross);
+                    for (let pos = 0; pos < verticalLines - 1; pos++) {
+                        levelData.push(selectedPositions.includes(pos));
                     }
+                    
+                    this.ladderData.push(levelData);
                 }
-                
-                // 보장된 가로선 추가
-                this.ladder.push(...guaranteedCrosses);
-                
-                // Y 좌표로 정렬
-                this.ladder.sort((a, b) => a.y - b.y);
-                
-                console.log(`사다리 생성 완료: ${this.ladder.length}개의 가로선`);
             }
             
-            /**
-             * 결과 순서 섞기 (Fisher-Yates 알고리즘)
-             */
-            shuffleResults() {
-                const shuffled = [...this.results];
-                for (let i = shuffled.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            calculateResults() {
+                this.currentResults = [];
+                const finalPositions = [];
+                
+                for (let playerIndex = 0; playerIndex < 3; playerIndex++) {
+                    let currentPosition = playerIndex;
+                    
+                    for (let level = 0; level < this.ladderData.length; level++) {
+                        const levelData = this.ladderData[level];
+                        
+                        if (currentPosition > 0 && levelData[currentPosition - 1]) {
+                            currentPosition--;
+                        } else if (currentPosition < 2 && levelData[currentPosition]) {
+                            currentPosition++;
+                        }
+                    }
+                    
+                    finalPositions.push(currentPosition);
                 }
-                this.results = shuffled;
+                
+                const shuffledResults = [...this.results].sort(() => Math.random() - 0.5);
+                
+                for (let i = 0; i < 3; i++) {
+                    this.currentResults[finalPositions[i]] = {
+                        playerIndex: i,
+                        result: shuffledResults[i]
+                    };
+                }
             }
             
-            /**
-             * 초기 사다리 그리기
-             */
-            drawInitialLadder() {
+            drawLadder() {
                 if (!this.ctx) return;
                 
-                this.clearCanvas();
-                this.drawBackground();
-                this.drawLadderStructure();
-                this.drawPlayerNames();
-                this.drawResultBoxes();
-            }
-            
-            /**
-             * 캔버스 클리어
-             */
-            clearCanvas() {
                 this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-            }
-            
-            /**
-             * 배경 그라디언트 그리기
-             */
-            drawBackground() {
-                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvasHeight);
-                gradient.addColorStop(0, this.COLORS.background);
-                gradient.addColorStop(1, this.COLORS.backgroundEnd);
                 
-                this.ctx.fillStyle = gradient;
-                this.ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
-            }
-            
-            /**
-             * 사다리 구조 그리기
-             */
-            drawLadderStructure() {
-                const { startY, endY, lineSpacing, verticalLineWidth, horizontalLineWidth } = this.LADDER_CONFIG;
+                const { startX, startY, lineSpacing, verticalLineHeight } = this.ladderConfig;
                 
-                // 세로선 그리기
-                this.ctx.strokeStyle = this.COLORS.primary;
-                this.ctx.lineWidth = verticalLineWidth;
+                this.ctx.strokeStyle = '#2E86AB';
+                this.ctx.lineWidth = 3;
                 
-                for (let i = 0; i < 7; i++) {
-                    const x = 50 + i * lineSpacing;
+                for (let i = 0; i < 3; i++) {
+                    const x = startX + (i * lineSpacing);
                     this.ctx.beginPath();
                     this.ctx.moveTo(x, startY);
-                    this.ctx.lineTo(x, endY);
+                    this.ctx.lineTo(x, startY + verticalLineHeight);
                     this.ctx.stroke();
                 }
                 
-                // 가로선 그리기
-                this.ctx.strokeStyle = this.COLORS.secondary;
-                this.ctx.lineWidth = horizontalLineWidth;
+                this.ctx.lineWidth = 2;
+                const levelHeight = verticalLineHeight / (this.ladderData.length + 1);
                 
-                this.ladder.forEach(cross => {
-                    const leftX = 50 + cross.leftLine * lineSpacing;
-                    const rightX = 50 + cross.rightLine * lineSpacing;
+                for (let level = 0; level < this.ladderData.length; level++) {
+                    const y = startY + ((level + 1) * levelHeight);
+                    const levelData = this.ladderData[level];
                     
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(leftX, cross.y);
-                    this.ctx.lineTo(rightX, cross.y);
-                    this.ctx.stroke();
-                });
-            }
-            
-            /**
-             * 플레이어 이름 그리기
-             */
-            drawPlayerNames() {
-                this.ctx.fillStyle = this.COLORS.primary;
-                this.ctx.font = 'bold 14px "Noto Sans KR", sans-serif';
-                this.ctx.textAlign = 'center';
-                
-                this.players.forEach((player, index) => {
-                    const x = 50 + index * this.LADDER_CONFIG.lineSpacing;
-                    const y = 30;
-                    
-                    // 배경 박스
-                    this.ctx.fillStyle = this.COLORS.primary;
-                    this.ctx.fillRect(x - 25, y - 20, 50, 25);
-                    
-                    // 텍스트
-                    this.ctx.fillStyle = this.COLORS.white;
-                    this.ctx.fillText(player.name, x, y - 5);
-                });
-            }
-            
-            /**
-             * 결과 박스 그리기
-             */
-            drawResultBoxes() {
-                this.ctx.textAlign = 'center';
-                this.ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
-                
-                this.results.forEach((result, index) => {
-                    const x = 50 + index * this.LADDER_CONFIG.lineSpacing;
-                    const y = this.LADDER_CONFIG.endY + 40;
-                    
-                    // 박스 그리기
-                    this.ctx.fillStyle = this.COLORS.white;
-                    this.ctx.fillRect(x - 20, y - 15, 40, 30);
-                    
-                    // 테두리
-                    this.ctx.strokeStyle = this.COLORS.primary;
-                    this.ctx.lineWidth = 2;
-                    this.ctx.strokeRect(x - 20, y - 15, 40, 30);
-                    
-                    // 텍스트
-                    this.ctx.fillStyle = result === '꽝' ? this.COLORS.accent : this.COLORS.primary;
-                    this.ctx.fillText(result, x, y + 5);
-                });
-            }
-            
-            /**
-             * 애니메이션 시작
-             */
-            startAnimation() {
-                this.currentAnimationIndex = 0;
-                this.animationResults = [];
-                this.updateGameStatus('애니메이션 시작!');
-                this.animateNextPlayer();
-            }
-            
-            /**
-             * 게임 상태 업데이트
-             */
-            updateGameStatus(message) {
-                const statusElement = document.getElementById('game-status');
-                if (statusElement) {
-                    statusElement.textContent = message;
-                }
-            }
-            
-            /**
-             * 다음 플레이어 애니메이션
-             */
-            animateNextPlayer() {
-                if (this.currentAnimationIndex >= this.players.length) {
-                    // 모든 애니메이션 완료
-                    this.updateGameStatus('게임 완료!');
-                    setTimeout(() => this.showResultScreen(), 1000);
-                    return;
-                }
-                
-                const player = this.players[this.currentAnimationIndex];
-                this.updateGameStatus(`${player.name} 사다리 타는 중...`);
-                this.animatePlayer(player, this.currentAnimationIndex).then(() => {
-                    this.currentAnimationIndex++;
-                    setTimeout(() => this.animateNextPlayer(), 500);
-                });
-            }
-            
-            /**
-             * 개별 플레이어 애니메이션
-             */
-            animatePlayer(player, playerIndex) {
-                return new Promise((resolve) => {
-                    let currentX = player.x;
-                    let currentY = this.LADDER_CONFIG.startY;
-                    const targetY = this.LADDER_CONFIG.endY;
-                    
-                    const animate = () => {
-                        // 현재 위치에서 가로선 체크
-                        const crossAtCurrentY = this.ladder.find(cross => 
-                            Math.abs(cross.y - currentY) < 5 && 
-                            (cross.leftLine * this.LADDER_CONFIG.lineSpacing + 50 === currentX ||
-                             cross.rightLine * this.LADDER_CONFIG.lineSpacing + 50 === currentX)
-                        );
-                        
-                        if (crossAtCurrentY) {
-                            // 가로선을 만났을 때 반대편으로 이동
-                            const leftX = 50 + crossAtCurrentY.leftLine * this.LADDER_CONFIG.lineSpacing;
-                            const rightX = 50 + crossAtCurrentY.rightLine * this.LADDER_CONFIG.lineSpacing;
-                            currentX = (currentX === leftX) ? rightX : leftX;
-                        }
-                        
-                        // Y 좌표 증가
-                        currentY += 3;
-                        
-                        // 그리기
-                        this.drawInitialLadder();
-                        this.drawAnimationBall(currentX, currentY, playerIndex);
-                        
-                        // 애니메이션 완료 체크
-                        if (currentY >= targetY) {
-                            // 최종 결과 저장
-                            const finalPosition = Math.round((currentX - 50) / this.LADDER_CONFIG.lineSpacing);
-                            player.result = this.results[finalPosition];
-                            this.animationResults.push({
-                                player: player.name,
-                                result: player.result,
-                                position: finalPosition
-                            });
+                    for (let pos = 0; pos < levelData.length; pos++) {
+                        if (levelData[pos]) {
+                            const x1 = startX + (pos * lineSpacing);
+                            const x2 = startX + ((pos + 1) * lineSpacing);
                             
-                            // 결과 박스 강조
-                            this.highlightResultBox(finalPosition);
-                            resolve();
-                        } else {
-                            requestAnimationFrame(animate);
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(x1, y);
+                            this.ctx.lineTo(x2, y);
+                            this.ctx.stroke();
+                            
+                            this.drawNode(x1, y);
+                            this.drawNode(x2, y);
                         }
-                    };
-                    
-                    animate();
-                });
+                    }
+                }
+                
+                this.drawPlayerAvatars();
             }
             
-            /**
-             * 애니메이션 볼 그리기
-             */
-            drawAnimationBall(x, y, playerIndex) {
-                this.ctx.fillStyle = this.COLORS.accent;
-                this.ctx.globalAlpha = 0.9;
-                
-                // 그림자 효과
-                this.ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-                this.ctx.shadowBlur = 4;
-                this.ctx.shadowOffsetX = 2;
-                this.ctx.shadowOffsetY = 2;
-                
+            drawNode(x, y) {
+                this.ctx.fillStyle = '#A23B72';
                 this.ctx.beginPath();
-                this.ctx.arc(x, y, this.LADDER_CONFIG.ballRadius, 0, Math.PI * 2);
+                this.ctx.arc(x, y, 4, 0, 2 * Math.PI);
                 this.ctx.fill();
-                
-                // 그림자 리셋
-                this.ctx.shadowColor = 'transparent';
-                this.ctx.shadowBlur = 0;
-                this.ctx.shadowOffsetX = 0;
-                this.ctx.shadowOffsetY = 0;
-                this.ctx.globalAlpha = 1;
             }
             
-            /**
-             * 결과 박스 강조 효과
-             */
-            highlightResultBox(position) {
-                const x = 50 + position * this.LADDER_CONFIG.lineSpacing;
-                const y = this.LADDER_CONFIG.endY + 40;
+            drawPlayerAvatars() {
+                const colors = ['#FFB3BA', '#BAFFC9', '#BAE1FF'];
+                const { startX, startY, lineSpacing } = this.ladderConfig;
                 
-                // 깜빡임 효과
-                let blinkCount = 0;
-                const blink = () => {
-                    if (blinkCount >= 3) return;
+                for (let i = 0; i < 3; i++) {
+                    const x = startX + (i * lineSpacing);
+                    const y = startY - 20;
                     
-                    // 강조 색상으로 그리기
-                    this.ctx.fillStyle = this.COLORS.highlight;
-                    this.ctx.fillRect(x - 20, y - 15, 40, 30);
+                    this.ctx.fillStyle = colors[i];
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 16, 0, 2 * Math.PI);
+                    this.ctx.fill();
                     
-                    // 테두리
-                    this.ctx.strokeStyle = this.COLORS.primary;
+                    this.ctx.strokeStyle = '#2E86AB';
                     this.ctx.lineWidth = 2;
-                    this.ctx.strokeRect(x - 20, y - 15, 40, 30);
+                    this.ctx.stroke();
                     
-                    // 텍스트
-                    this.ctx.fillStyle = this.COLORS.primary;
-                    this.ctx.font = 'bold 12px "Noto Sans KR", sans-serif';
+                    this.ctx.fillStyle = '#333';
+                    this.ctx.font = '12px Noto Sans KR';
                     this.ctx.textAlign = 'center';
-                    this.ctx.fillText(this.results[position], x, y + 5);
-                    
-                    setTimeout(() => {
-                        // 원래 색상으로 복원
-                        this.ctx.fillStyle = this.COLORS.white;
-                        this.ctx.fillRect(x - 20, y - 15, 40, 30);
-                        this.ctx.strokeRect(x - 20, y - 15, 40, 30);
-                        
-                        this.ctx.fillStyle = this.results[position] === '꽝' ? this.COLORS.accent : this.COLORS.primary;
-                        this.ctx.fillText(this.results[position], x, y + 5);
-                        
-                        blinkCount++;
-                        if (blinkCount < 3) {
-                            setTimeout(blink, 200);
-                        }
-                    }, 200);
-                };
-                
-                setTimeout(blink, 300);
-            }
-            
-            /**
-             * 결과 표시
-             */
-            displayResults() {
-                const resultList = document.getElementById('result-list');
-                if (!resultList) return;
-                
-                resultList.innerHTML = '';
-                
-                // 순위별로 정렬
-                const sortedResults = [...this.animationResults].sort((a, b) => {
-                    const rankA = this.getRankNumber(a.result);
-                    const rankB = this.getRankNumber(b.result);
-                    return rankA - rankB;
-                });
-                
-                sortedResults.forEach(result => {
-                    const resultItem = document.createElement('div');
-                    resultItem.className = 'result-item';
-                    resultItem.innerHTML = `
-                        <span class="player-name">${result.player}</span>
-                        <span class="player-result ${result.result === '꽝' ? 'fail' : 'success'}">${result.result}</span>
-                    `;
-                    resultList.appendChild(resultItem);
-                });
-            }
-            
-            /**
-             * 순위 번호 반환 (정렬용)
-             */
-            getRankNumber(result) {
-                const rankMap = { '1등': 1, '2등': 2, '3등': 3, '4등': 4, '5등': 5, '꽝': 6 };
-                return rankMap[result] || 7;
-            }
-            
-            /**
-             * 게임 리셋
-             */
-            resetGame() {
-                this.gameState = 'input';
-                this.players = [];
-                this.ladder = [];
-                this.currentAnimationIndex = 0;
-                this.animationResults = [];
-                this.results = ['1등', '2등', '3등', '4등', '5등', '꽝', '꽝'];
-                
-                // 입력 필드 초기화
-                for (let i = 1; i <= 7; i++) {
-                    const input = document.getElementById(`player-${i}`);
-                    if (input) {
-                        input.value = '';
-                        input.classList.remove('error');
-                    }
-                }
-                
-                this.showInputScreen();
-            }
-            
-            /**
-             * 결과 공유
-             */
-            shareResults() {
-                if (this.animationResults.length === 0) return;
-                
-                let shareText = '🎯 Lucky Ladder 결과 🎯\n\n';
-                
-                const sortedResults = [...this.animationResults].sort((a, b) => {
-                    const rankA = this.getRankNumber(a.result);
-                    const rankB = this.getRankNumber(b.result);
-                    return rankA - rankB;
-                });
-                
-                sortedResults.forEach(result => {
-                    const emoji = result.result === '꽝' ? '💥' : '🏆';
-                    shareText += `${emoji} ${result.player}: ${result.result}\n`;
-                });
-                
-                shareText += '\n🎮 Lucky Ladder로 공정한 추첨을 해보세요!';
-                
-                if (navigator.share) {
-                    navigator.share({
-                        title: 'Lucky Ladder 결과',
-                        text: shareText
-                    }).catch(console.error);
-                } else {
-                    // 클립보드 복사
-                    navigator.clipboard.writeText(shareText).then(() => {
-                        alert('결과가 클립보드에 복사되었습니다!');
-                    }).catch(() => {
-                        // 폴백: 텍스트 선택
-                        const textArea = document.createElement('textarea');
-                        textArea.value = shareText;
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(textArea);
-                        alert('결과가 클립보드에 복사되었습니다!');
-                    });
+                    this.ctx.fillText((i + 1).toString(), x, y + 4);
                 }
             }
             
-            /**
-             * 결과 저장 (로컬스토리지)
-             */
-            saveResults() {
+            async revealResults() {
+                if (this.state !== 'PLAYING') return;
+                
+                this.setState('REVEALING');
+                
                 try {
-                    const gameData = {
-                        timestamp: new Date().toISOString(),
-                        players: this.players.map(p => p.name),
-                        results: this.animationResults
+                    for (let playerIndex = 0; playerIndex < 3; playerIndex++) {
+                        await this.tracePath(playerIndex);
+                        await this.delay(500);
+                    }
+                    
+                    this.setState('FINISHED');
+                    this.playSound('finish');
+                    
+                    const restartBtn = document.getElementById('restartBtn');
+                    if (restartBtn) {
+                        restartBtn.style.display = 'block';
+                    }
+                    
+                    const revealBtn = document.getElementById('revealBtn');
+                    if (revealBtn) {
+                        revealBtn.style.display = 'none';
+                    }
+                    
+                } catch (error) {
+                    console.error('결과 공개 중 오류:', error);
+                    this.setState('PLAYING');
+                }
+            }
+            
+            async tracePath(playerIndex) {
+                return new Promise((resolve) => {
+                    const { startX, startY, lineSpacing, verticalLineHeight } = this.ladderConfig;
+                    const levelHeight = verticalLineHeight / (this.ladderData.length + 1);
+                    
+                    let currentPosition = playerIndex;
+                    let currentLevel = 0;
+                    
+                    const animateStep = () => {
+                        this.drawLadder();
+                        
+                        const x = startX + (currentPosition * lineSpacing);
+                        const y = startY + (currentLevel * levelHeight);
+                        
+                        this.ctx.fillStyle = '#A23B72';
+                        this.ctx.beginPath();
+                        this.ctx.arc(x, y, 8, 0, 2 * Math.PI);
+                        this.ctx.fill();
+                        
+                        if (currentLevel < this.ladderData.length) {
+                            const levelData = this.ladderData[currentLevel];
+                            
+                            if (currentPosition > 0 && levelData[currentPosition - 1]) {
+                                currentPosition--;
+                            } else if (currentPosition < 2 && levelData[currentPosition]) {
+                                currentPosition++;
+                            }
+                            
+                            currentLevel++;
+                            setTimeout(animateStep, this.animationConfig.tracingSpeed);
+                        } else {
+                            this.showPlayerResult(playerIndex, currentPosition);
+                            resolve();
+                        }
                     };
                     
-                    let savedGames = JSON.parse(localStorage.getItem('ladderGameHistory') || '[]');
-                    savedGames.unshift(gameData);
-                    
-                    // 최근 10게임만 저장
-                    if (savedGames.length > 10) {
-                        savedGames = savedGames.slice(0, 10);
-                    }
-                    
-                    localStorage.setItem('ladderGameHistory', JSON.stringify(savedGames));
-                } catch (error) {
-                    console.error('결과 저장 실패:', error);
-                }
+                    animateStep();
+                });
             }
             
-            /**
-             * 이전 결과 불러오기
-             */
-            loadPreviousResults() {
-                try {
-                    const savedGames = JSON.parse(localStorage.getItem('ladderGameHistory') || '[]');
-                    console.log(`저장된 게임 ${savedGames.length}개 발견`);
-                } catch (error) {
-                    console.error('이전 결과 불러오기 실패:', error);
-                }
-            }
-            
-            /**
-             * 에러 메시지 표시
-             */
-            showError(message) {
-                // 기존 에러 메시지 제거
-                const existingError = document.querySelector('.error-message');
-                if (existingError) {
-                    existingError.remove();
-                }
-                
-                // 새 에러 메시지 생성
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: #C73E1D;
-                    color: white;
-                    padding: 12px 24px;
-                    border-radius: 8px;
-                    font-weight: bold;
-                    z-index: 1000;
-                    animation: fadeInOut 3s ease-in-out forwards;
-                `;
-                errorDiv.textContent = message;
-                
-                // CSS 애니메이션 추가
-                if (!document.querySelector('#error-animation-style')) {
-                    const style = document.createElement('style');
-                    style.id = 'error-animation-style';
-                    style.textContent = `
-                        @keyframes fadeInOut {
-                            0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-                            20%, 80% { opacity: 1; transform: translateX(-50%) translateY(0); }
-                            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            showPlayerResult(playerIndex, finalPosition) {
+                const resultElement = document.querySelector(`#result${playerIndex + 1} .result-icon`);
+                if (resultElement && this.currentResults[finalPosition]) {
+                    const result = this.currentResults[finalPosition].result;
+                    resultElement.textContent = result;
+                    resultElement.classList.add('revealed');
+                    
+                    if (result === '🏆') {
+                        this.createParticleEffect(resultElement);
+                        this.playSound('victory');
+                        
+                        const playerNameElement = document.getElementById(`playerName${playerIndex + 1}`);
+                        if (playerNameElement) {
+                            playerNameElement.classList.add('winner');
                         }
-                    `;
-                    document.head.appendChild(style);
-                }
-                
-                document.body.appendChild(errorDiv);
-                
-                // 3초 후 자동 제거
-                setTimeout(() => {
-                    if (errorDiv.parentNode) {
-                        errorDiv.remove();
                     }
-                }, 3000);
+                }
+            }
+            
+            createParticleEffect(element) {
+                const rect = element.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                for (let i = 0; i < this.animationConfig.particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.cssText = `
+                        position: fixed;
+                        width: 8px;
+                        height: 8px;
+                        background: #FFD700;
+                        border-radius: 50%;
+                        left: ${centerX}px;
+                        top: ${centerY}px;
+                        pointer-events: none;
+                        z-index: 1000;
+                    `;
+                    
+                    document.body.appendChild(particle);
+                    
+                    const angle = (i / this.animationConfig.particleCount) * 2 * Math.PI;
+                    const distance = 100;
+                    const endX = centerX + Math.cos(angle) * distance;
+                    const endY = centerY + Math.sin(angle) * distance;
+                    
+                    particle.animate([
+                        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                        { transform: `translate(${endX - centerX}px, ${endY - centerY}px) scale(0)`, opacity: 0 }
+                    ], {
+                        duration: this.animationConfig.particleDuration,
+                        easing: 'ease-out'
+                    }).onfinish = () => {
+                        if (document.body.contains(particle)) {
+                            document.body.removeChild(particle);
+                        }
+                    };
+                }
+            }
+            
+            restartGame() {
+                try {
+                    this.ladderData = [];
+                    this.currentResults = [];
+                    this.currentTracing = {
+                        playerIndex: -1,
+                        currentX: 0,
+                        currentY: 0,
+                        isTracing: false
+                    };
+                    
+                    for (let i = 1; i <= 3; i++) {
+                        const resultElement = document.querySelector(`#result${i} .result-icon`);
+                        if (resultElement) {
+                            resultElement.textContent = '❓';
+                            resultElement.classList.remove('revealed');
+                        }
+                        
+                        const playerNameElement = document.getElementById(`playerName${i}`);
+                        if (playerNameElement) {
+                            playerNameElement.classList.remove('winner');
+                        }
+                    }
+                    
+                    const restartBtn = document.getElementById('restartBtn');
+                    if (restartBtn) {
+                        restartBtn.style.display = 'none';
+                    }
+                    
+                    const revealBtn = document.getElementById('revealBtn');
+                    if (revealBtn) {
+                        revealBtn.style.display = 'block';
+                    }
+                    
+                    if (this.ctx) {
+                        this.ctx.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+                    }
+                    
+                    this.setState('SETUP');
+                    this.playSound('restart');
+                    
+                } catch (error) {
+                    console.error('게임 재시작 중 오류:', error);
+                }
+            }
+            
+            playSound(type) {
+                try {
+                    if (!this.audioContext) {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    switch (type) {
+                        case 'start':
+                            oscillator.frequency.setValueAtTime(523.25, this.audioContext.currentTime);
+                            gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                            oscillator.start();
+                            oscillator.stop(this.audioContext.currentTime + 0.3);
+                            break;
+                            
+                        case 'victory':
+                            const notes = [523.25, 659.25, 783.99];
+                            notes.forEach((freq, index) => {
+                                const osc = this.audioContext.createOscillator();
+                                const gain = this.audioContext.createGain();
+                                osc.connect(gain);
+                                gain.connect(this.audioContext.destination);
+                                
+                                osc.frequency.setValueAtTime(freq, this.audioContext.currentTime + index * 0.2);
+                                gain.gain.setValueAtTime(0.1, this.audioContext.currentTime + index * 0.2);
+                                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + index * 0.2 + 0.3);
+                                
+                                osc.start(this.audioContext.currentTime + index * 0.2);
+                                osc.stop(this.audioContext.currentTime + index * 0.2 + 0.3);
+                            });
+                            break;
+                            
+                        case 'finish':
+                            oscillator.frequency.setValueAtTime(440, this.audioContext.currentTime);
+                            gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+                            oscillator.start();
+                            oscillator.stop(this.audioContext.currentTime + 0.5);
+                            break;
+                            
+                        case 'restart':
+                            oscillator.frequency.setValueAtTime(261.63, this.audioContext.currentTime);
+                            gainNode.gain.setValueAtTime(0.05, this.audioContext.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+                            oscillator.start();
+                            oscillator.stop(this.audioContext.currentTime + 0.2);
+                            break;
+                    }
+                    
+                } catch (error) {
+                    console.warn('사운드 재생 실패:', error);
+                }
+            }
+            
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
             }
         }
 
-        // 게임 인스턴스 생성 및 시작
-        let ladderGame;
+        let ladderRushGame;
 
-        // DOM 로드 완료 후 게임 시작
         document.addEventListener('DOMContentLoaded', () => {
             try {
-                ladderGame = new LadderGame();
-                console.log('Lucky Ladder 게임이 시작되었습니다.');
+                ladderRushGame = new LadderRushGame();
+                console.log('래더 러시 게임이 성공적으로 초기화되었습니다.');
             } catch (error) {
                 console.error('게임 초기화 실패:', error);
+                alert('게임을 불러오는 중 문제가 발생했습니다. 페이지를 새로고침해주세요.');
             }
         });
 
-        // 브라우저 리사이즈 처리
-        window.addEventListener('resize', () => {
-            if (ladderGame && ladderGame.gameState === 'playing') {
-                // 게임 중일 때는 캔버스 다시 그리기
-                setTimeout(() => {
-                    if (ladderGame.ctx) {
-                        ladderGame.drawInitialLadder();
-                    }
-                }, 100);
-            }
-        });
-
-        // 페이지 언로드 시 정리
-        window.addEventListener('beforeunload', () => {
-            if (ladderGame && ladderGame.animationResults.length > 0) {
-                ladderGame.saveResults();
-            }
-        });
+        window.LadderRushGame = LadderRushGame;
     </script>
 </body>
 </html>
