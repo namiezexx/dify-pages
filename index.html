@@ -3,405 +3,425 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Neo Tetris Challenge</title>
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-
+  <title>PING PONG BATTLE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
   <style>
-/* ===========================
-   Neo Tetris Challenge — CSS
-   Semantic, responsive, full-screen layout
-   No external CSS libraries used
-   =========================== */
-
-/* ---- CSS Variables (Custom Properties) ---- */
 :root{
-  /* Colors */
-  --color-bg: #1A1A1A;         /* 전체 배경 */
-  --primary: #2C3E50;         /* 주색 (보더 등) */
-  --secondary: #E74C3C;       /* 강조/아이템 (I 블록 / accent) */
-  --accent: #F39C12;          /* 골드 (점수/스테이지) */
-  --neon-cyan: #00FFFF;       /* I블록 glow, board border */
-  --grid-line: #333333;
-  --cell-bg: #000000;
-  --white: #FFFFFF;
-
-  /* Tetromino colors (as per guide) */
-  --t-I: #00FFFF;
-  --t-O: #FFFF00;
-  --t-T: #800080;
-  --t-S: #00FF00;
-  --t-Z: #FF0000;
-  --t-J: #0000FF;
-  --t-L: #FFA500;
-
-  /* Sizes */
-  --cell-size: 30px; /* base cell size (10x20 => 300x600) */
-  --board-w: calc(var(--cell-size) * 10);
-  --board-h: calc(var(--cell-size) * 20);
-  --board-max-w: 400px; /* for large screens we'll scale cell-size via media queries */
-  --panel-w: 320px;
-
-  /* UI */
-  --radius: 10px;
-  --glass: rgba(255,255,255,0.03);
-  --muted: rgba(255,255,255,0.12);
-
-  /* Animation durations */
-  --fast: 0.25s;
-  --mid: 0.6s;
-  --long: 1s;
+  --color-bg: #000000;
+  --color-primary: #FFFFFF;
+  --color-secondary: #00FF41;
+  --color-accent: #FF6B35;
+  --overlay-bg: rgba(0,0,0,0.8);
+  --font-title: 'Orbitron', 'Courier New', monospace;
+  --font-body: 'Courier New', monospace;
+  --canvas-w: 800px;
+  --canvas-h: 400px;
+  --paddle-w: 20px;
+  --paddle-h: 80px;
+  --ball-size: 15px;
+  --dur-fast: 0.1s;
+  --dur-mid: 0.2s;
+  --dur-long: 0.3s;
 }
-
-/* Responsive scaling for larger screens (up to 400x800 board) */
-@media (min-width: 1100px){
-  :root{
-    --cell-size: 40px; /* 40*10=400, 40*20=800 */
-  }
-}
-
-/* Basic reset */
-*{box-sizing:border-box}
-html,body,#app{height:100%;margin:0;font-family:"Roboto Mono",monospace;background:linear-gradient(180deg,var(--color-bg),#0f0f0f);color:var(--white);-webkit-font-smoothing:antialiased}
-
-/* App layout */
-.app{display:flex;flex-direction:column;height:100vh;align-items:center;justify-content:flex-start;padding:24px;gap:18px}
-
-/* Header */
-.app-header{display:flex;flex-direction:column;align-items:center;gap:6px}
-.logo{font-family:"Orbitron",sans-serif;color:var(--neon-cyan);text-shadow:0 0 8px rgba(0,255,255,0.12),0 0 18px rgba(44,62,80,0.6);margin:0;font-size:28px}
-.subtitle{margin:0;color:var(--muted);font-size:13px}
-
-/* Main layout (board + info) */
-.main-layout{display:flex;gap:28px;width:100%;max-width:1200px;align-items:flex-start;justify-content:center}
-
-/* Board area */
-.board-area{display:flex;align-items:center;justify-content:center}
-.board-frame{
-  width:var(--board-w);
-  height:var(--board-h);
-  border-radius:8px;
-  background:linear-gradient(180deg,var(--cell-bg),#050505);
-  position:relative;
-  box-shadow:0 6px 30px rgba(0,0,0,0.8), 0 0 14px rgba(0,255,255,0.06) inset;
-  border:2px solid var(--neon-cyan);
-  /* neon glow */
-  box-shadow: 0 0 30px rgba(0,255,255,0.08), 0 6px 30px rgba(0,0,0,0.9);
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#app{height:100%}
+body{
+  background:var(--color-bg);
+  color:var(--color-primary);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
   overflow:hidden;
 }
-
-/* When level-up, JS can add .levelup-pulse to board-frame to trigger gold pulse */
-.board-frame.levelup-pulse{
-  animation: levelupGlow 1s ease-in-out;
-  box-shadow: 0 0 36px rgba(243,156,18,0.55), 0 0 80px rgba(243,156,18,0.18) inset;
+.app{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  padding:24px;
 }
-
-@keyframes levelupGlow{
-  0%{transform:scale(1);filter:brightness(1)}
-  50%{transform:scale(1.02);filter:brightness(1.12)}
-  100%{transform:scale(1);filter:brightness(1)}
+.screen{
+  width:100%;
+  max-width:var(--canvas-w);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:20px;
+  position:relative;
 }
-
-/* Canvas fills the frame */
-.game-canvas{
-  position:absolute;left:0;top:0;width:100%;height:100%;display:block;
-  image-rendering:pixelated; /* sharp blocks */
+.is-hidden{display:none}
+.is-visible{display:flex}
+.title{
+  font-family:var(--font-title);
+  font-weight:700;
+  font-size:48px;
+  color:var(--color-primary);
+  letter-spacing:4px;
+  text-align:center;
+  text-shadow:0 0 8px rgba(255,255,255,0.06);
+}
+.menu-actions{
+  display:flex;
+  gap:16px;
+  align-items:center;
+}
+.menu-btn{
+  width:60px;
+  height:40px;
   background:transparent;
+  color:var(--color-primary);
+  border:2px solid var(--color-accent);
+  border-radius:6px;
+  cursor:pointer;
+  font-family:var(--font-title);
+  font-size:16px;
+  transition:transform var(--dur-fast), box-shadow var(--dur-fast);
 }
-
-/* Grid overlay using repeating linear gradients to create 10x20 lines */
-.grid-overlay{
-  position:absolute;inset:0;pointer-events:none;
-  background-image:
-    linear-gradient(to right, rgba(51,51,51,0.9) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(51,51,51,0.9) 1px, transparent 1px);
-  background-size: var(--cell-size) var(--cell-size);
-  mix-blend-mode:overlay;
-  opacity:0.9;
+.menu-btn:active{transform:translateY(1px)}
+.menu-btn:hover{box-shadow:0 6px 18px rgba(255,107,53,0.12)}
+.controls-hint{
+  position:relative;
+  bottom:0;
+  color:rgba(255,255,255,0.8);
+  font-size:14px;
+  font-family:var(--font-body);
 }
-
-/* Overlay layer for ghost outlines and line flashes */
-.overlay-layer{
-  position:absolute;inset:0;pointer-events:none;
-}
-
-/* Example class for line flash: JS will create elements with .line-flash-row and animate */
-.line-flash-row{
-  position:absolute;left:0;width:100%;height:var(--cell-size);background:linear-gradient(90deg,rgba(255,255,255,0.95),rgba(255,255,255,0.75));
-  opacity:0;transform:scaleY(0.9);
-  animation: lineFlashAnim 0.3s ease-out forwards;
+.hud{
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 12px;
+  box-sizing:border-box;
   pointer-events:none;
 }
-
-@keyframes lineFlashAnim{
-  0%{opacity:1;transform:scaleY(1)}
-  100%{opacity:0;transform:scaleY(0.2)}
+.score{
+  font-family:var(--font-title);
+  font-size:32px;
+  color:var(--color-primary);
+  min-width:80px;
+  text-align:center;
 }
-
-/* Hard-drop outline (dashed) — JS toggles .ghost-outline and positions it */
-.ghost-outline{
-  position:absolute;border:2px dashed rgba(255,255,255,0.6);border-radius:4px;opacity:0.7;pointer-events:none;
+.hud-center{
+  font-size:12px;
+  color:rgba(255,255,255,0.6);
 }
-
-/* Info panel */
-.info-panel{width:var(--panel-w);max-width:40vw;display:flex;flex-direction:column;gap:12px}
-.panel-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.04);backdrop-filter: blur(4px)}
-.panel-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.panel-title{font-family:"Orbitron",sans-serif;color:var(--neon-cyan);font-size:12px;margin:0}
-.stage-value{font-size:18px;color:var(--accent);font-weight:700}
-.score-value{font-size:20px;color:var(--accent);font-weight:700}
-.target-value{font-size:14px;color:var(--muted)}
-
-/* Progress bar */
-.progress-group{margin:8px 0}
-.progress-track{width:100%;height:12px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.03);overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#ffd27a);width:0%;transition:width var(--mid) ease-in-out}
-.progress-text{font-size:12px;color:var(--muted);margin-top:6px}
-
-/* Next preview */
-.next-preview{display:flex;flex-direction:column;align-items:center;margin-top:12px}
-.next-title{font-family:"Orbitron",sans-serif;color:var(--neon-cyan);font-size:12px;margin-bottom:8px}
-.next-canvas{width:100px;height:100px;border-radius:8px;background:linear-gradient(180deg,#050505,#0b0b0b);border:1px solid rgba(255,255,255,0.03);box-shadow:0 6px 20px rgba(0,0,0,0.6)}
-/* Next-canvas drawing handled by GameRenderer */
-
-/* Buttons */
-.controls{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-.btn{cursor:pointer;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:var(--glass);color:var(--white);font-weight:700;letter-spacing:0.6px;transition:all var(--fast) ease}
-.btn.primary{background:linear-gradient(90deg,var(--neon-cyan),#66ffff);color:#042027;box-shadow:0 8px 24px rgba(0,255,255,0.06)}
-.btn:disabled{opacity:0.4;cursor:not-allowed}
-.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,255,255,0.08);outline:none;border-color:var(--neon-cyan)}
-
-/* Legend text */
-.legend{margin-top:12px;font-size:12px;color:var(--muted)}
-.legend .accent{color:var(--accent);margin-top:6px}
-
-/* Footer compact progress */
-.app-footer{width:100%;display:flex;justify-content:center}
-.footer-inner{width:100%;max-width:1200px;padding:8px 12px}
-.stage-progress-compact{display:flex;align-items:center;gap:12px}
-.compact-bar{width:240px;height:8px;background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden}
-.compact-fill{height:100%;background:linear-gradient(90deg,var(--accent),#ffd27a);width:0%;transition:width var(--mid)}
-
-/* Particle layer (for stage clear celebration)
-   JS should append elements with class .particle inside #particle-layer.
-*/
-.particle-layer{position:fixed;inset:0;pointer-events:none;overflow:visible}
+.arena{
+  width:var(--canvas-w);
+  max-width:90vw;
+  aspect-ratio: 800 / 400;
+  position:relative;
+  display:block;
+  background:var(--color-bg);
+  border-radius:4px;
+  overflow:visible;
+}
+.game-canvas{
+  display:block;
+  width:100%;
+  height:100%;
+  background:transparent;
+  image-rendering:optimizeSpeed;
+  outline:none;
+  border-radius:0;
+  box-shadow:0 10px 40px rgba(0,0,0,0.6);
+}
+.center-line{
+  pointer-events:none;
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:50%;
+  width:0;
+  border-left:5px dashed rgba(255,255,255,0.12);
+  transform:translateX(-50%);
+  mix-blend-mode:screen;
+}
+.boundary{
+  position:absolute;
+  left:0;
+  right:0;
+  height:2px;
+  background:var(--color-primary);
+  opacity:0.08;
+}
+.top-boundary{top:0}
+.bottom-boundary{bottom:0}
+.particle-layer{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  overflow:visible;
+}
 .particle{
-  position:absolute;width:10px;height:10px;border-radius:50%;
-  background:var(--accent);opacity:0.95;transform:translateY(-40vh);
-  animation: particleFall linear forwards;
-  box-shadow:0 0 8px rgba(243,156,18,0.9);
+  position:absolute;
+  width:6px;
+  height:6px;
+  background:var(--color-primary);
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  opacity:1;
+  will-change:transform, opacity;
+  animation:particle-burst var(--dur-mid) linear forwards;
 }
-@keyframes particleFall{
-  0%{transform:translateY(-10vh) rotate(0deg);opacity:1}
-  100%{transform:translateY(110vh) rotate(720deg);opacity:0}
+@keyframes particle-burst{
+  to{
+    transform:translate(-50%,-50%) translate(var(--tx,0px), var(--ty,0px));
+    opacity:0;
+  }
 }
-
-/* Modal base */
-.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:opacity var(--fast) ease, visibility var(--fast)}
-.modal.is-visible{visibility:visible;opacity:1}
-.modal-card{background:linear-gradient(180deg,#0b0b0b,#050505);border-radius:12px;padding:22px 24px;border:1px solid rgba(255,255,255,0.04);text-align:center;min-width:280px;box-shadow:0 24px 60px rgba(0,0,0,0.8)}
-.modal-title{font-family:"Orbitron",sans-serif;color:var(--accent);margin:0 0 8px 0;font-size:20px}
-.modal-body{color:var(--muted);margin:8px 0}
-.modal-actions{margin-top:12px}
-
-/* Game Over overlay effect — JS will add .gameover-overlay to board-frame or body to show red fade */
-.gameover-overlay::after{
-  content:"";position:absolute;inset:0;background:rgba(255,0,0,0.12);mix-blend-mode:screen;animation: gameoverFade 0.8s ease forwards;
+.score-flash{
+  position:absolute;
+  inset:0;
+  background:var(--color-secondary);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--dur-fast) linear;
+  z-index:8;
 }
-@keyframes gameoverFade{from{opacity:0} to{opacity:1}}
-
-/* Utility: hidden for accessibility toggling */
-.hidden{display:none !important;visibility:hidden !important}
-
-/* Small screens: stack layout vertical */
-@media (max-width:900px){
-  .main-layout{flex-direction:column;align-items:center}
-  .info-panel{width:90%;max-width:420px}
-  .board-frame{transform:scale(0.95)}
+.score-flash.flash--show{
+  opacity:0.18;
+  transition:opacity var(--dur-fast) linear;
 }
+.game-controls{
+  margin-top:10px;
+}
+.control-btn{
+  background:transparent;
+  border:2px solid var(--color-accent);
+  color:var(--color-primary);
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  font-family:var(--font-body);
+}
+.overlay{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:20;
+  pointer-events:none;
+}
+.overlay.is-visible{display:flex; pointer-events:auto}
+.overlay-panel{
+  width:min(520px,calc(90vw));
+  background:var(--overlay-bg);
+  color:var(--color-primary);
+  padding:24px;
+  border-radius:8px;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+}
+.overlay-title{
+  font-family:var(--font-title);
+  font-size:24px;
+  margin-bottom:12px;
+}
+.result-winner{
+  font-family:var(--font-title);
+  font-size:28px;
+  color:var(--color-secondary);
+  margin-bottom:8px;
+}
+.result-score{
+  font-family:var(--font-title);
+  font-size:20px;
+  color:var(--color-primary);
+  margin-bottom:16px;
+}
+.primary-btn{
+  width:120px;
+  height:50px;
+  border-radius:6px;
+  border:2px solid var(--color-accent);
+  background:transparent;
+  color:var(--color-primary);
+  cursor:pointer;
+  margin:8px;
+  font-family:var(--font-title);
+}
+.primary-btn:hover{box-shadow:0 8px 24px rgba(255,107,53,0.12)}
+.overlay-actions{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+.settings-form fieldset{
+  border:none;
+  margin:16px 0;
+}
+.settings-form legend{
+  font-family:var(--font-title);
+  font-size:18px;
+  margin-bottom:8px;
+}
+.settings-form label{
+  display:block;
+  margin:8px 0;
+  cursor:pointer;
+}
+.settings-form input[type="radio"]{
+  margin-right:8px;
+}
+@media (max-width:520px){
+  .title{font-size:36px}
+  .menu-btn{width:64px;height:44px;font-size:14px}
+  .primary-btn{width:100px;height:44px;font-size:14px}
+}
+.sr-only{
+  position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;
+}
+.app.state-paused .game-screen{filter:blur(0.0)}
   </style>
 </head>
 <body>
-  <!-- App shell -->
-  <div class="app" id="app">
-    <!-- Header -->
-    <header class="app-header" role="banner">
-      <h1 class="logo">
-        <!-- Orbitron font, neon title -->
-        ⚡ Neo Tetris Challenge
-      </h1>
-      <p class="subtitle">클래식 테트리스 × 스테이지 챌린지</p>
-    </header>
-
-    <!-- Main content: centered full-screen layout -->
-    <main class="main-layout" role="main" id="main-game-area">
-      <!-- Left: Game Board Area -->
-      <section class="board-area" aria-label="게임 보드 영역">
-        <div class="board-frame" id="board-frame"><!-- JS can add/remove classes like .levelup-pulse -->
-          <!-- Canvas for main board rendering.
-               id="game-canvas" -> GameRenderer will draw board/tetrominoes here.
-               Important: JS should set canvas.width/height to match computed CSS vars for crisp rendering. -->
-          <canvas id="game-canvas" class="game-canvas" width="300" height="600" aria-label="게임 캔버스"></canvas>
-
-          <!-- Grid overlay for neon cell lines (visual only) -->
-          <div class="grid-overlay" aria-hidden="true"></div>
-
-          <!-- Ghost + line flash layer:
-               Use JS to create child elements for line flashes with class .line-flash-row (see PUBLISHER_NOTES) -->
-          <div id="overlay-layer" class="overlay-layer" aria-hidden="true"></div>
-
-          <!-- Hard-drop ghost outline (dashed) will be positioned by JS inside this layer -->
-        </div>
-      </section>
-
-      <!-- Right: Info / Controls Panel -->
-      <aside class="info-panel" role="complementary" aria-label="정보 패널">
-        <div class="panel-card">
-          <div class="panel-row">
-            <h2 class="panel-title">STAGE</h2>
-            <!-- id="stage-label" -> textContent updated by Game -->
-            <div id="stage-label" class="stage-value">1</div>
-          </div>
-
-          <div class="panel-row">
-            <h2 class="panel-title">SCORE</h2>
-            <!-- id="score-label" -> updated by Game -->
-            <div id="score-label" class="score-value">0</div>
-          </div>
-
-          <div class="panel-row">
-            <h2 class="panel-title">TARGET</h2>
-            <!-- id="target-label" -> target lines for current stage -->
-            <div id="target-label" class="target-value">5 lines</div>
-          </div>
-
-          <!-- Progress: visual progress bar for stage lines cleared -->
-          <div class="progress-group" aria-hidden="true">
-            <div class="progress-label">PROGRESS</div>
-            <!-- id="progress-bar" -> adjust width of inner via JS -->
-            <div class="progress-track" aria-hidden="true">
-              <div id="progress-fill" class="progress-fill" style="width:0%"></div>
-            </div>
-            <div id="progress-text" class="progress-text">0 / 5</div>
-          </div>
-
-          <!-- Next block preview -->
-          <div class="next-preview">
-            <div class="next-title">NEXT</div>
-            <!-- id="next-canvas" -> small canvas for next tetromino (100x100) -->
-            <canvas id="next-canvas" class="next-canvas" width="100" height="100" aria-label="다음 블록 미리보기"></canvas>
-          </div>
-
-          <!-- Controls -->
-          <div class="controls">
-            <!-- Buttons have clear IDs for js handlers -->
-            <button id="start-btn" class="btn primary">▶ START</button>
-            <button id="pause-btn" class="btn" disabled>⏸ PAUSE</button>
-            <button id="restart-btn" class="btn" disabled>↺ RESTART</button>
-          </div>
-
-          <!-- Small help / legend -->
-          <div class="legend">
-            <div>키: ← → 이동 · ↑ 회전 · ↓ 소프트 · 스페이스 하드</div>
-            <div class="accent">세부 점수: 1L=100 · 2L=300 · 3L=500 · 4L=800</div>
-          </div>
-        </div>
-      </aside>
+  <div id="app" class="app">
+    <main id="main-menu" class="screen menu-screen">
+      <h1 id="title" class="title">PING PONG BATTLE</h1>
+      <nav class="menu-actions" aria-label="메인 메뉴">
+        <button id="btn-1v1" class="menu-btn" type="button">1 vs 1</button>
+        <button id="btn-vsai" class="menu-btn" type="button">vs AI</button>
+        <button id="btn-settings" class="menu-btn" type="button">설정</button>
+      </nav>
+      <div id="controls-hint" class="controls-hint">
+        Player1: W / S &nbsp;&nbsp; | &nbsp;&nbsp; Player2: ↑ / ↓
+      </div>
     </main>
 
-    <!-- Footer: stage progress display (compact) -->
-    <footer class="app-footer" role="contentinfo">
-      <div class="footer-inner">
-        <div class="stage-progress-compact">
-          <span id="stage-progress-text">Stage 1 — 0 / 5</span>
-          <div class="compact-bar">
-            <div id="compact-fill" class="compact-fill" style="width:0%"></div>
+    <section id="game-screen" class="screen game-screen is-hidden" aria-label="게임 화면">
+      <header class="hud">
+        <div id="score-left" class="score score-left" aria-live="polite">0</div>
+        <div class="hud-center" aria-hidden="true">FIRST TO 11</div>
+        <div id="score-right" class="score score-right" aria-live="polite">0</div>
+      </header>
+
+      <div id="arena" class="arena">
+        <canvas id="game-canvas" width="800" height="400" class="game-canvas" aria-label="게임 캔버스"></canvas>
+        <div class="center-line" aria-hidden="true"></div>
+        <div class="boundary top-boundary" aria-hidden="true"></div>
+        <div class="boundary bottom-boundary" aria-hidden="true"></div>
+        <div id="particle-layer" class="particle-layer" aria-hidden="true"></div>
+        <div id="score-flash" class="score-flash" aria-hidden="true"></div>
+      </div>
+
+      <div class="game-controls">
+        <button id="btn-pause" class="control-btn" type="button">일시정지</button>
+      </div>
+    </section>
+
+    <div id="pause-overlay" class="overlay pause-overlay is-hidden" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="overlay-panel">
+        <h2 class="overlay-title">일시정지</h2>
+        <div class="overlay-actions">
+          <button id="btn-resume" class="primary-btn" type="button">계속하기</button>
+          <button id="btn-restart" class="primary-btn" type="button">다시 시작</button>
+          <button id="btn-back-to-menu" class="primary-btn" type="button">메인으로</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="result-modal" class="overlay result-modal is-hidden" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="overlay-panel">
+        <h2 id="result-winner" class="result-winner">Player 1 승리!</h2>
+        <div id="result-score" class="result-score">11 : 8</div>
+        <div class="overlay-actions">
+          <button id="btn-replay" class="primary-btn" type="button">다시하기</button>
+          <button id="btn-mainmenu" class="primary-btn" type="button">메인으로</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="settings-modal" class="overlay settings-modal is-hidden" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="overlay-panel">
+        <h2 class="overlay-title">설정</h2>
+        <form id="settings-form" class="settings-form" aria-label="게임 설정">
+          <fieldset>
+            <legend>AI 난이도</legend>
+            <label><input type="radio" name="ai-diff" value="easy"> 쉬움</label>
+            <label><input type="radio" name="ai-diff" value="normal" checked> 보통</label>
+            <label><input type="radio" name="ai-diff" value="hard"> 어려움</label>
+          </fieldset>
+          <div class="overlay-actions">
+            <button id="btn-save-settings" class="primary-btn" type="button">저장</button>
+            <button id="btn-close-settings" class="primary-btn" type="button">닫기</button>
           </div>
-        </div>
-      </div>
-    </footer>
-
-    <!-- Particle layer for stage clear gold particles (JS will insert .particle elements here) -->
-    <div id="particle-layer" class="particle-layer" aria-hidden="true"></div>
-
-    <!-- Modals -->
-
-    <!-- Stage Clear Modal
-         id="stage-clear-modal" -> show by adding .is-visible -->
-    <div id="stage-clear-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
-      <div class="modal-card">
-        <h3 class="modal-title">✨ STAGE CLEARED!</h3>
-        <p id="stage-clear-msg" class="modal-body">축하합니다! Stage 1 클리어 — +1200 점</p>
-        <div class="modal-actions">
-          <button id="next-stage-btn" class="btn primary">NEXT STAGE ➜</button>
-        </div>
+        </form>
       </div>
     </div>
 
-    <!-- Game Over Modal
-         id="gameover-modal" -> show by adding .is-visible -->
-    <div id="gameover-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
-      <div class="modal-card">
-        <h3 class="modal-title">💀 GAME OVER</h3>
-        <p id="gameover-msg" class="modal-body">최종 스코어: <strong id="final-score">0</strong> · 도달 스테이지: <strong id="final-stage">1</strong></p>
-        <div class="modal-actions">
-          <button id="restart-from-gameover-btn" class="btn primary">RESTART</button>
-        </div>
-      </div>
-    </div>
+    <div class="sr-only" aria-hidden="true">Screen reader helper</div>
   </div>
 
-<script>
-// Neo Tetris Challenge - 게임 엔진 구현
-// 상태머신 패턴을 활용한 테트리스 게임
-
-class Game {
+  <script>
+class PingPongGame {
     constructor() {
-        // 게임 상태 정의
-        this.states = {
-            MENU: 'menu',
-            PLAYING: 'playing',
-            PAUSED: 'paused',
-            STAGE_CLEAR: 'stageClear',
-            GAME_OVER: 'gameOver'
+        this.canvas = document.getElementById('game-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.canvas.width = 800;
+        this.canvas.height = 400;
+        
+        this.gameState = {
+            current: 'MENU',
+            mode: null,
+            aiDifficulty: 'normal'
         };
         
-        this.currentState = this.states.MENU;
-        this.stage = 1;
-        this.score = 0;
-        this.linesCleared = 0;
-        this.targetLines = 5; // 1스테이지 목표
-        this.fallSpeed = 1000; // 초기 낙하 속도 (ms)
-        this.lastFallTime = 0;
-        this.isPaused = false;
-        
-        // 게임 보드 및 렌더러 초기화
-        this.board = new Board();
-        this.renderer = new GameRenderer();
-        this.currentTetromino = null;
-        this.nextTetromino = null;
-        this.ghostTetromino = null;
-        
-        // 오디오 컨텍스트 (간단한 사운드 효과용)
-        this.audioContext = null;
-        this.initAudio();
-        
-        // 게임 루프 바인딩
-        this.gameLoop = this.gameLoop.bind(this);
-        this.lastTime = 0;
-        
-        // 키 입력 상태 추적
+        this.initGameObjects();
         this.keys = {};
-        this.keyRepeatDelay = 150; // 키 반복 지연시간
-        this.lastKeyTime = {};
-        
-        this.init();
+        this.setupEventListeners();
+        this.lastTime = 0;
+        this.gameLoop = this.gameLoop.bind(this);
+        this.initAudio();
+        this.loadHighScores();
+        this.showMenuScreen();
     }
     
-    // 오디오 초기화
+    initGameObjects() {
+        this.ball = {
+            x: this.canvas.width / 2,
+            y: this.canvas.height / 2,
+            dx: Math.random() > 0.5 ? 5 : -5,
+            dy: (Math.random() - 0.5) * 4,
+            speed: 5,
+            size: 15,
+            maxSpeed: 12,
+            rallyCount: 0
+        };
+        
+        this.paddle1 = {
+            x: 20,
+            y: this.canvas.height / 2 - 40,
+            width: 20,
+            height: 80,
+            dy: 0,
+            speed: 8
+        };
+        
+        this.paddle2 = {
+            x: this.canvas.width - 40,
+            y: this.canvas.height / 2 - 40,
+            width: 20,
+            height: 80,
+            dy: 0,
+            speed: 8
+        };
+        
+        this.score = {
+            player1: 0,
+            player2: 0
+        };
+        
+        this.particles = [];
+        
+        this.flash = {
+            active: false,
+            timer: 0,
+            color: '#00FF41'
+        };
+    }
+    
     initAudio() {
+        this.audioContext = null;
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         } catch (e) {
@@ -409,8 +429,7 @@ class Game {
         }
     }
     
-    // 간단한 비프음 생성
-    playSound(frequency, duration) {
+    playSound(frequency, duration = 0.1) {
         if (!this.audioContext) return;
         
         const oscillator = this.audioContext.createOscillator();
@@ -419,1055 +438,459 @@ class Game {
         oscillator.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
         
-        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+        oscillator.frequency.value = frequency;
         oscillator.type = 'square';
         
         gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
         
-        oscillator.start(this.audioContext.currentTime);
+        oscillator.start();
         oscillator.stop(this.audioContext.currentTime + duration);
     }
     
-    // 게임 초기화
-    init() {
-        this.setupEventListeners();
-        this.loadHighScore();
-        this.updateUI();
-    }
-    
-    // 이벤트 리스너 설정
     setupEventListeners() {
-        // 키보드 이벤트
-        document.addEventListener('keydown', (e) => this.handleKeyDown(e));
-        document.addEventListener('keyup', (e) => this.handleKeyUp(e));
+        document.addEventListener('keydown', (e) => {
+            this.keys[e.key] = true;
+            this.handleKeyDown(e);
+        });
         
-        // 터치 이벤트 (모바일 지원)
-        this.setupTouchControls();
+        document.addEventListener('keyup', (e) => {
+            this.keys[e.key] = false;
+        });
         
-        // UI 버튼 이벤트
-        this.setupUIEvents();
+        document.getElementById('btn-1v1').addEventListener('click', () => {
+            this.startGame('1v1');
+        });
         
-        // 포커스 이벤트 (게임 일시정지)
-        window.addEventListener('blur', () => {
-            if (this.currentState === this.states.PLAYING) {
-                this.pauseGame();
-            }
+        document.getElementById('btn-vsai').addEventListener('click', () => {
+            this.startGame('AI');
+        });
+        
+        document.getElementById('btn-settings').addEventListener('click', () => {
+            this.showSettings();
+        });
+        
+        document.getElementById('btn-pause').addEventListener('click', () => {
+            this.pauseGame();
+        });
+        
+        document.getElementById('btn-resume').addEventListener('click', () => {
+            this.resumeGame();
+        });
+        
+        document.getElementById('btn-restart').addEventListener('click', () => {
+            this.restartGame();
+        });
+        
+        document.getElementById('btn-back-to-menu').addEventListener('click', () => {
+            this.returnToMenu();
+        });
+        
+        document.getElementById('btn-replay').addEventListener('click', () => {
+            this.restartGame();
+        });
+        
+        document.getElementById('btn-mainmenu').addEventListener('click', () => {
+            this.returnToMenu();
+        });
+        
+        document.getElementById('btn-save-settings').addEventListener('click', () => {
+            this.saveSettings();
+        });
+        
+        document.getElementById('btn-close-settings').addEventListener('click', () => {
+            this.hideSettings();
         });
     }
     
-    // 터치 컨트롤 설정
-    setupTouchControls() {
-        const gameArea = document.getElementById('main-game-area');
-        if (!gameArea) return;
-        
-        let touchStartX = 0;
-        let touchStartY = 0;
-        
-        gameArea.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        });
-        
-        gameArea.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-            
-            const deltaX = touchEndX - touchStartX;
-            const deltaY = touchEndY - touchStartY;
-            
-            // 스와이프 감지
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                if (Math.abs(deltaX) > 50) {
-                    if (deltaX > 0) {
-                        this.moveTetromino('right');
-                    } else {
-                        this.moveTetromino('left');
-                    }
-                }
-            } else {
-                if (deltaY > 50) {
-                    this.hardDrop();
-                } else if (Math.abs(deltaX) < 30 && Math.abs(deltaY) < 30) {
-                    this.rotateTetromino();
-                }
-            }
-        });
-    }
-    
-    // UI 이벤트 설정
-    setupUIEvents() {
-        // 시작 버튼
-        const startBtn = document.getElementById('start-btn');
-        if (startBtn) {
-            startBtn.addEventListener('click', () => this.startGame());
-        }
-        
-        // 다음 스테이지 버튼
-        const nextStageBtn = document.getElementById('next-stage-btn');
-        if (nextStageBtn) {
-            nextStageBtn.addEventListener('click', () => this.nextStage());
-        }
-        
-        // 재시작 버튼
-        const restartBtn = document.getElementById('restart-btn');
-        if (restartBtn) {
-            restartBtn.addEventListener('click', () => this.restartGame());
-        }
-        
-        // 게임오버에서 재시작 버튼
-        const restartFromGameoverBtn = document.getElementById('restart-from-gameover-btn');
-        if (restartFromGameoverBtn) {
-            restartFromGameoverBtn.addEventListener('click', () => this.restartGame());
-        }
-        
-        // 일시정지 버튼
-        const pauseBtn = document.getElementById('pause-btn');
-        if (pauseBtn) {
-            pauseBtn.addEventListener('click', () => this.togglePause());
-        }
-    }
-    
-    // 키 입력 처리
     handleKeyDown(e) {
-        if (this.currentState !== this.states.PLAYING) return;
-        
-        const now = Date.now();
-        const key = e.code;
-        
-        // 키 반복 방지 (이동키 제외)
-        if (this.keys[key] && !['ArrowLeft', 'ArrowRight', 'ArrowDown'].includes(key)) {
-            return;
-        }
-        
-        // 키 반복 지연 체크 (이동키만)
-        if (['ArrowLeft', 'ArrowRight'].includes(key)) {
-            if (this.lastKeyTime[key] && now - this.lastKeyTime[key] < this.keyRepeatDelay) {
-                return;
-            }
-            this.lastKeyTime[key] = now;
-        }
-        
-        this.keys[key] = true;
-        
-        switch (key) {
-            case 'ArrowLeft':
-                this.moveTetromino('left');
+        switch (e.key) {
+            case 'Escape':
+                if (this.gameState.current === 'PLAYING') {
+                    this.pauseGame();
+                } else if (this.gameState.current === 'PAUSED') {
+                    this.resumeGame();
+                }
                 break;
-            case 'ArrowRight':
-                this.moveTetromino('right');
-                break;
-            case 'ArrowDown':
-                this.moveTetromino('down');
-                break;
-            case 'ArrowUp':
-                this.rotateTetromino();
-                break;
-            case 'Space':
-                e.preventDefault();
-                this.hardDrop();
-                break;
-            case 'KeyP':
-                this.togglePause();
+            case 'Enter':
+                if (this.gameState.current === 'GAME_OVER') {
+                    this.restartGame();
+                }
                 break;
         }
     }
     
-    handleKeyUp(e) {
-        this.keys[e.code] = false;
-    }
-    
-    // 게임 시작
-    startGame() {
-        this.currentState = this.states.PLAYING;
-        this.stage = 1;
-        this.score = 0;
-        this.linesCleared = 0;
-        this.targetLines = 5;
-        this.fallSpeed = 1000;
-        
-        this.board.clear();
-        this.spawnNewTetromino();
-        this.updateUI();
-        this.updateButtonStates();
-        
-        // 게임 루프 시작
-        this.lastTime = performance.now();
-        this.lastFallTime = 0;
+    startGame(mode) {
+        this.gameState.current = 'PLAYING';
+        this.gameState.mode = mode;
+        this.initGameObjects();
+        this.showGameScreen();
+        this.updateScoreDisplay();
         requestAnimationFrame(this.gameLoop);
-        
-        this.playSound(440, 0.1); // 게임 시작 사운드
     }
     
-    // 게임 루프 (60fps)
+    pauseGame() {
+        this.gameState.current = 'PAUSED';
+        document.getElementById('pause-overlay').classList.add('is-visible');
+        document.getElementById('pause-overlay').setAttribute('aria-hidden', 'false');
+    }
+    
+    resumeGame() {
+        this.gameState.current = 'PLAYING';
+        document.getElementById('pause-overlay').classList.remove('is-visible');
+        document.getElementById('pause-overlay').setAttribute('aria-hidden', 'true');
+        requestAnimationFrame(this.gameLoop);
+    }
+    
+    restartGame() {
+        this.initGameObjects();
+        this.gameState.current = 'PLAYING';
+        document.getElementById('result-modal').classList.remove('is-visible');
+        document.getElementById('result-modal').setAttribute('aria-hidden', 'true');
+        document.getElementById('pause-overlay').classList.remove('is-visible');
+        document.getElementById('pause-overlay').setAttribute('aria-hidden', 'true');
+        this.updateScoreDisplay();
+        requestAnimationFrame(this.gameLoop);
+    }
+    
+    returnToMenu() {
+        this.gameState.current = 'MENU';
+        this.showMenuScreen();
+        document.getElementById('pause-overlay').classList.remove('is-visible');
+        document.getElementById('pause-overlay').setAttribute('aria-hidden', 'true');
+        document.getElementById('result-modal').classList.remove('is-visible');
+        document.getElementById('result-modal').setAttribute('aria-hidden', 'true');
+    }
+    
     gameLoop(currentTime) {
-        if (this.currentState !== this.states.PLAYING) return;
+        if (this.gameState.current !== 'PLAYING') return;
         
         const deltaTime = currentTime - this.lastTime;
         this.lastTime = currentTime;
         
-        // 자동 낙하 처리
-        this.lastFallTime += deltaTime;
-        if (this.lastFallTime >= this.fallSpeed) {
-            this.moveTetromino('down');
-            this.lastFallTime = 0;
-        }
-        
-        // 연속 키 입력 처리 (부드러운 이동)
-        if (this.keys['ArrowDown']) {
-            this.lastFallTime += deltaTime * 10; // 소프트 드롭 가속
-        }
-        
-        // 렌더링
-        this.renderer.render(this.board, this.currentTetromino, this.ghostTetromino);
+        this.update(deltaTime);
+        this.render();
         
         requestAnimationFrame(this.gameLoop);
     }
     
-    // 새 테트로미노 생성
-    spawnNewTetromino() {
-        if (!this.nextTetromino) {
-            this.nextTetromino = new Tetromino();
-        }
-        
-        this.currentTetromino = this.nextTetromino;
-        this.nextTetromino = new Tetromino();
-        
-        // 게임오버 체크
-        if (!this.board.canPlace(this.currentTetromino)) {
-            this.gameOver();
-            return;
-        }
-        
-        this.updateGhostTetromino();
-        this.updateNextTetrominoDisplay();
+    update(deltaTime) {
+        this.updatePaddles();
+        this.updateBall();
+        this.updateParticles();
+        this.updateFlash();
+        this.checkCollisions();
+        this.checkScore();
     }
     
-    // 고스트 테트로미노 업데이트 (하드드롭 위치 표시)
-    updateGhostTetromino() {
-        if (!this.currentTetromino) return;
-        
-        this.ghostTetromino = this.currentTetromino.clone();
-        
-        // 바닥까지 떨어뜨려서 위치 찾기
-        while (this.board.canPlace(this.ghostTetromino, this.ghostTetromino.x, this.ghostTetromino.y + 1)) {
-            this.ghostTetromino.y++;
-        }
-    }
-    
-    // 테트로미노 이동
-    moveTetromino(direction) {
-        if (!this.currentTetromino) return;
-        
-        let newX = this.currentTetromino.x;
-        let newY = this.currentTetromino.y;
-        
-        switch (direction) {
-            case 'left':
-                newX--;
-                break;
-            case 'right':
-                newX++;
-                break;
-            case 'down':
-                newY++;
-                break;
-        }
-        
-        if (this.board.canPlace(this.currentTetromino, newX, newY)) {
-            this.currentTetromino.x = newX;
-            this.currentTetromino.y = newY;
-            this.updateGhostTetromino();
-            
-            if (direction !== 'down') {
-                this.playSound(220, 0.05); // 이동 사운드
-            }
-        } else if (direction === 'down') {
-            // 바닥에 닿았을 때 블록 고정
-            this.placeTetromino();
-        }
-    }
-    
-    // 테트로미노 회전
-    rotateTetromino() {
-        if (!this.currentTetromino) return;
-        
-        const rotated = this.currentTetromino.getRotated();
-        
-        // 벽 킥 시스템 (회전 시 벽에 닿으면 좌우로 이동 시도)
-        for (let offsetX of [0, -1, 1, -2, 2]) {
-            if (this.board.canPlace(rotated, this.currentTetromino.x + offsetX, this.currentTetromino.y)) {
-                this.currentTetromino.shape = rotated.shape;
-                this.currentTetromino.rotation = rotated.rotation;
-                this.currentTetromino.x += offsetX;
-                this.updateGhostTetromino();
-                this.playSound(330, 0.05); // 회전 사운드
-                return;
-            }
-        }
-    }
-    
-    // 하드 드롭
-    hardDrop() {
-        if (!this.currentTetromino) return;
-        
-        let dropDistance = 0;
-        while (this.board.canPlace(this.currentTetromino, this.currentTetromino.x, this.currentTetromino.y + 1)) {
-            this.currentTetromino.y++;
-            dropDistance++;
-        }
-        
-        // 하드드롭 보너스 점수
-        this.score += dropDistance * 2;
-        this.updateScoreDisplay();
-        
-        this.placeTetromino();
-        this.playSound(110, 0.1); // 하드드롭 사운드
-    }
-    
-    // 테트로미노 보드에 고정
-    placeTetromino() {
-        if (!this.currentTetromino) return;
-        
-        this.board.place(this.currentTetromino);
-        
-        // 라인 클리어 체크
-        const clearedLines = this.board.clearLines();
-        if (clearedLines > 0) {
-            this.handleLinesClear(clearedLines);
-        }
-        
-        // 다음 블록 생성
-        this.spawnNewTetromino();
-    }
-    
-    // 라인 클리어 처리
-    handleLinesClear(clearedLines) {
-        this.linesCleared += clearedLines;
-        
-        // 점수 계산 (1라인: 100, 2라인: 300, 3라인: 500, 4라인: 800)
-        const lineScores = [0, 100, 300, 500, 800];
-        const baseScore = lineScores[clearedLines] || 0;
-        const stageMultiplier = this.stage;
-        this.score += baseScore * stageMultiplier;
-        
-        // 라인 클리어 사운드
-        if (clearedLines === 4) {
-            this.playSound(660, 0.3); // 테트리스 사운드
+    updatePaddles() {
+        if (this.keys['w'] || this.keys['W']) {
+            this.paddle1.dy = -this.paddle1.speed;
+        } else if (this.keys['s'] || this.keys['S']) {
+            this.paddle1.dy = this.paddle1.speed;
         } else {
-            this.playSound(440, 0.2); // 일반 라인 클리어 사운드
+            this.paddle1.dy = 0;
         }
         
-        // 라인 클리어 이펙트
-        this.renderer.showLineClearEffect(this.board.getLastClearedLines());
-        
-        this.updateUI();
-        
-        // 스테이지 클리어 체크
-        if (this.linesCleared >= this.targetLines) {
-            this.stageComplete();
-        }
-    }
-    
-    // 스테이지 완료
-    stageComplete() {
-        this.currentState = this.states.STAGE_CLEAR;
-        
-        // 스테이지 클리어 보너스
-        this.score += this.stage * 1000;
-        
-        this.playSound(880, 0.5); // 스테이지 클리어 사운드
-        this.renderer.showStageCompleteEffect();
-        this.showStageClearModal();
-        this.updateUI();
-    }
-    
-    // 다음 스테이지로 진행
-    nextStage() {
-        if (this.stage >= 10) {
-            // 게임 완전 클리어
-            this.gameComplete();
-            return;
-        }
-        
-        this.stage++;
-        this.targetLines = this.stage * 5; // 5, 10, 15, ... 50
-        this.linesCleared = 0;
-        
-        // 속도 증가 (10%씩)
-        this.fallSpeed = Math.max(100, this.fallSpeed * 0.9);
-        
-        this.currentState = this.states.PLAYING;
-        this.hideStageClearModal();
-        this.updateUI();
-        
-        // 게임 루프 재시작
-        this.lastTime = performance.now();
-        this.lastFallTime = 0;
-        requestAnimationFrame(this.gameLoop);
-    }
-    
-    // 게임 완전 클리어
-    gameComplete() {
-        this.score += 50000; // 완주 보너스
-        this.saveHighScore();
-        alert(`축하합니다! 모든 스테이지를 클리어했습니다!\n최종 점수: ${this.score.toLocaleString()}점`);
-        this.restartGame();
-    }
-    
-    // 게임오버
-    gameOver() {
-        this.currentState = this.states.GAME_OVER;
-        this.saveHighScore();
-        this.playSound(110, 1.0); // 게임오버 사운드
-        
-        // 게임오버 효과
-        const boardFrame = document.getElementById('board-frame');
-        if (boardFrame) {
-            boardFrame.classList.add('gameover-overlay');
-        }
-        
-        this.showGameOverModal();
-        this.updateButtonStates();
-    }
-    
-    // 게임 재시작
-    restartGame() {
-        this.currentState = this.states.MENU;
-        this.hideAllModals();
-        
-        // 게임오버 효과 제거
-        const boardFrame = document.getElementById('board-frame');
-        if (boardFrame) {
-            boardFrame.classList.remove('gameover-overlay');
-        }
-        
-        this.updateButtonStates();
-    }
-    
-    // 일시정지 토글
-    togglePause() {
-        if (this.currentState === this.states.PLAYING) {
-            this.pauseGame();
-        } else if (this.currentState === this.states.PAUSED) {
-            this.resumeGame();
-        }
-    }
-    
-    pauseGame() {
-        this.currentState = this.states.PAUSED;
-        this.updateButtonStates();
-    }
-    
-    resumeGame() {
-        this.currentState = this.states.PLAYING;
-        this.lastTime = performance.now();
-        this.updateButtonStates();
-        requestAnimationFrame(this.gameLoop);
-    }
-    
-    // 최고점수 저장/로드
-    saveHighScore() {
-        const currentHigh = this.getHighScore();
-        if (this.score > currentHigh) {
-            localStorage.setItem('neoTetrisHighScore', this.score.toString());
-            localStorage.setItem('neoTetrisHighStage', this.stage.toString());
-        }
-    }
-    
-    getHighScore() {
-        return parseInt(localStorage.getItem('neoTetrisHighScore')) || 0;
-    }
-    
-    getHighStage() {
-        return parseInt(localStorage.getItem('neoTetrisHighStage')) || 1;
-    }
-    
-    loadHighScore() {
-        // 최고점수 로드 로직 (필요시 UI에 표시)
-    }
-    
-    // UI 업데이트 메서드들
-    updateUI() {
-        this.updateScoreDisplay();
-        this.updateStageDisplay();
-        this.updateProgressDisplay();
-        this.updateNextTetrominoDisplay();
-    }
-    
-    updateScoreDisplay() {
-        const scoreEl = document.getElementById('score-label');
-        if (scoreEl) scoreEl.textContent = this.score.toLocaleString();
-    }
-    
-    updateStageDisplay() {
-        const stageEl = document.getElementById('stage-label');
-        if (stageEl) stageEl.textContent = this.stage;
-        
-        const targetEl = document.getElementById('target-label');
-        if (targetEl) targetEl.textContent = `${this.targetLines} lines`;
-    }
-    
-    updateProgressDisplay() {
-        const progressEl = document.getElementById('progress-fill');
-        const progressText = document.getElementById('progress-text');
-        const compactFill = document.getElementById('compact-fill');
-        const stageProgressText = document.getElementById('stage-progress-text');
-        
-        const progress = Math.min((this.linesCleared / this.targetLines) * 100, 100);
-        
-        if (progressEl) {
-            progressEl.style.width = progress + '%';
-        }
-        
-        if (progressText) {
-            progressText.textContent = `${this.linesCleared} / ${this.targetLines}`;
-        }
-        
-        if (compactFill) {
-            compactFill.style.width = progress + '%';
-        }
-        
-        if (stageProgressText) {
-            stageProgressText.textContent = `Stage ${this.stage} — ${this.linesCleared} / ${this.targetLines}`;
-        }
-    }
-    
-    updateNextTetrominoDisplay() {
-        const nextCanvas = document.getElementById('next-canvas');
-        if (nextCanvas && this.nextTetromino) {
-            this.renderer.renderNextTetromino(nextCanvas, this.nextTetromino);
-        }
-    }
-    
-    updateButtonStates() {
-        const startBtn = document.getElementById('start-btn');
-        const pauseBtn = document.getElementById('pause-btn');
-        const restartBtn = document.getElementById('restart-btn');
-        
-        if (this.currentState === this.states.MENU) {
-            if (startBtn) startBtn.disabled = false;
-            if (pauseBtn) pauseBtn.disabled = true;
-            if (restartBtn) restartBtn.disabled = true;
-        } else if (this.currentState === this.states.PLAYING) {
-            if (startBtn) startBtn.disabled = true;
-            if (pauseBtn) {
-                pauseBtn.disabled = false;
-                pauseBtn.textContent = '⏸ PAUSE';
+        if (this.gameState.mode === '1v1') {
+            if (this.keys['ArrowUp']) {
+                this.paddle2.dy = -this.paddle2.speed;
+            } else if (this.keys['ArrowDown']) {
+                this.paddle2.dy = this.paddle2.speed;
+            } else {
+                this.paddle2.dy = 0;
             }
-            if (restartBtn) restartBtn.disabled = false;
-        } else if (this.currentState === this.states.PAUSED) {
-            if (pauseBtn) {
-                pauseBtn.disabled = false;
-                pauseBtn.textContent = '▶ RESUME';
-            }
+        } else if (this.gameState.mode === 'AI') {
+            this.updateAI();
+        }
+        
+        this.paddle1.y += this.paddle1.dy;
+        this.paddle2.y += this.paddle2.dy;
+        
+        this.paddle1.y = Math.max(0, Math.min(this.canvas.height - this.paddle1.height, this.paddle1.y));
+        this.paddle2.y = Math.max(0, Math.min(this.canvas.height - this.paddle2.height, this.paddle2.y));
+    }
+    
+    updateAI() {
+        const difficulty = this.gameState.aiDifficulty;
+        let reactionSpeed, predictError;
+        
+        switch (difficulty) {
+            case 'easy':
+                reactionSpeed = 0.7;
+                predictError = 30;
+                break;
+            case 'normal':
+                reactionSpeed = 0.85;
+                predictError = 15;
+                break;
+            case 'hard':
+                reactionSpeed = 0.95;
+                predictError = 5;
+                break;
+        }
+        
+        const targetY = this.ball.y + (Math.random() - 0.5) * predictError;
+        const paddleCenter = this.paddle2.y + this.paddle2.height / 2;
+        const diff = targetY - paddleCenter;
+        
+        if (Math.abs(diff) > 10 && Math.random() < reactionSpeed) {
+            this.paddle2.dy = diff > 0 ? this.paddle2.speed : -this.paddle2.speed;
+        } else {
+            this.paddle2.dy = 0;
         }
     }
     
-    // 모달 표시/숨김 메서드들
-    showStageClearModal() {
-        const modal = document.getElementById('stage-clear-modal');
-        const msg = document.getElementById('stage-clear-msg');
+    updateBall() {
+        this.ball.x += this.ball.dx;
+        this.ball.y += this.ball.dy;
         
-        if (modal) {
-            modal.classList.add('is-visible');
-            modal.setAttribute('aria-hidden', 'false');
-        }
-        
-        if (msg) {
-            const bonus = this.stage * 1000;
-            msg.textContent = `축하합니다! Stage ${this.stage} 클리어 — +${bonus.toLocaleString()} 점`;
-        }
-        
-        // 레벨업 펄스 효과
-        const boardFrame = document.getElementById('board-frame');
-        if (boardFrame) {
-            boardFrame.classList.add('levelup-pulse');
-            setTimeout(() => {
-                boardFrame.classList.remove('levelup-pulse');
-            }, 1000);
-        }
-        
-        // 파티클 효과
-        this.createParticleEffect();
-    }
-    
-    hideStageClearModal() {
-        const modal = document.getElementById('stage-clear-modal');
-        if (modal) {
-            modal.classList.remove('is-visible');
-            modal.setAttribute('aria-hidden', 'true');
+        if (this.ball.y <= this.ball.size / 2 || this.ball.y >= this.canvas.height - this.ball.size / 2) {
+            this.ball.dy = -this.ball.dy;
+            this.playSound(800, 0.1);
+            this.createParticles(this.ball.x, this.ball.y);
         }
     }
     
-    showGameOverModal() {
-        const modal = document.getElementById('gameover-modal');
-        const finalScore = document.getElementById('final-score');
-        const finalStage = document.getElementById('final-stage');
-        
-        if (modal) {
-            modal.classList.add('is-visible');
-            modal.setAttribute('aria-hidden', 'false');
+    checkCollisions() {
+        if (this.ballPaddleCollision(this.ball, this.paddle1)) {
+            this.handlePaddleCollision(this.paddle1, 'left');
         }
         
-        if (finalScore) finalScore.textContent = this.score.toLocaleString();
-        if (finalStage) finalStage.textContent = this.stage;
-    }
-    
-    hideGameOverModal() {
-        const modal = document.getElementById('gameover-modal');
-        if (modal) {
-            modal.classList.remove('is-visible');
-            modal.setAttribute('aria-hidden', 'true');
+        if (this.ballPaddleCollision(this.ball, this.paddle2)) {
+            this.handlePaddleCollision(this.paddle2, 'right');
         }
     }
     
-    hideAllModals() {
-        this.hideStageClearModal();
-        this.hideGameOverModal();
+    ballPaddleCollision(ball, paddle) {
+        return ball.x - ball.size / 2 < paddle.x + paddle.width &&
+               ball.x + ball.size / 2 > paddle.x &&
+               ball.y - ball.size / 2 < paddle.y + paddle.height &&
+               ball.y + ball.size / 2 > paddle.y;
     }
     
-    // 파티클 효과 생성
-    createParticleEffect() {
+    handlePaddleCollision(paddle, side) {
+        this.ball.dx = -this.ball.dx;
+        
+        const paddleCenter = paddle.y + paddle.height / 2;
+        const hitPosition = (this.ball.y - paddleCenter) / (paddle.height / 2);
+        this.ball.dy = hitPosition * 3;
+        
+        if (side === 'left') {
+            this.ball.x = paddle.x + paddle.width + this.ball.size / 2;
+        } else {
+            this.ball.x = paddle.x - this.ball.size / 2;
+        }
+        
+        this.ball.rallyCount++;
+        if (this.ball.rallyCount % 5 === 0 && this.ball.speed < this.ball.maxSpeed) {
+            this.ball.speed *= 1.1;
+            this.ball.dx = this.ball.dx > 0 ? this.ball.speed : -this.ball.speed;
+        }
+        
+        this.playSound(600, 0.1);
+        this.createParticles(this.ball.x, this.ball.y);
+    }
+    
+    checkScore() {
+        if (this.ball.x < 0) {
+            this.score.player2++;
+            this.resetBall();
+            this.createFlash('#00FF41');
+            this.playSound(300, 0.3);
+            this.updateScoreDisplay();
+        }
+        
+        if (this.ball.x > this.canvas.width) {
+            this.score.player1++;
+            this.resetBall();
+            this.createFlash('#00FF41');
+            this.playSound(300, 0.3);
+            this.updateScoreDisplay();
+        }
+        
+        if ((this.score.player1 >= 11 || this.score.player2 >= 11) && 
+            Math.abs(this.score.player1 - this.score.player2) >= 2) {
+            this.endGame();
+        }
+    }
+    
+    resetBall() {
+        this.ball.x = this.canvas.width / 2;
+        this.ball.y = this.canvas.height / 2;
+        this.ball.dx = Math.random() > 0.5 ? 5 : -5;
+        this.ball.dy = (Math.random() - 0.5) * 4;
+        this.ball.speed = 5;
+        this.ball.rallyCount = 0;
+    }
+    
+    endGame() {
+        this.gameState.current = 'GAME_OVER';
+        this.saveScore();
+        this.showGameOverScreen();
+    }
+    
+    createParticles(x, y) {
         const particleLayer = document.getElementById('particle-layer');
-        if (!particleLayer) return;
-        
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 4; i++) {
             const particle = document.createElement('div');
             particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDuration = (0.8 + Math.random() * 0.8) + 's';
-            particle.style.animationDelay = Math.random() * 0.5 + 's';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            
+            const tx = (Math.random() - 0.5) * 40;
+            const ty = (Math.random() - 0.5) * 40;
+            particle.style.setProperty('--tx', tx + 'px');
+            particle.style.setProperty('--ty', ty + 'px');
             
             particleLayer.appendChild(particle);
             
-            // 애니메이션 후 제거
             setTimeout(() => {
                 if (particle.parentNode) {
                     particle.parentNode.removeChild(particle);
                 }
-            }, 2000);
-        }
-    }
-}
-
-// 게임 보드 클래스
-class Board {
-    constructor() {
-        this.width = 10;
-        this.height = 20;
-        this.grid = this.createEmptyGrid();
-        this.lastClearedLines = [];
-    }
-    
-    createEmptyGrid() {
-        return Array(this.height).fill(null).map(() => Array(this.width).fill(0));
-    }
-    
-    clear() {
-        this.grid = this.createEmptyGrid();
-        this.lastClearedLines = [];
-    }
-    
-    // 테트로미노를 놓을 수 있는지 검사
-    canPlace(tetromino, x = tetromino.x, y = tetromino.y) {
-        for (let row = 0; row < tetromino.shape.length; row++) {
-            for (let col = 0; col < tetromino.shape[row].length; col++) {
-                if (tetromino.shape[row][col]) {
-                    const boardX = x + col;
-                    const boardY = y + row;
-                    
-                    // 경계 검사
-                    if (boardX < 0 || boardX >= this.width || 
-                        boardY >= this.height) {
-                        return false;
-                    }
-                    
-                    // 다른 블록과 충돌 검사 (y < 0은 허용 - 스폰 지역)
-                    if (boardY >= 0 && this.grid[boardY][boardX]) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-    
-    // 테트로미노를 보드에 고정
-    place(tetromino) {
-        for (let row = 0; row < tetromino.shape.length; row++) {
-            for (let col = 0; col < tetromino.shape[row].length; col++) {
-                if (tetromino.shape[row][col]) {
-                    const boardX = tetromino.x + col;
-                    const boardY = tetromino.y + row;
-                    
-                    if (boardY >= 0 && boardY < this.height && 
-                        boardX >= 0 && boardX < this.width) {
-                        this.grid[boardY][boardX] = tetromino.typeNumber;
-                    }
-                }
-            }
+            }, 200);
         }
     }
     
-    // 완성된 라인 제거
-    clearLines() {
-        const linesToClear = [];
-        
-        // 완성된 라인 찾기
-        for (let row = 0; row < this.height; row++) {
-            if (this.grid[row].every(cell => cell !== 0)) {
-                linesToClear.push(row);
-            }
-        }
-        
-        this.lastClearedLines = [...linesToClear];
-        
-        // 라인 제거 및 위쪽 블록들 아래로 이동
-        linesToClear.forEach(row => {
-            this.grid.splice(row, 1);
-            this.grid.unshift(Array(this.width).fill(0));
-        });
-        
-        return linesToClear.length;
+    updateParticles() {
+        // DOM 기반 파티클은 CSS 애니메이션으로 처리
     }
     
-    getLastClearedLines() {
-        return this.lastClearedLines;
+    createFlash(color) {
+        const flashElement = document.getElementById('score-flash');
+        flashElement.classList.add('flash--show');
+        setTimeout(() => {
+            flashElement.classList.remove('flash--show');
+        }, 100);
     }
     
-    // 보드 상태 반환 (렌더링용)
-    getGrid() {
-        return this.grid;
-    }
-}
-
-// 테트로미노 클래스
-class Tetromino {
-    constructor(type = null) {
-        // 7가지 테트로미노 타입
-        this.types = {
-            I: { shape: [[1,1,1,1]], color: '#00FFFF', number: 1 },
-            O: { shape: [[1,1],[1,1]], color: '#FFFF00', number: 2 },
-            T: { shape: [[0,1,0],[1,1,1]], color: '#800080', number: 3 },
-            S: { shape: [[0,1,1],[1,1,0]], color: '#00FF00', number: 4 },
-            Z: { shape: [[1,1,0],[0,1,1]], color: '#FF0000', number: 5 },
-            J: { shape: [[1,0,0],[1,1,1]], color: '#0000FF', number: 6 },
-            L: { shape: [[0,0,1],[1,1,1]], color: '#FFA500', number: 7 }
-        };
-        
-        // 랜덤 타입 선택 또는 지정된 타입 사용
-        const typeKeys = Object.keys(this.types);
-        this.type = type || typeKeys[Math.floor(Math.random() * typeKeys.length)];
-        
-        this.shape = this.types[this.type].shape.map(row => [...row]);
-        this.color = this.types[this.type].color;
-        this.typeNumber = this.types[this.type].number;
-        this.x = Math.floor((10 - this.shape[0].length) / 2); // 중앙에 스폰
-        this.y = -this.shape.length; // 화면 위쪽에서 시작
-        this.rotation = 0;
+    updateFlash() {
+        // DOM 기반 플래시는 CSS 클래스로 처리
     }
     
-    // 테트로미노 회전 (시계방향)
-    getRotated() {
-        const rotated = new Tetromino(this.type);
-        rotated.x = this.x;
-        rotated.y = this.y;
-        rotated.rotation = (this.rotation + 1) % 4;
-        
-        // O블록은 회전하지 않음
-        if (this.type === 'O') {
-            rotated.shape = this.shape.map(row => [...row]);
-            return rotated;
-        }
-        
-        // 90도 시계방향 회전
-        const originalShape = this.types[this.type].shape;
-        let currentShape = originalShape.map(row => [...row]);
-        
-        // rotation 횟수만큼 회전 적용
-        for (let i = 0; i < rotated.rotation; i++) {
-            const rows = currentShape.length;
-            const cols = currentShape[0].length;
-            const newShape = Array(cols).fill(null).map(() => Array(rows).fill(0));
-            
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    newShape[col][rows - 1 - row] = currentShape[row][col];
-                }
-            }
-            currentShape = newShape;
-        }
-        
-        rotated.shape = currentShape;
-        return rotated;
-    }
-    
-    // 테트로미노 복사
-    clone() {
-        const cloned = new Tetromino(this.type);
-        cloned.x = this.x;
-        cloned.y = this.y;
-        cloned.rotation = this.rotation;
-        cloned.shape = this.shape.map(row => [...row]);
-        return cloned;
-    }
-}
-
-// 게임 렌더러 클래스
-class GameRenderer {
-    constructor() {
-        this.canvas = document.getElementById('game-canvas');
-        this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
-        this.cellSize = 30;
-        this.boardWidth = 10;
-        this.boardHeight = 20;
-        
-        // 애니메이션 효과용
-        this.lineClearEffect = {
-            active: false,
-            lines: [],
-            timer: 0,
-            duration: 300
-        };
-        
-        this.stageCompleteEffect = {
-            active: false,
-            particles: [],
-            timer: 0,
-            duration: 2000
-        };
-        
-        if (this.canvas && this.ctx) {
-            this.setupCanvas();
-        }
-    }
-    
-    setupCanvas() {
-        const rect = this.canvas.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-        
-        this.canvas.width = Math.round(rect.width * dpr);
-        this.canvas.height = Math.round(rect.height * dpr);
-        this.canvas.style.width = `${rect.width}px`;
-        this.canvas.style.height = `${rect.height}px`;
-        
-        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        
-        // 실제 렌더링 크기 계산
-        this.renderWidth = rect.width;
-        this.renderHeight = rect.height;
-        this.cellSize = this.renderWidth / this.boardWidth;
-    }
-    
-    // 메인 렌더링 함수
-    render(board, currentTetromino, ghostTetromino) {
-        if (!this.ctx) return;
-        
-        // 화면 클리어
+    render() {
         this.ctx.fillStyle = '#000000';
-        this.ctx.fillRect(0, 0, this.renderWidth, this.renderHeight);
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // 고정된 블록들 그리기
-        this.drawBoard(board);
-        
-        // 고스트 테트로미노 그리기 (하드드롭 위치)
-        if (ghostTetromino && currentTetromino) {
-            this.drawTetromino(ghostTetromino, true);
-        }
-        
-        // 현재 테트로미노 그리기
-        if (currentTetromino) {
-            this.drawTetromino(currentTetromino, false);
-        }
-        
-        // 효과 렌더링
-        this.renderEffects();
+        this.drawCenterLine();
+        this.drawBorders();
+        this.drawPaddle(this.paddle1);
+        this.drawPaddle(this.paddle2);
+        this.drawBall();
     }
     
-    // 보드의 고정된 블록들 그리기
-    drawBoard(board) {
-        const grid = board.getGrid();
-        const tetrominoColors = {
-            1: '#00FFFF', // I
-            2: '#FFFF00', // O
-            3: '#800080', // T
-            4: '#00FF00', // S
-            5: '#FF0000', // Z
-            6: '#0000FF', // J
-            7: '#FFA500'  // L
+    drawCenterLine() {
+        this.ctx.strokeStyle = '#FFFFFF';
+        this.ctx.lineWidth = 2;
+        this.ctx.setLineDash([5, 5]);
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.canvas.width / 2, 0);
+        this.ctx.lineTo(this.canvas.width / 2, this.canvas.height);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+    }
+    
+    drawBorders() {
+        this.ctx.strokeStyle = '#FFFFFF';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, 1);
+        this.ctx.lineTo(this.canvas.width, 1);
+        this.ctx.moveTo(0, this.canvas.height - 1);
+        this.ctx.lineTo(this.canvas.width, this.canvas.height - 1);
+        this.ctx.stroke();
+    }
+    
+    drawPaddle(paddle) {
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+    }
+    
+    drawBall() {
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.beginPath();
+        this.ctx.arc(this.ball.x, this.ball.y, this.ball.size / 2, 0, Math.PI * 2);
+        this.ctx.fill();
+    }
+    
+    updateScoreDisplay() {
+        document.getElementById('score-left').textContent = this.score.player1;
+        document.getElementById('score-right').textContent = this.score.player2;
+    }
+    
+    showMenuScreen() {
+        document.getElementById('main-menu').classList.remove('is-hidden');
+        document.getElementById('game-screen').classList.add('is-hidden');
+    }
+    
+    showGameScreen() {
+        document.getElementById('main-menu').classList.add('is-hidden');
+        document.getElementById('game-screen').classList.remove('is-hidden');
+    }
+    
+    showGameOverScreen() {
+        const winner = this.score.player1 > this.score.player2 ? 'Player 1' : 
+                      (this.gameState.mode === 'AI' ? 'AI' : 'Player 2');
+        document.getElementById('result-winner').textContent = `${winner} 승리!`;
+        document.getElementById('result-score').textContent = `${this.score.player1} : ${this.score.player2}`;
+        document.getElementById('result-modal').classList.add('is-visible');
+        document.getElementById('result-modal').setAttribute('aria-hidden', 'false');
+    }
+    
+    showSettings() {
+        document.getElementById('settings-modal').classList.add('is-visible');
+        document.getElementById('settings-modal').setAttribute('aria-hidden', 'false');
+        this.updateDifficultyButtons();
+    }
+    
+    hideSettings() {
+        document.getElementById('settings-modal').classList.remove('is-visible');
+        document.getElementById('settings-modal').setAttribute('aria-hidden', 'true');
+    }
+    
+    saveSettings() {
+        const selectedDifficulty = document.querySelector('input[name="ai-diff"]:checked')?.value;
+        if (selectedDifficulty) {
+            this.gameState.aiDifficulty = selectedDifficulty;
+        }
+        this.hideSettings();
+    }
+    
+    updateDifficultyButtons() {
+        document.querySelectorAll('input[name="ai-diff"]').forEach(radio => {
+            radio.checked = radio.value === this.gameState.aiDifficulty;
+        });
+    }
+    
+    saveScore() {
+        const scores = this.loadHighScores();
+        const newScore = {
+            player1: this.score.player1,
+            player2: this.score.player2,
+            mode: this.gameState.mode,
+            date: new Date().toISOString()
         };
         
-        for (let row = 0; row < grid.length; row++) {
-            for (let col = 0; col < grid[row].length; col++) {
-                if (grid[row][col]) {
-                    const color = tetrominoColors[grid[row][col]] || '#FFFFFF';
-                    this.drawCell(col, row, color, false);
-                }
-            }
-        }
+        scores.push(newScore);
+        scores.sort((a, b) => Math.max(b.player1, b.player2) - Math.max(a.player1, a.player2));
+        scores.splice(10);
+        
+        localStorage.setItem('pingpong_scores', JSON.stringify(scores));
     }
     
-    // 테트로미노 그리기
-    drawTetromino(tetromino, isGhost) {
-        for (let row = 0; row < tetromino.shape.length; row++) {
-            for (let col = 0; col < tetromino.shape[row].length; col++) {
-                if (tetromino.shape[row][col]) {
-                    const x = tetromino.x + col;
-                    const y = tetromino.y + row;
-                    
-                    // 화면 밖은 그리지 않음
-                    if (y >= 0 && y < this.boardHeight && x >= 0 && x < this.boardWidth) {
-                        this.drawCell(x, y, tetromino.color, isGhost);
-                    }
-                }
-            }
-        }
-    }
-    
-    // 개별 셀 그리기
-    drawCell(x, y, color, isGhost) {
-        const pixelX = x * this.cellSize;
-        const pixelY = y * this.cellSize;
-        
-        if (isGhost) {
-            // 고스트 블록은 투명하게
-            this.ctx.globalAlpha = 0.3;
-            this.ctx.strokeStyle = color;
-            this.ctx.lineWidth = 2;
-            this.ctx.strokeRect(pixelX + 1, pixelY + 1, this.cellSize - 2, this.cellSize - 2);
-            this.ctx.globalAlpha = 1.0;
-        } else {
-            // 일반 블록
-            this.ctx.fillStyle = color;
-            this.ctx.fillRect(pixelX, pixelY, this.cellSize, this.cellSize);
-            
-            // 테두리
-            this.ctx.strokeStyle = '#FFFFFF';
-            this.ctx.lineWidth = 1;
-            this.ctx.strokeRect(pixelX, pixelY, this.cellSize, this.cellSize);
-        }
-    }
-    
-    // 다음 테트로미노 렌더링 (미니 캔버스)
-    renderNextTetromino(canvas, tetromino) {
-        const ctx = canvas.getContext('2d');
-        const miniCellSize = 20;
-        
-        // 캔버스 클리어
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // 테트로미노 중앙 정렬
-        const offsetX = Math.floor((canvas.width / miniCellSize - tetromino.shape[0].length) / 2);
-        const offsetY = Math.floor((canvas.height / miniCellSize - tetromino.shape.length) / 2);
-        
-        for (let row = 0; row < tetromino.shape.length; row++) {
-            for (let col = 0; col < tetromino.shape[row].length; col++) {
-                if (tetromino.shape[row][col]) {
-                    const x = (offsetX + col) * miniCellSize;
-                    const y = (offsetY + row) * miniCellSize;
-                    
-                    ctx.fillStyle = tetromino.color;
-                    ctx.fillRect(x, y, miniCellSize, miniCellSize);
-                    
-                    ctx.strokeStyle = '#FFFFFF';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(x, y, miniCellSize, miniCellSize);
-                }
-            }
-        }
-    }
-    
-    // 라인 클리어 효과
-    showLineClearEffect(lines) {
-        this.lineClearEffect.active = true;
-        this.lineClearEffect.lines = [...lines];
-        this.lineClearEffect.timer = 0;
-        
-        // DOM 기반 라인 플래시 효과
-        const overlayLayer = document.getElementById('overlay-layer');
-        if (overlayLayer) {
-            lines.forEach(lineIndex => {
-                const flashEl = document.createElement('div');
-                flashEl.className = 'line-flash-row';
-                flashEl.style.top = `${lineIndex * this.cellSize}px`;
-                overlayLayer.appendChild(flashEl);
-                
-                // 300ms 후 제거
-                setTimeout(() => {
-                    if (flashEl.parentNode) {
-                        flashEl.parentNode.removeChild(flashEl);
-                    }
-                }, 300);
-            });
-        }
-    }
-    
-    // 스테이지 완료 효과
-    showStageCompleteEffect() {
-        this.stageCompleteEffect.active = true;
-        this.stageCompleteEffect.timer = 0;
-        this.stageCompleteEffect.particles = [];
-        
-        // 파티클 생성
-        for (let i = 0; i < 20; i++) {
-            this.stageCompleteEffect.particles.push({
-                x: Math.random() * this.renderWidth,
-                y: -10,
-                vx: (Math.random() - 0.5) * 2,
-                vy: Math.random() * 3 + 2,
-                color: '#F39C12',
-                size: Math.random() * 4 + 2
-            });
-        }
-    }
-    
-    // 효과 렌더링
-    renderEffects() {
-        // 스테이지 완료 파티클 효과 (캔버스 기반)
-        if (this.stageCompleteEffect.active) {
-            this.stageCompleteEffect.timer += 16;
-            
-            this.stageCompleteEffect.particles.forEach(particle => {
-                particle.x += particle.vx;
-                particle.y += particle.vy;
-                particle.vy += 0.1; // 중력
-                
-                this.ctx.fillStyle = particle.color;
-                this.ctx.beginPath();
-                this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                this.ctx.fill();
-            });
-            
-            if (this.stageCompleteEffect.timer >= this.stageCompleteEffect.duration) {
-                this.stageCompleteEffect.active = false;
-            }
+    loadHighScores() {
+        try {
+            return JSON.parse(localStorage.getItem('pingpong_scores') || '[]');
+        } catch (e) {
+            return [];
         }
     }
 }
 
-// 게임 초기화 및 시작
 document.addEventListener('DOMContentLoaded', () => {
-    try {
-        window.neoTetrisGame = new Game();
-        console.log('Neo Tetris Challenge 게임이 성공적으로 초기화되었습니다.');
-    } catch (error) {
-        console.error('게임 초기화 중 오류 발생:', error);
-        alert('게임을 불러오는 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
-    }
+    const game = new PingPongGame();
 });
-
-// 에러 핸들링
-window.addEventListener('error', (e) => {
-    console.error('게임 실행 중 오류:', e.error);
-});
-
-window.addEventListener('unhandledrejection', (e) => {
-    console.error('처리되지 않은 Promise 거부:', e.reason);
-});
-</script>
+  </script>
 </body>
 </html>
