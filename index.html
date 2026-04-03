@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>갤럭시 슈팅</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #00FF00;
+            --secondary-color: #FF4444;
+            --background-color: #000011;
+            --accent-color: #FFFF00;
+            --neon-glow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+            --game-width: 800px;
+            --game-height: 600px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--background-color);
+            color: var(--primary-color);
+            overflow: hidden;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(ellipse at center, #000033 0%, #000011 100%);
+        }
+
+        #stars-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: starField 20s linear infinite;
+        }
+
+        @keyframes starField {
+            from { transform: translateY(0); }
+            to { transform: translateY(100px); }
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        #main-menu {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .game-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--primary-color);
+            text-shadow: var(--neon-glow);
+            margin-bottom: 3rem;
+            animation: titlePulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes titlePulse {
+            from { text-shadow: var(--neon-glow); }
+            to { text-shadow: 0 0 15px var(--primary-color), 0 0 25px var(--primary-color), 0 0 35px var(--primary-color), 0 0 45px var(--primary-color); }
+        }
+
+        .menu-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .high-score {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .neon-button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            padding: 12px 24px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px currentColor;
+            box-shadow: inset 0 0 0 0 var(--primary-color);
+        }
+
+        .neon-button:hover {
+            color: var(--background-color);
+            text-shadow: none;
+            box-shadow: inset 0 0 0 100px var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .neon-button.secondary {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .neon-button.secondary:hover {
+            box-shadow: inset 0 0 0 100px var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        #game-screen {
+            flex-direction: column;
+            padding: 20px;
+            width: min(var(--game-width), 100vw);
+            height: min(var(--game-height), 100vh);
+        }
+
+        #game-hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 20px 10px 20px;
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .hud-left {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .score-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--primary-color);
+        }
+
+        .score-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .lives-container {
+            display: flex;
+            gap: 5px;
+        }
+
+        .life-icon {
+            width: 20px;
+            height: 20px;
+            background: var(--secondary-color);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            filter: drop-shadow(0 0 5px var(--secondary-color));
+            transition: all 0.3s ease;
+        }
+
+        .life-icon:not(.active) {
+            background: #333;
+            filter: none;
+        }
+
+        #game-canvas {
+            flex: 1;
+            width: 100%;
+            background: rgba(0, 0, 17, 0.8);
+            border: 2px solid var(--primary-color);
+            border-radius: 4px;
+            box-shadow: inset 0 0 50px rgba(0, 255, 0, 0.1);
+        }
+
+        .controls-guide {
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9rem;
+            color: rgba(0, 255, 0, 0.7);
+            border-top: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        .modal-content {
+            background: rgba(0, 0, 17, 0.95);
+            border: 3px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 
+                0 0 30px var(--primary-color),
+                inset 0 0 30px rgba(0, 255, 0, 0.1);
+            min-width: 300px;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--secondary-color);
+            text-shadow: 0 0 20px var(--secondary-color);
+            margin-bottom: 30px;
+        }
+
+        .final-score, .stage-info {
+            margin: 30px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .score-big {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            text-shadow: 0 0 15px var(--accent-color);
+        }
+
+        .bonus-score {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px var(--primary-color);
+        }
+
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 900px) {
+            :root {
+                --game-width: 100vw;
+                --game-height: 100vh;
+            }
+            
+            .game-title {
+                font-size: 2.5rem;
+            }
+            
+            #game-screen {
+                padding: 10px;
+            }
+            
+            #game-hud {
+                padding: 0 10px 10px 10px;
+            }
+            
+            .modal-content {
+                margin: 20px;
+                padding: 30px;
+                min-width: auto;
+                max-width: 90vw;
+            }
+            
+            .modal-title {
+                font-size: 2rem;
+            }
+            
+            .score-big {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .game-title {
+                font-size: 2rem;
+                margin-bottom: 2rem;
+            }
+            
+            .neon-button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+            
+            .modal-title {
+                font-size: 1.5rem;
+            }
+            
+            .score-big {
+                font-size: 2rem;
+            }
+            
+            .controls-guide {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="stars-container"></div>
+    
+    <div id="game-container">
+        <div id="main-menu" class="screen active">
+            <div class="menu-content">
+                <h1 class="game-title">갤럭시 슈팅</h1>
+                <div class="menu-buttons">
+                    <button id="start-button" class="neon-button">START GAME</button>
+                    <div class="high-score">HIGH SCORE: <span id="high-score-value">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div id="game-hud">
+                <div class="hud-left">
+                    <span class="score-label">SCORE</span>
+                    <span id="score-value" class="score-value">0</span>
+                </div>
+                <div class="hud-right">
+                    <div id="lives-container" class="lives-container">
+                        <div class="life-icon active"></div>
+                        <div class="life-icon active"></div>
+                        <div class="life-icon active"></div>
+                    </div>
+                </div>
+            </div>
+
+            <canvas id="game-canvas" width="760" height="450"></canvas>
+
+            <div class="controls-guide">
+                <span>← → 이동 | SPACE 발사</span>
+            </div>
+        </div>
+
+        <div id="game-over-screen" class="screen">
+            <div class="modal-content">
+                <h2 class="modal-title">GAME OVER</h2>
+                <div class="final-score">
+                    <span>FINAL SCORE</span>
+                    <span id="final-score-value" class="score-big">0</span>
+                </div>
+                <div class="modal-buttons">
+                    <button id="restart-button" class="neon-button">RESTART</button>
+                    <button id="menu-button" class="neon-button secondary">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="stage-clear-screen" class="screen">
+            <div class="modal-content">
+                <h2 class="modal-title">STAGE CLEAR!</h2>
+                <div class="stage-info">
+                    <div>STAGE <span id="cleared-stage">1</span> COMPLETE</div>
+                    <div class="bonus-score">BONUS: <span id="bonus-points">1000</span></div>
+                </div>
+                <div class="modal-buttons">
+                    <button id="next-stage-button" class="neon-button">NEXT STAGE</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            
+            const GameState = {
+                MENU: 'menu',
+                PLAYING: 'playing',
+                PAUSED: 'paused',
+                GAMEOVER: 'gameover',
+                STAGE_CLEAR: 'stage_clear'
+            };
+            
+            const EnemyType = {
+                NORMAL: { size: 16, color: '#FF4444', points: 100, speed: 1.0 },
+                FAST: { size: 12, color: '#FF8800', points: 150, speed: 1.5 },
+                LARGE: { size: 20, color: '#CC0000', points: 200, speed: 0.8 }
+            };
+            
+            const CONFIG = {
+                CANVAS_WIDTH: 760,
+                CANVAS_HEIGHT: 450,
+                PLAYER_SPEED: 5,
+                BULLET_SPEED: 8,
+                ENEMY_ROWS: 5,
+                ENEMY_COLS: 8,
+                FORMATION_SPEED: 1,
+                STAGE_BONUS: 1000,
+                INITIAL_LIVES: 3,
+                DIVE_CURVE_POINTS: 20
+            };
+            
+            class GalaxyShooter {
+                constructor() {
+                    this.canvas = document.getElementById('game-canvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    
+                    this.gameState = GameState.MENU;
+                    this.score = 0;
+                    this.lives = CONFIG.INITIAL_LIVES;
+                    this.stage = 1;
+                    this.highScore = parseInt(localStorage.getItem('galaxyHighScore')) || 0;
+                    
+                    this.player = null;
+                    this.formation = null;
+                    this.bullets = [];
+                    this.enemyBullets = [];
+                    this.particles = [];
+                    this.stars = [];
+                    
+                    this.keys = {};
+                    this.touches = {};
+                    
+                    this.lastTime = 0;
+                    this.stateTimer = 0;
+                    
+                    this.audioContext = null;
+                    this.initAudio();
+                    this.initStars();
+                    this.bindEvents();
+                    this.updateHighScore();
+                    
+                    console.log('갤럭시 슈팅 게임 초기화 완료');
+                }
+                
+                initAudio() {
+                    try {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    } catch (e) {
+                        console.warn('Web Audio API를 지원하지 않습니다.');
+                    }
+                }
+                
+                playSound(frequency, duration = 0.1, type = 'square') {
+                    if (!this.audioContext) return;
+                    
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                    
+                    oscillator.start(this.audioContext.currentTime);
+                    oscillator.stop(this.audioContext.currentTime + duration);
+                }
+                
+                initStars() {
+                    this.stars = [];
+                    for (let i = 0; i < 100; i++) {
+                        this.stars.push({
+                            x: Math.random() * CONFIG.CANVAS_WIDTH,
+                            y: Math.random() * CONFIG.CANVAS_HEIGHT,
+                            speed: 0.5 + Math.random() * 2,
+                            opacity: 0.3 + Math.random() * 0.7
+                        });
+                    }
+                }
+                
+                bindEvents() {
+                    document.addEventListener('keydown', (e) => {
+                        this.keys[e.code] = true;
+                        
+                        if (e.code === 'Space') {
+                            e.preventDefault();
+                            this.handleAction();
+                        }
+                        
+                        if (e.code === 'Enter' || e.code === 'Space') {
+                            if (this.gameState === GameState.MENU) {
+                                this.startGame();
+                            } else if (this.gameState === GameState.GAMEOVER || this.gameState === GameState.STAGE_CLEAR) {
+                                this.restartGame();
+                            }
+                        }
+                    });
+                    
+                    document.addEventListener('keyup', (e) => {
+                        this.keys[e.code] = false;
+                    });
+                    
+                    // UI 버튼 이벤트
+                    document.getElementById('start-button').addEventListener('click', () => {
+                        this.startGame();
+                    });
+                    
+                    document.getElementById('restart-button').addEventListener('click', () => {
+                        this.restartGame();
+                    });
+                    
+                    document.getElementById('menu-button').addEventListener('click', () => {
+                        this.returnToMenu();
+                    });
+                    
+                    document.getElementById('next-stage-button').addEventListener('click', () => {
+                        this.nextStage();
+                    });
+                    
+                    this.canvas.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        const rect = this.canvas.getBoundingClientRect();
+                        const touch = e.touches[0];
+                        this.touches.startX = touch.clientX - rect.left;
+                        this.touches.startY = touch.clientY - rect.top;
+                        
+                        if (this.touches.startY > CONFIG.CANVAS_HEIGHT * 0.8) {
+                            this.handleAction();
+                        }
+                    });
+                    
+                    this.canvas.addEventListener('touchmove', (e) => {
+                        e.preventDefault();
+                        if (!this.player || this.gameState !== GameState.PLAYING) return;
+                        
+                        const rect = this.canvas.getBoundingClientRect();
+                        const touch = e.touches[0];
+                        const x = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
+                        
+                        this.player.x = Math.max(this.player.width/2, Math.min(CONFIG.CANVAS_WIDTH - this.player.width/2, x));
+                    });
+                }
+                
+                handleAction() {
+                    if (this.gameState === GameState.PLAYING && this.player) {
+                        this.fireBullet();
+                    }
+                }
+                
+                startGame() {
+                    this.gameState = GameState.PLAYING;
+                    this.score = 0;
+                    this.lives = CONFIG.INITIAL_LIVES;
+                    this.stage = 1;
+                    
+                    this.initPlayer();
+                    this.initFormation();
+                    
+                    this.bullets = [];
+                    this.enemyBullets = [];
+                    this.particles = [];
+                    
+                    this.showScreen('game-screen');
+                    this.updateUI();
+                    
+                    console.log('게임 시작 - 스테이지 1');
+                }
+                
+                restartGame() {
+                    this.startGame();
+                }
+                
+                returnToMenu() {
+                    this.gameState = GameState.MENU;
+                    this.showScreen('main-menu');
+                }
+                
+                nextStage() {
+                    this.initFormation();
+                    this.gameState = GameState.PLAYING;
+                    this.showScreen('game-screen');
+                }
+                
+                showScreen(screenId) {
+                    document.querySelectorAll('.screen').forEach(screen => {
+                        screen.classList.remove('active');
+                    });
+                    document.getElementById(screenId).classList.add('active');
+                }
+                
+                initPlayer() {
+                    this.player = new Player(CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT - 50);
+                }
+                
+                initFormation() {
+                    this.formation = new Formation(this.stage);
+                }
+                
+                fireBullet() {
+                    if (!this.player) return;
+                    
+                    this.bullets.push(new Bullet(
+                        this.player.x,
+                        this.player.y - this.player.height/2,
+                        0, -CONFIG.BULLET_SPEED,
+                        '#00FF00'
+                    ));
+                    
+                    this.playSound(800, 0.05);
+                }
+                
+                update(currentTime) {
+                    const deltaTime = currentTime - this.lastTime;
+                    this.lastTime = currentTime;
+                    this.stateTimer += deltaTime;
+                    
+                    if (this.gameState === GameState.PLAYING) {
+                        this.updateGame(deltaTime);
+                    }
+                    
+                    this.updateStars();
+                    this.updateParticles(deltaTime);
+                }
+                
+                updateGame(deltaTime) {
+                    if (this.player) {
+                        if (this.keys['ArrowLeft'] || this.keys['KeyA']) {
+                            this.player.x = Math.max(this.player.width/2, this.player.x - CONFIG.PLAYER_SPEED);
+                        }
+                        if (this.keys['ArrowRight'] || this.keys['KeyD']) {
+                            this.player.x = Math.min(CONFIG.CANVAS_WIDTH - this.player.width/2, this.player.x + CONFIG.PLAYER_SPEED);
+                        }
+                    }
+                    
+                    if (this.formation) {
+                        this.formation.update(deltaTime);
+                        
+                        if (Math.random() < 0.002) {
+                            const enemy = this.formation.getRandomAliveEnemy();
+                            if (enemy) {
+                                this.enemyBullets.push(new Bullet(
+                                    enemy.x, enemy.y + enemy.height/2,
+                                    0, 3, '#FF4444'
+                                ));
+                            }
+                        }
+                    }
+                    
+                    this.updateBullets();
+                    this.checkCollisions();
+                    this.checkGameState();
+                }
+                
+                updateBullets() {
+                    this.bullets = this.bullets.filter(bullet => {
+                        bullet.update();
+                        return bullet.y > -bullet.height;
+                    });
+                    
+                    this.enemyBullets = this.enemyBullets.filter(bullet => {
+                        bullet.update();
+                        return bullet.y < CONFIG.CANVAS_HEIGHT + bullet.height;
+                    });
+                }
+                
+                updateStars() {
+                    this.stars.forEach(star => {
+                        star.y += star.speed;
+                        if (star.y > CONFIG.CANVAS_HEIGHT) {
+                            star.y = -5;
+                            star.x = Math.random() * CONFIG.CANVAS_WIDTH;
+                        }
+                    });
+                }
+                
+                updateParticles(deltaTime) {
+                    this.particles = this.particles.filter(particle => {
+                        particle.update(deltaTime);
+                        return particle.life > 0;
+                    });
+                }
+                
+                checkCollisions() {
+                    if (!this.player || !this.formation) return;
+                    
+                    this.bullets.forEach((bullet, bulletIndex) => {
+                        this.formation.enemies.forEach((enemy, enemyIndex) => {
+                            if (enemy.alive && this.checkAABB(bullet, enemy)) {
+                                enemy.alive = false;
+                                this.bullets.splice(bulletIndex, 1);
+                                
+                                const points = enemy.isDiving ? enemy.type.points * 2 : enemy.type.points;
+                                this.score += points;
+                                
+                                this.createExplosion(enemy.x, enemy.y);
+                                this.playSound(200, 0.2);
+                                this.updateUI();
+                                
+                                console.log(`적군 파괴! +${points}점`);
+                            }
+                        });
+                    });
+                    
+                    this.enemyBullets.forEach((bullet, bulletIndex) => {
+                        if (this.checkAABB(bullet, this.player)) {
+                            this.enemyBullets.splice(bulletIndex, 1);
+                            this.playerHit();
+                        }
+                    });
+                    
+                    this.formation.enemies.forEach(enemy => {
+                        if (enemy.alive && this.checkAABB(enemy, this.player)) {
+                            enemy.alive = false;
+                            this.playerHit();
+                        }
+                    });
+                }
+                
+                checkAABB(obj1, obj2) {
+                    return obj1.x - obj1.width/2 < obj2.x + obj2.width/2 &&
+                           obj1.x + obj1.width/2 > obj2.x - obj2.width/2 &&
+                           obj1.y - obj1.height/2 < obj2.y + obj2.height/2 &&
+                           obj1.y + obj1.height/2 > obj2.y - obj2.height/2;
+                }
+                
+                playerHit() {
+                    this.lives--;
+                    this.createExplosion(this.player.x, this.player.y);
+                    this.playSound(150, 0.5);
+                    
+                    if (this.lives <= 0) {
+                        this.gameOver();
+                    } else {
+                        console.log(`플레이어 피격! 남은 생명: ${this.lives}`);
+                    }
+                    
+                    this.updateUI();
+                }
+                
+                createExplosion(x, y) {
+                    for (let i = 0; i < 12; i++) {
+                        const angle = (i / 12) * Math.PI * 2;
+                        const speed = 2 + Math.random() * 3;
+                        
+                        this.particles.push(new Particle(
+                            x, y,
+                            Math.cos(angle) * speed,
+                            Math.sin(angle) * speed,
+                            '#FFFF00', 500
+                        ));
+                    }
+                }
+                
+                checkGameState() {
+                    if (!this.formation) return;
+                    
+                    const aliveEnemies = this.formation.enemies.filter(enemy => enemy.alive);
+                    if (aliveEnemies.length === 0) {
+                        this.stageClear();
+                    }
+                }
+                
+                stageClear() {
+                    this.score += CONFIG.STAGE_BONUS;
+                    this.stage++;
+                    
+                    this.gameState = GameState.STAGE_CLEAR;
+                    this.stateTimer = 0;
+                    
+                    this.updateUI();
+                    this.showStageClear();
+                    
+                    console.log(`스테이지 ${this.stage - 1} 클리어! 보너스 +${CONFIG.STAGE_BONUS}점`);
+                }
+                
+                gameOver() {
+                    this.gameState = GameState.GAMEOVER;
+                    
+                    if (this.score > this.highScore) {
+                        this.highScore = this.score;
+                        localStorage.setItem('galaxyHighScore', this.highScore.toString());
+                        this.updateHighScore();
+                        console.log(`신기록! 최고점수: ${this.highScore}`);
+                    }
+                    
+                    this.showGameOver();
+                    this.playSound(100, 1.0, 'sawtooth');
+                }
+                
+                updateUI() {
+                    document.getElementById('score-value').textContent = this.score.toLocaleString();
+                    
+                    const lifeIcons = document.querySelectorAll('.life-icon');
+                    lifeIcons.forEach((icon, index) => {
+                        if (index < this.lives) {
+                            icon.classList.add('active');
+                        } else {
+                            icon.classList.remove('active');
+                        }
+                    });
+                }
+                
+                updateHighScore() {
+                    document.getElementById('high-score-value').textContent = this.highScore.toLocaleString();
+                }
+                
+                showGameOver() {
+                    document.getElementById('final-score-value').textContent = this.score.toLocaleString();
+                    this.showScreen('game-over-screen');
+                }
+                
+                showStageClear() {
+                    document.getElementById('cleared-stage').textContent = this.stage - 1;
+                    document.getElementById('bonus-points').textContent = CONFIG.STAGE_BONUS.toLocaleString();
+                    this.showScreen('stage-clear-screen');
+                }
+                
+                render() {
+                    this.ctx.fillStyle = '#000011';
+                    this.ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+                    
+                    this.renderStars();
+                    
+                    if (this.gameState === GameState.PLAYING || this.gameState === GameState.STAGE_CLEAR) {
+                        this.renderGame();
+                    }
+                }
+                
+                renderStars() {
+                    this.ctx.fillStyle = '#FFFFFF';
+                    this.stars.forEach(star => {
+                        this.ctx.globalAlpha = star.opacity;
+                        this.ctx.fillRect(star.x, star.y, 2, 2);
+                    });
+                    this.ctx.globalAlpha = 1.0;
+                }
+                
+                renderGame() {
+                    if (this.player) {
+                        this.player.render(this.ctx);
+                    }
+                    
+                    if (this.formation) {
+                        this.formation.render(this.ctx);
+                    }
+                    
+                    this.bullets.forEach(bullet => bullet.render(this.ctx));
+                    this.enemyBullets.forEach(bullet => bullet.render(this.ctx));
+                    this.particles.forEach(particle => particle.render(this.ctx));
+                }
+                
+                gameLoop(currentTime) {
+                    this.update(currentTime);
+                    this.render();
+                    requestAnimationFrame((time) => this.gameLoop(time));
+                }
+                
+                start() {
+                    console.log('갤럭시 슈팅 게임 루프 시작');
+                    this.gameLoop(0);
+                }
+            }
+            
+            class Player {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    this.width = 24;
+                    this.height = 24;
+                    this.color = '#00FF00';
+                }
+                
+                render(ctx) {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y - this.height/2);
+                    ctx.lineTo(this.x - this.width/2, this.y + this.height/2);
+                    ctx.lineTo(this.x + this.width/2, this.y + this.height/2);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#0088FF';
+                    ctx.fillRect(this.x - 3, this.y + this.height/3, 6, 4);
+                }
+            }
+            
+            class Enemy {
+                constructor(x, y, type) {
+                    this.x = x;
+                    this.y = y;
+                    this.formationX = x;
+                    this.formationY = y;
+                    this.width = type.size;
+                    this.height = type.size;
+                    this.type = type;
+                    this.alive = true;
+                    this.isDiving = false;
+                    this.diveProgress = 0;
+                    this.diveSpeed = 1.0;
+                }
+                
+                render(ctx) {
+                    if (!this.alive) return;
+                    
+                    ctx.fillStyle = this.type.color;
+                    
+                    if (this.isDiving) {
+                        ctx.save();
+                        ctx.translate(this.x, this.y);
+                        ctx.rotate(this.diveProgress * 0.1);
+                        ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                        ctx.restore();
+                    } else {
+                        ctx.fillRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+                        
+                        ctx.fillStyle = '#FFFF00';
+                        if (this.type === EnemyType.NORMAL) {
+                            ctx.fillRect(this.x - 2, this.y - 2, 4, 4);
+                        } else if (this.type === EnemyType.FAST) {
+                            ctx.fillRect(this.x - 1, this.y - 1, 2, 2);
+                        } else if (this.type === EnemyType.LARGE) {
+                            ctx.fillRect(this.x - 4, this.y - 4, 8, 8);
+                        }
+                    }
+                }
+            }
+            
+            class Formation {
+                constructor(stage) {
+                    this.enemies = [];
+                    this.direction = 1;
+                    this.moveTimer = 0;
+                    this.diveTimer = 0;
+                    this.stage = stage;
+                    
+                    this.initEnemies();
+                }
+                
+                initEnemies() {
+                    const startX = 100;
+                    const startY = 80;
+                    const spacing = 60;
+                    
+                    for (let row = 0; row < CONFIG.ENEMY_ROWS; row++) {
+                        for (let col = 0; col < CONFIG.ENEMY_COLS; col++) {
+                            const x = startX + col * spacing;
+                            const y = startY + row * 50;
+                            
+                            let type;
+                            if (row === 0) type = EnemyType.LARGE;
+                            else if (row <= 2) type = EnemyType.NORMAL;
+                            else type = EnemyType.FAST;
+                            
+                            this.enemies.push(new Enemy(x, y, type));
+                        }
+                    }
+                    
+                    console.log(`편대 초기화 완료 - 스테이지 ${this.stage}, 적군 ${this.enemies.length}기`);
+                }
+                
+                update(deltaTime) {
+                    this.moveTimer += deltaTime;
+                    this.diveTimer += deltaTime;
+                    
+                    if (this.moveTimer > 1000) {
+                        this.moveFormation();
+                        this.moveTimer = 0;
+                    }
+                    
+                    const diveInterval = Math.max(2000 - (this.stage - 1) * 200, 1000);
+                    if (this.diveTimer > diveInterval) {
+                        this.startDive();
+                        this.diveTimer = 0;
+                    }
+                    
+                    this.enemies.forEach(enemy => {
+                        if (enemy.isDiving) {
+                            this.updateDivingEnemy(enemy, deltaTime);
+                        }
+                    });
+                }
+                
+                moveFormation() {
+                    const aliveEnemies = this.enemies.filter(enemy => enemy.alive && !enemy.isDiving);
+                    if (aliveEnemies.length === 0) return;
+                    
+                    const leftMost = Math.min(...aliveEnemies.map(e => e.formationX));
+                    const rightMost = Math.max(...aliveEnemies.map(e => e.formationX));
+                    
+                    if (rightMost >= CONFIG.CANVAS_WIDTH - 50) {
+                        this.direction = -1;
+                    } else if (leftMost <= 50) {
+                        this.direction = 1;
+                    }
+                    
+                    this.enemies.forEach(enemy => {
+                        if (enemy.alive && !enemy.isDiving) {
+                            enemy.formationX += this.direction * 20;
+                            enemy.x = enemy.formationX;
+                        }
+                    });
+                }
+                
+                startDive() {
+                    const candidates = this.enemies.filter(enemy => enemy.alive && !enemy.isDiving);
+                    if (candidates.length === 0) return;
+                    
+                    const diveCount = Math.min(1 + Math.floor((this.stage - 1) / 2), 4);
+                    
+                    for (let i = 0; i < diveCount && candidates.length > 0; i++) {
+                        const randomIndex = Math.floor(Math.random() * candidates.length);
+                        const enemy = candidates[randomIndex];
+                        
+                        enemy.isDiving = true;
+                        enemy.diveProgress = 0;
+                        enemy.diveSpeed = (1.0 + (this.stage - 1) * 0.1) * enemy.type.speed;
+                        
+                        candidates.splice(randomIndex, 1);
+                    }
+                    
+                    console.log(`다이빙 공격 시작 - ${diveCount}기`);
+                }
+                
+                updateDivingEnemy(enemy, deltaTime) {
+                    enemy.diveProgress += deltaTime * 0.002 * enemy.diveSpeed;
+                    
+                    if (enemy.diveProgress >= 1.0) {
+                        enemy.isDiving = false;
+                        enemy.x = enemy.formationX;
+                        enemy.y = enemy.formationY;
+                        enemy.diveProgress = 0;
+                        return;
+                    }
+                    
+                    const t = enemy.diveProgress;
+                    const startX = enemy.formationX;
+                    const startY = enemy.formationY;
+                    const controlX = CONFIG.CANVAS_WIDTH / 2 + (Math.random() - 0.5) * 200;
+                    const controlY = CONFIG.CANVAS_HEIGHT * 0.6;
+                    const endX = enemy.formationX;
+                    const endY = enemy.formationY;
+                    
+                    enemy.x = Math.pow(1-t, 2) * startX + 2*(1-t)*t * controlX + Math.pow(t, 2) * endX;
+                    enemy.y = Math.pow(1-t, 2) * startY + 2*(1-t)*t * controlY + Math.pow(t, 2) * endY;
+                }
+                
+                getRandomAliveEnemy() {
+                    const aliveEnemies = this.enemies.filter(enemy => enemy.alive);
+                    if (aliveEnemies.length === 0) return null;
+                    return aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+                }
+                
+                render(ctx) {
+                    this.enemies.forEach(enemy => enemy.render(ctx));
+                }
+            }
+            
+            class Bullet {
+                constructor(x, y, vx, vy, color) {
+                    this.x = x;
+                    this.y = y;
+                    this.vx = vx;
+                    this.vy = vy;
+                    this.width = 4;
+                    this.height = 8;
+                    this.color = color;
+                }
+                
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                }
+                
+                render(ctx) {
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
+                }
+            }
+            
+            class Particle {
+                constructor(x, y, vx, vy, color, life) {
+                    this.x = x;
+                    this.y = y;
+                    this.vx = vx;
+                    this.vy = vy;
+                    this.color = color;
+                    this.life = life;
+                    this.maxLife = life;
+                    this.size = 3;
+                }
+                
+                update(deltaTime) {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.life -= deltaTime;
+                    
+                    this.vy += 0.1;
+                    this.size = (this.life / this.maxLife) * 3;
+                }
+                
+                render(ctx) {
+                    const alpha = this.life / this.maxLife;
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+                    ctx.globalAlpha = 1.0;
+                }
+            }
+            
+            let game;
+            
+            function initGame() {
+                game = new GalaxyShooter();
+                game.start();
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initGame);
+            } else {
+                initGame();
+            }
+            
+            window.GalaxyShooter = GalaxyShooter;
+        })();
+    </script>
+</body>
+</html>
