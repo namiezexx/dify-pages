@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Neo Tetris</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --color-bg: #1A202C;
+      --color-primary: #2D3748;
+      --color-secondary: #4A5568;
+      --color-accent: #00D9FF;
+      --color-AccentYellow: #FFD700;
+      --color-I: #00D9FF;
+      --color-O: #FFD700;
+      --color-T: #9F7AEA;
+      --color-S: #48BB78;
+      --color-Z: #F56565;
+      --color-J: #3182CE;
+      --color-L: #ED8936;
+      --white: #FFFFFF;
+      --muted: #A0AEC0;
+      --cell-size: 24px;
+      --cols: 10;
+      --rows: 20;
+      --board-width: calc(var(--cell-size) * var(--cols));
+      --board-height: calc(var(--cell-size) * var(--rows));
+      --grid-line: #2D3748;
+      --board-border: #4A5568;
+      --panel-width: 200px;
+      --line-flash-dur: 0.3s;
+      --levelup-dur: 0.5s;
+      --gameover-dur: 1.2s;
+      --game-scale: 1;
+      --radius: 8px;
+    }
+    
+    * { box-sizing: border-box; }
+    html,body { height:100%; }
+    body{
+      margin:0;
+      min-height:100%;
+      font-family: "Roboto Mono", monospace;
+      background: var(--color-bg);
+      color: var(--white);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      flex-direction:column;
+    }
+    
+    .site-header{
+      padding:18px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    }
+    .header-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      max-width:1200px;
+      margin:0 auto;
+    }
+    .game-title{
+      margin:0;
+      font-family: "Orbitron", sans-serif;
+      font-weight:700;
+      letter-spacing:1px;
+      color: var(--color-AccentYellow);
+      text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    }
+    .highscore{
+      font-family: "Roboto Mono", monospace;
+      color: var(--color-accent);
+      font-weight:700;
+    }
+    
+    .app{
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:32px;
+    }
+    
+    .screen{
+      width:100%;
+      max-width:1100px;
+      margin:0 auto;
+    }
+    
+    .is-hidden { display:none !important; }
+    
+    .menu-screen{
+      text-align:center;
+      padding:40px;
+    }
+    .menu-title{
+      font-family:"Orbitron",sans-serif;
+      font-size:48px;
+      margin:8px 0 4px;
+      color: var(--color-accent);
+    }
+    .menu-sub{
+      color:var(--muted);
+      margin-bottom:20px;
+    }
+    .menu-meta{
+      margin-top:24px;
+      color:var(--muted);
+      display:flex;
+      gap:16px;
+      justify-content:center;
+    }
+    
+    .game-screen .game-wrapper{
+      display:flex;
+      gap:28px;
+      align-items:flex-start;
+      justify-content:center;
+      transform: scale(var(--game-scale));
+      transform-origin: top left;
+    }
+    
+    .board-wrap{
+      width: var(--board-width);
+      height: var(--board-height);
+      position:relative;
+      padding:8px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+      border: 4px solid var(--board-border);
+    }
+    
+    .board-frame{
+      position:relative;
+      width: calc(var(--board-width));
+      height: calc(var(--board-height));
+      overflow:hidden;
+      background: var(--color-bg);
+      border-radius:4px;
+    }
+    
+    #game-canvas{
+      width:100%;
+      height:100%;
+      display:block;
+      background: var(--color-bg);
+      background-image:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      background-size: var(--cell-size) var(--cell-size);
+      image-rendering: pixelated;
+    }
+    
+    .board-overlay{
+      position:absolute;
+      left:0; top:0;
+      width:100%; height:100%;
+      pointer-events:none;
+    }
+    
+    .info-panel{
+      width: var(--panel-width);
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .panel-section{
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      padding:12px;
+      border-radius:8px;
+      border: 2px solid transparent;
+    }
+    .stat-label{
+      display:block;
+      font-size:12px;
+      color: var(--muted);
+      margin-bottom:8px;
+      letter-spacing:1px;
+    }
+    .stat-value{
+      font-family:"Roboto Mono", monospace;
+      color: var(--color-accent);
+      font-size:18px;
+      font-weight:700;
+    }
+    .level-value{
+      font-family:"Orbitron",sans-serif;
+      font-size:24px;
+      color: var(--color-AccentYellow);
+      font-weight:700;
+    }
+    .lines-value{
+      font-family:"Roboto Mono", monospace;
+      color:var(--white);
+      font-weight:700;
+    }
+    .next-box{
+      width:96px;
+      height:96px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:6px;
+      border: 2px solid rgba(255,255,255,0.03);
+    }
+    #next-canvas{ width:86px; height:86px; }
+    
+    .panel-actions{
+      display:flex;
+      gap:8px;
+      justify-content:space-between;
+    }
+    .btn{
+      appearance:none;
+      border:2px solid transparent;
+      background:var(--color-primary);
+      color:var(--white);
+      padding:8px 12px;
+      border-radius:6px;
+      cursor:pointer;
+      font-family:"Roboto Mono", monospace;
+      transition: background 0.18s, transform 0.12s, box-shadow 0.12s;
+    }
+    .btn:hover{ background: var(--color-secondary); transform: translateY(-1px); }
+    .primary-btn{
+      border-color: var(--color-accent);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent), var(--color-primary);
+    }
+    .primary-btn:hover{ background: var(--color-secondary); }
+    
+    .panel-footer{ color:var(--muted); font-size:12px; text-align:center; }
+    
+    .modal{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(2,6,23,0.6);
+      z-index:1200;
+    }
+    .modal-panel{
+      width:320px;
+      padding:20px;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 2px solid rgba(255,255,255,0.04);
+      text-align:center;
+    }
+    .modal-stats{ margin:16px 0; color:var(--muted); }
+    .modal-actions{ display:flex; gap:8px; justify-content:center; }
+    
+    @keyframes flashWhite {
+      0% { background-color: rgba(255,255,255,0.0); opacity:0; transform:scaleY(1); }
+      20% { background-color: rgba(255,255,255,0.95); opacity:1; transform:scaleY(1.02); }
+      100% { background-color: rgba(255,255,255,0.0); opacity:0; transform:scaleY(1); }
+    }
+    .line-flash{
+      position:absolute;
+      left:0;
+      width:100%;
+      animation: flashWhite var(--line-flash-dur) ease-out forwards;
+      pointer-events:none;
+      mix-blend-mode:screen;
+    }
+    
+    @keyframes dropDown {
+      from { transform: translateY(-12px); opacity:0.95; }
+      to   { transform: translateY(0); opacity:1; }
+    }
+    .drop-rows {
+      animation: dropDown 300ms cubic-bezier(.2,.9,.2,1) forwards;
+    }
+    
+    @keyframes levelGlow {
+      0% { box-shadow: 0 0 0 rgba(255,215,0,0); }
+      50% { box-shadow: 0 0 40px rgba(255,215,0,0.28); }
+      100% { box-shadow: 0 0 0 rgba(255,215,0,0); }
+    }
+    .board-wrap.level-up {
+      animation: levelGlow var(--levelup-dur) ease-out both;
+      border-color: var(--color-AccentYellow);
+    }
+    
+    @keyframes gameOverWave {
+      0% { background-position: -50% 50%; opacity:0; }
+      20% { opacity:0.6; }
+      100% { background-position: 150% 50%; opacity:0; }
+    }
+    .board-overlay.game-over {
+      background: linear-gradient(90deg, rgba(245,101,101,0.0), rgba(245,101,101,0.25), rgba(245,101,101,0.0));
+      background-size: 200% 100%;
+      animation: gameOverWave var(--gameover-dur) ease-in-out forwards;
+    }
+    
+    @media (max-width: 980px){
+      .game-screen .game-wrapper{ gap:16px; }
+      .header-inner{ padding:0 12px; }
+    }
+    @media (max-width: 640px){
+      :root{
+        --game-scale: 0.8;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <h1 class="game-title">Neo Tetris</h1>
+      <div id="highscore" class="highscore" aria-live="polite">Best: 0</div>
+    </div>
+  </header>
+
+  <main id="app" class="app" role="main">
+    <section id="main-menu" class="screen menu-screen">
+      <h2 class="menu-title">Neo Tetris</h2>
+      <p class="menu-sub">다크 사이버펑크 감성의 클래식 테트리스</p>
+      <button id="start-button" class="btn primary-btn" aria-label="게임 시작">시작 ▶</button>
+      <div class="menu-meta">
+        <div class="meta-item">최고 점수: <span id="menu-highscore">0</span></div>
+        <div class="meta-item">레벨: 1 — 5단계 진행</div>
+      </div>
+    </section>
+
+    <section id="game-screen" class="screen game-screen is-hidden" aria-live="off">
+      <div class="game-wrapper" id="game-wrapper">
+        <div class="board-wrap" id="board-wrap" role="region" aria-label="게임 보드">
+          <div class="board-frame">
+            <canvas id="game-canvas" width="240" height="480"></canvas>
+            <div id="board-overlay" class="board-overlay" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <aside id="info-panel" class="info-panel" role="complementary" aria-label="정보 패널">
+          <div class="panel-section stats">
+            <label class="stat-label">SCORE</label>
+            <div id="score" class="stat-value">0</div>
+          </div>
+
+          <div class="panel-section level">
+            <label class="stat-label">LEVEL</label>
+            <div id="level" class="level-value">1</div>
+          </div>
+
+          <div class="panel-section lines">
+            <label class="stat-label">LINES</label>
+            <div id="lines" class="lines-value">0 / 10</div>
+          </div>
+
+          <div class="panel-section next-block">
+            <label class="stat-label">NEXT</label>
+            <div id="next-box" class="next-box" aria-hidden="false">
+              <canvas id="next-canvas" width="96" height="96"></canvas>
+            </div>
+          </div>
+
+          <div class="panel-actions">
+            <button id="pause-button" class="btn" aria-pressed="false">일시정지 ⏸</button>
+            <button id="restart-button" class="btn">재시작 ↻</button>
+          </div>
+
+          <div class="panel-footer">
+            <small class="hint">← → 이동 · ↑ 회전 · ↓ 빠르게 하강</small>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <div id="result-modal" class="modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <div class="modal-panel">
+        <h3 id="result-title">결과</h3>
+        <div class="modal-stats">
+          <div>최종 점수: <strong id="final-score">0</strong></div>
+          <div>클리어 레벨: <strong id="final-level">1</strong></div>
+          <div>총 제거 라인: <strong id="final-lines">0</strong></div>
+        </div>
+        <div class="modal-actions">
+          <button id="replay-button" class="btn primary-btn">다시하기</button>
+          <button id="close-modal" class="btn">메뉴로</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-inner">Neo Tetris — UI Prototype • 퍼블리셔: UI/UX / HTML5</div>
+  </footer>
+
+  <script>
+    // Neo Tetris 게임 메인 클래스
+    class NeoTetris {
+        constructor() {
+            this.canvas = document.getElementById('game-canvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.nextCanvas = document.getElementById('next-canvas');
+            this.nextCtx = this.nextCanvas.getContext('2d');
+            
+            // 게임 상태
+            this.gameState = 'MENU';
+            this.board = new Board(10, 20);
+            this.currentTetromino = null;
+            this.nextTetromino = null;
+            this.level = 1;
+            this.score = 0;
+            this.linesCleared = 0;
+            this.dropTime = 0;
+            this.lastTime = 0;
+            
+            // 레벨별 설정
+            this.levelConfig = {
+                1: { targetLines: 10, dropInterval: 800 },
+                2: { targetLines: 20, dropInterval: 600 },
+                3: { targetLines: 30, dropInterval: 400 },
+                4: { targetLines: 40, dropInterval: 250 },
+                5: { targetLines: 50, dropInterval: 150 }
+            };
+            
+            // 키 입력 상태
+            this.keys = {};
+            this.keyRepeatDelay = 150;
+            this.keyRepeatRate = 50;
+            this.keyTimers = {};
+            
+            // 사운드 컨텍스트
+            this.audioContext = null;
+            this.initAudio();
+            
+            // 이벤트 리스너 등록
+            this.bindEvents();
+            
+            // 최고 점수 로드
+            this.highScore = this.loadHighScore();
+            
+            // UI 업데이트
+            this.updateUI();
+            
+            console.log('Neo Tetris 게임이 초기화되었습니다.');
+        }
+        
+        initAudio() {
+            try {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (error) {
+                console.warn('오디오 컨텍스트 초기화 실패:', error);
+            }
+        }
+        
+        playSound(frequency = 440, duration = 100, type = 'square') {
+            if (!this.audioContext) return;
+            
+            const oscillator = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
+            
+            oscillator.start(this.audioContext.currentTime);
+            oscillator.stop(this.audioContext.currentTime + duration / 1000);
+        }
+        
+        bindEvents() {
+            document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+            document.addEventListener('keyup', (e) => this.handleKeyUp(e));
+            
+            const startBtn = document.getElementById('start-button');
+            const restartBtn = document.getElementById('restart-button');
+            const pauseBtn = document.getElementById('pause-button');
+            const replayBtn = document.getElementById('replay-button');
+            const closeBtn = document.getElementById('close-modal');
+            
+            if (startBtn) startBtn.addEventListener('click', () => this.startGame());
+            if (restartBtn) restartBtn.addEventListener('click', () => this.restartGame());
+            if (pauseBtn) pauseBtn.addEventListener('click', () => this.togglePause());
+            if (replayBtn) replayBtn.addEventListener('click', () => this.replayGame());
+            if (closeBtn) closeBtn.addEventListener('click', () => this.closeModal());
+            
+            this.canvas.addEventListener('touchstart', (e) => this.handleTouch(e));
+            this.canvas.addEventListener('touchmove', (e) => e.preventDefault());
+        }
+        
+        handleKeyDown(e) {
+            if (this.gameState !== 'PLAYING') {
+                if (e.code === 'Space' && this.gameState === 'MENU') {
+                    this.startGame();
+                }
+                return;
+            }
+            
+            if (!this.keys[e.code]) {
+                this.keys[e.code] = true;
+                this.processKeyInput(e.code);
+                
+                if (['ArrowLeft', 'ArrowRight', 'ArrowDown'].includes(e.code)) {
+                    this.keyTimers[e.code] = setTimeout(() => {
+                        this.startKeyRepeat(e.code);
+                    }, this.keyRepeatDelay);
+                }
+            }
+            
+            e.preventDefault();
+        }
+        
+        handleKeyUp(e) {
+            this.keys[e.code] = false;
+            if (this.keyTimers[e.code]) {
+                clearTimeout(this.keyTimers[e.code]);
+                clearInterval(this.keyTimers[e.code]);
+                delete this.keyTimers[e.code];
+            }
+        }
+        
+        startKeyRepeat(keyCode) {
+            this.keyTimers[keyCode] = setInterval(() => {
+                if (this.keys[keyCode]) {
+                    this.processKeyInput(keyCode);
+                }
+            }, this.keyRepeatRate);
+        }
+        
+        processKeyInput(keyCode) {
+            if (!this.currentTetromino) return;
+            
+            switch (keyCode) {
+                case 'ArrowLeft':
+                    this.moveTetromino(-1, 0);
+                    break;
+                case 'ArrowRight':
+                    this.moveTetromino(1, 0);
+                    break;
+                case 'ArrowDown':
+                    this.moveTetromino(0, 1);
+                    break;
+                case 'ArrowUp':
+                case 'Space':
+                    this.rotateTetromino();
+                    break;
+                case 'KeyP':
+                    this.togglePause();
+                    break;
+            }
+        }
+        
+        handleTouch(e) {
+            e.preventDefault();
+            if (this.gameState === 'MENU') {
+                this.startGame();
+            } else if (this.gameState === 'PLAYING') {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.touches[0].clientX - rect.left;
+                const centerX = this.canvas.width / 2;
+                
+                if (x < centerX - 50) {
+                    this.moveTetromino(-1, 0);
+                } else if (x > centerX + 50) {
+                    this.moveTetromino(1, 0);
+                } else {
+                    this.rotateTetromino();
+                }
+            }
+        }
+        
+        startGame() {
+            this.gameState = 'PLAYING';
+            this.level = 1;
+            this.score = 0;
+            this.linesCleared = 0;
+            this.board.clear();
+            
+            this.nextTetromino = new Tetromino();
+            this.spawnNextTetromino();
+            
+            this.updateUI();
+            this.hideMenuScreen();
+            this.showGameScreen();
+            
+            this.lastTime = performance.now();
+            this.gameLoop();
+            
+            this.playSound(220, 200, 'sine');
+            console.log('게임이 시작되었습니다.');
+        }
+        
+        restartGame() {
+            this.startGame();
+        }
+        
+        replayGame() {
+            this.hideResultScreen();
+            this.startGame();
+        }
+        
+        closeModal() {
+            this.hideResultScreen();
+            this.showMenuScreen();
+        }
+        
+        togglePause() {
+            if (this.gameState === 'PLAYING') {
+                this.gameState = 'PAUSED';
+                const pauseBtn = document.getElementById('pause-button');
+                if (pauseBtn) {
+                    pauseBtn.textContent = '재개 ▶';
+                    pauseBtn.setAttribute('aria-pressed', 'true');
+                }
+                console.log('게임이 일시정지되었습니다.');
+            } else if (this.gameState === 'PAUSED') {
+                this.gameState = 'PLAYING';
+                const pauseBtn = document.getElementById('pause-button');
+                if (pauseBtn) {
+                    pauseBtn.textContent = '일시정지 ⏸';
+                    pauseBtn.setAttribute('aria-pressed', 'false');
+                }
+                this.lastTime = performance.now();
+                this.gameLoop();
+                console.log('게임이 재개되었습니다.');
+            }
+        }
+        
+        spawnNextTetromino() {
+            this.currentTetromino = this.nextTetromino;
+            this.nextTetromino = new Tetromino();
+            
+            this.currentTetromino.x = Math.floor(this.board.width / 2) - Math.floor(this.currentTetromino.shape[0].length / 2);
+            this.currentTetromino.y = 0;
+            
+            if (this.board.isCollision(this.currentTetromino)) {
+                this.gameOver();
+            }
+        }
+        
+        moveTetromino(dx, dy) {
+            if (!this.currentTetromino) return false;
+            
+            this.currentTetromino.x += dx;
+            this.currentTetromino.y += dy;
+            
+            if (this.board.isCollision(this.currentTetromino)) {
+                this.currentTetromino.x -= dx;
+                this.currentTetromino.y -= dy;
+                
+                if (dy > 0) {
+                    this.placeTetromino();
+                }
+                return false;
+            }
+            
+            return true;
+        }
+        
+        rotateTetromino() {
+            if (!this.currentTetromino) return;
+            
+            const originalShape = this.currentTetromino.shape;
+            this.currentTetromino.rotate();
+            
+            const kicks = [
+                [0, 0], [-1, 0], [1, 0], [0, -1], [-1, -1], [1, -1]
+            ];
+            
+            for (let [dx, dy] of kicks) {
+                this.currentTetromino.x += dx;
+                this.currentTetromino.y += dy;
+                
+                if (!this.board.isCollision(this.currentTetromino)) {
+                    this.playSound(330, 50, 'square');
+                    return;
+                }
+                
+                this.currentTetromino.x -= dx;
+                this.currentTetromino.y -= dy;
+            }
+            
+            this.currentTetromino.shape = originalShape;
+        }
+        
+        placeTetromino() {
+            this.board.placeTetromino(this.currentTetromino);
+            
+            const clearedLines = this.board.clearLines();
+            if (clearedLines > 0) {
+                this.linesCleared += clearedLines;
+                this.addScore(clearedLines);
+                this.playSound(440, 300, 'sawtooth');
+                
+                if (this.linesCleared >= this.levelConfig[this.level].targetLines) {
+                    this.levelClear();
+                    return;
+                }
+            }
+            
+            this.spawnNextTetromino();
+            this.updateUI();
+            this.playSound(200, 100, 'triangle');
+        }
+        
+        addScore(lines) {
+            const baseScores = { 1: 100, 2: 300, 3: 500, 4: 800 };
+            const baseScore = baseScores[lines] || 0;
+            this.score += baseScore * this.level;
+        }
+        
+        levelClear() {
+            if (this.level >= 5) {
+                this.gameComplete();
+            } else {
+                this.level++;
+                this.linesCleared = 0;
+                this.playSound(660, 500, 'sine');
+                
+                const boardWrap = document.getElementById('board-wrap');
+                if (boardWrap) {
+                    boardWrap.classList.add('level-up');
+                    setTimeout(() => boardWrap.classList.remove('level-up'), 500);
+                }
+                
+                console.log(`레벨 ${this.level}로 진행합니다.`);
+            }
+        }
+        
+        gameComplete() {
+            this.gameState = 'LEVEL_CLEAR';
+            this.saveHighScore();
+            this.showResultScreen(true);
+            this.playSound(880, 1000, 'sine');
+            console.log('모든 레벨을 클리어했습니다!');
+        }
+        
+        gameOver() {
+            this.gameState = 'GAME_OVER';
+            this.saveHighScore();
+            
+            const boardOverlay = document.getElementById('board-overlay');
+            if (boardOverlay) {
+                boardOverlay.classList.add('game-over');
+            }
+            
+            this.showResultScreen(false);
+            this.playSound(110, 800, 'sawtooth');
+            console.log('게임 오버입니다.');
+        }
+        
+        gameLoop() {
+            if (this.gameState !== 'PLAYING') return;
+            
+            const currentTime = performance.now();
+            const deltaTime = currentTime - this.lastTime;
+            
+            this.dropTime += deltaTime;
+            const dropInterval = this.levelConfig[this.level].dropInterval;
+            
+            if (this.dropTime >= dropInterval) {
+                this.moveTetromino(0, 1);
+                this.dropTime = 0;
+            }
+            
+            this.render();
+            this.lastTime = currentTime;
+            
+            requestAnimationFrame(() => this.gameLoop());
+        }
+        
+        render() {
+            this.ctx.fillStyle = '#1A202C';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            this.board.render(this.ctx);
+            
+            if (this.currentTetromino) {
+                this.currentTetromino.render(this.ctx, this.currentTetromino.x, this.currentTetromino.y);
+            }
+            
+            if (this.nextTetromino && this.nextCtx) {
+                this.nextCtx.fillStyle = '#1A202C';
+                this.nextCtx.fillRect(0, 0, this.nextCanvas.width, this.nextCanvas.height);
+                this.nextTetromino.render(this.nextCtx, 1, 1);
+            }
+        }
+        
+        updateUI() {
+            const scoreEl = document.getElementById('score');
+            const levelEl = document.getElementById('level');
+            const linesEl = document.getElementById('lines');
+            const highScoreEl = document.getElementById('highscore');
+            const menuHighScoreEl = document.getElementById('menu-highscore');
+            
+            if (scoreEl) scoreEl.textContent = this.score.toLocaleString();
+            if (levelEl) levelEl.textContent = this.level;
+            if (linesEl) {
+                const target = this.levelConfig[this.level].targetLines;
+                linesEl.textContent = `${this.linesCleared} / ${target}`;
+            }
+            if (highScoreEl) highScoreEl.textContent = `Best: ${this.highScore.toLocaleString()}`;
+            if (menuHighScoreEl) menuHighScoreEl.textContent = this.highScore.toLocaleString();
+        }
+        
+        hideMenuScreen() {
+            const menuScreen = document.getElementById('main-menu');
+            if (menuScreen) menuScreen.classList.add('is-hidden');
+        }
+        
+        showMenuScreen() {
+            const menuScreen = document.getElementById('main-menu');
+            const gameScreen = document.getElementById('game-screen');
+            if (menuScreen) menuScreen.classList.remove('is-hidden');
+            if (gameScreen) gameScreen.classList.add('is-hidden');
+        }
+        
+        showGameScreen() {
+            const gameScreen = document.getElementById('game-screen');
+            if (gameScreen) gameScreen.classList.remove('is-hidden');
+        }
+        
+        showResultScreen(isComplete) {
+            const resultModal = document.getElementById('result-modal');
+            const finalScoreEl = document.getElementById('final-score');
+            const finalLevelEl = document.getElementById('final-level');
+            const finalLinesEl = document.getElementById('final-lines');
+            const resultTitleEl = document.getElementById('result-title');
+            
+            if (resultModal) resultModal.classList.remove('is-hidden');
+            if (finalScoreEl) finalScoreEl.textContent = this.score.toLocaleString();
+            if (finalLevelEl) finalLevelEl.textContent = this.level;
+            if (finalLinesEl) finalLinesEl.textContent = this.linesCleared;
+            if (resultTitleEl) {
+                resultTitleEl.textContent = isComplete ? 'GAME COMPLETE!' : 'GAME OVER';
+            }
+        }
+        
+        hideResultScreen() {
+            const resultModal = document.getElementById('result-modal');
+            const gameScreen = document.getElementById('game-screen');
+            const boardOverlay = document.getElementById('board-overlay');
+            
+            if (resultModal) resultModal.classList.add('is-hidden');
+            if (gameScreen) gameScreen.classList.add('is-hidden');
+            if (boardOverlay) boardOverlay.classList.remove('game-over');
+        }
+        
+        saveHighScore() {
+            if (this.score > this.highScore) {
+                this.highScore = this.score;
+                localStorage.setItem('neoTetrisHighScore', this.highScore.toString());
+                this.updateUI();
+            }
+        }
+        
+        loadHighScore() {
+            const saved = localStorage.getItem('neoTetrisHighScore');
+            return saved ? parseInt(saved, 10) : 0;
+        }
+    }
+
+    // 게임 보드 클래스
+    class Board {
+        constructor(width, height) {
+            this.width = width;
+            this.height = height;
+            this.cellSize = 24;
+            this.grid = this.createGrid();
+        }
+        
+        createGrid() {
+            return Array(this.height).fill().map(() => Array(this.width).fill(0));
+        }
+        
+        clear() {
+            this.grid = this.createGrid();
+        }
+        
+        isCollision(tetromino) {
+            for (let y = 0; y < tetromino.shape.length; y++) {
+                for (let x = 0; x < tetromino.shape[y].length; x++) {
+                    if (tetromino.shape[y][x]) {
+                        const boardX = tetromino.x + x;
+                        const boardY = tetromino.y + y;
+                        
+                        if (boardX < 0 || boardX >= this.width || 
+                            boardY >= this.height) {
+                            return true;
+                        }
+                        
+                        if (boardY >= 0 && this.grid[boardY][boardX]) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+        
+        placeTetromino(tetromino) {
+            for (let y = 0; y < tetromino.shape.length; y++) {
+                for (let x = 0; x < tetromino.shape[y].length; x++) {
+                    if (tetromino.shape[y][x]) {
+                        const boardX = tetromino.x + x;
+                        const boardY = tetromino.y + y;
+                        
+                        if (boardY >= 0) {
+                            this.grid[boardY][boardX] = tetromino.shape[y][x];
+                        }
+                    }
+                }
+            }
+        }
+        
+        clearLines() {
+            let linesCleared = 0;
+            
+            for (let y = this.height - 1; y >= 0; y--) {
+                if (this.grid[y].every(cell => cell !== 0)) {
+                    this.grid.splice(y, 1);
+                    this.grid.unshift(Array(this.width).fill(0));
+                    linesCleared++;
+                    y++;
+                }
+            }
+            
+            return linesCleared;
+        }
+        
+        render(ctx) {
+            for (let y = 0; y < this.height; y++) {
+                for (let x = 0; x < this.width; x++) {
+                    if (this.grid[y][x]) {
+                        this.renderBlock(ctx, x, y, this.grid[y][x]);
+                    }
+                }
+            }
+        }
+        
+        renderBlock(ctx, x, y, type) {
+            const colors = {
+                1: '#00D9FF',
+                2: '#FFD700',
+                3: '#9F7AEA',
+                4: '#48BB78',
+                5: '#F56565',
+                6: '#3182CE',
+                7: '#ED8936'
+            };
+            
+            const color = colors[type] || '#4A5568';
+            
+            ctx.fillStyle = color;
+            ctx.fillRect(
+                x * this.cellSize + 1, 
+                y * this.cellSize + 1, 
+                this.cellSize - 2, 
+                this.cellSize - 2
+            );
+            
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(
+                x * this.cellSize + 1, 
+                y * this.cellSize + 1, 
+                this.cellSize - 2, 
+                this.cellSize - 2
+            );
+        }
+    }
+
+    // 테트로미노 클래스
+    class Tetromino {
+        constructor(type = null) {
+            this.shapes = {
+                I: [[1, 1, 1, 1]],
+                O: [[2, 2], [2, 2]],
+                T: [[0, 3, 0], [3, 3, 3]],
+                S: [[0, 4, 4], [4, 4, 0]],
+                Z: [[5, 5, 0], [0, 5, 5]],
+                J: [[6, 0, 0], [6, 6, 6]],
+                L: [[0, 0, 7], [7, 7, 7]]
+            };
+            
+            this.types = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+            this.type = type || this.getRandomType();
+            this.shape = this.copyShape(this.shapes[this.type]);
+            this.x = 0;
+            this.y = 0;
+        }
+        
+        getRandomType() {
+            return this.types[Math.floor(Math.random() * this.types.length)];
+        }
+        
+        copyShape(shape) {
+            return shape.map(row => [...row]);
+        }
+        
+        rotate() {
+            const newShape = [];
+            const rows = this.shape.length;
+            const cols = this.shape[0].length;
+            
+            for (let x = 0; x < cols; x++) {
+                newShape[x] = [];
+                for (let y = rows - 1; y >= 0; y--) {
+                    newShape[x][rows - 1 - y] = this.shape[y][x];
+                }
+            }
+            
+            this.shape = newShape;
+        }
+        
+        render(ctx, offsetX = 0, offsetY = 0) {
+            const cellSize = 24;
+            
+            for (let y = 0; y < this.shape.length; y++) {
+                for (let x = 0; x < this.shape[y].length; x++) {
+                    if (this.shape[y][x]) {
+                        const boardX = (offsetX + x) * cellSize;
+                        const boardY = (offsetY + y) * cellSize;
+                        
+                        const colors = {
+                            1: '#00D9FF',
+                            2: '#FFD700',
+                            3: '#9F7AEA',
+                            4: '#48BB78',
+                            5: '#F56565',
+                            6: '#3182CE',
+                            7: '#ED8936'
+                        };
+                        
+                        const color = colors[this.shape[y][x]] || '#00D9FF';
+                        
+                        ctx.fillStyle = color;
+                        ctx.fillRect(boardX + 1, boardY + 1, cellSize - 2, cellSize - 2);
+                        
+                        ctx.strokeStyle = '#FFFFFF';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(boardX + 1, boardY + 1, cellSize - 2, cellSize - 2);
+                    }
+                }
+            }
+        }
+    }
+
+    // 게임 초기화
+    let game;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        try {
+            game = new NeoTetris();
+            console.log('Neo Tetris가 성공적으로 로드되었습니다.');
+        } catch (error) {
+            console.error('게임 초기화 중 오류 발생:', error);
+        }
+    });
+  </script>
+</body>
+</html>
