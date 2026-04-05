@@ -3,309 +3,476 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>테트리스 - Tetris Game</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <title>아름이 테트리스</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@300;400;500&display=swap');
+        
         :root {
-            --primary: #2196F3;
-            --secondary: #FF5722;
-            --background: #121212;
-            --accent: #4CAF50;
-            --text: #FFFFFF;
-            --board-bg: #000000;
-            --grid: #333333;
+            --primary-color: #2E86AB;
+            --secondary-color: #A23B72;
+            --background-color: #F18F01;
+            --accent-color: #C73E1D;
+            --board-bg: #2C3E50;
+            --grid-color: #34495E;
+            --text-white: #FFFFFF;
+            --text-dark: #2C3E50;
+            --gold: #FFD700;
+            --block-size: 25px;
         }
-
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
-            background: linear-gradient(135deg, var(--background) 0%, #1a1a1a 100%);
-            color: var(--text);
-            font-family: 'Roboto Mono', monospace;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, var(--background-color) 0%, var(--accent-color) 100%);
+            color: var(--text-white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .game-container {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        .game-container {
-            display: flex;
-            align-items: flex-start;
-            gap: 30px;
             padding: 20px;
-            max-width: 100vw;
         }
-
-        .game-board {
-            border: 3px solid var(--primary);
-            background-color: var(--board-bg);
-            position: relative;
-            box-shadow: 0 0 30px rgba(33, 150, 243, 0.3);
-            border-radius: 8px;
-        }
-
-        .side-panel {
-            width: 200px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .panel-section {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid var(--grid);
-            border-radius: 10px;
-            padding: 15px;
-            backdrop-filter: blur(10px);
-        }
-
-        .next-block {
+        
+        .main-screen {
             text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
-
-        .next-block h3 {
-            font-size: 14px;
-            margin-bottom: 10px;
-            color: var(--accent);
+        
+        .game-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 3.5em;
+            font-weight: 900;
+            color: var(--text-white);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            margin-bottom: 30px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(255, 255, 255, 0.3); }
+            to { text-shadow: 0 0 30px rgba(255, 255, 255, 0.6); }
+        }
+        
+        .btn {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
             font-weight: 700;
+            background: var(--primary-color);
+            color: var(--text-white);
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            touch-action: manipulation;
         }
-
-        .score-item {
-            margin-bottom: 12px;
+        
+        .btn:hover {
+            background: #1A5276;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 134, 171, 0.4);
+        }
+        
+        .high-score {
+            font-size: 1.5em;
+            margin-top: 20px;
+            color: var(--gold);
+            font-weight: 500;
+        }
+        
+        .game-screen {
+            display: none;
+            grid-template-columns: auto 250px;
+            gap: 20px;
+            align-items: start;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .game-board-container {
+            position: relative;
+        }
+        
+        #gameCanvas {
+            background: var(--board-bg);
+            border: 3px solid var(--primary-color);
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(46, 134, 171, 0.3);
+            touch-action: none;
+        }
+        
+        .side-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .pause-btn {
+            position: absolute;
+            top: -50px;
+            left: 0;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+            touch-action: manipulation;
+        }
+        
+        .pause-btn:hover {
+            background: #A12E1A;
+        }
+        
+        .next-piece {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .next-piece h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: var(--text-white);
+        }
+        
+        .stats {
+            margin-bottom: 20px;
+        }
+        
+        .stats h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: var(--text-white);
+        }
+        
+        .stat-item {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-        }
-
-        .score-label {
-            color: #CCCCCC;
-            font-size: 12px;
-            font-weight: 300;
-        }
-
-        .score-value {
-            color: var(--accent);
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .controls {
-            font-size: 11px;
-            line-height: 1.5;
-        }
-
-        .controls h4 {
-            color: var(--primary);
             margin-bottom: 8px;
-            font-size: 12px;
+            font-size: 1.1em;
         }
-
-        .controls div {
-            margin-bottom: 4px;
-            color: #999;
+        
+        .stat-label {
+            color: #BDC3C7;
         }
-
-        .game-over {
+        
+        .stat-value {
+            color: var(--gold);
+            font-weight: 500;
+        }
+        
+        .items-container {
+            text-align: center;
+        }
+        
+        .items-container h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: var(--text-white);
+        }
+        
+        .items-slots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .item-slot {
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            background: rgba(44, 62, 80, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+        
+        .item-slot:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(46, 134, 171, 0.5);
+        }
+        
+        .item-slot.empty {
+            border-style: dashed;
+            border-color: #7F8C8D;
+        }
+        
+        .item-slot.has-item {
+            border-color: var(--gold);
+            background: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        
+        .item-icon {
+            width: 30px;
+            height: 30px;
+            background: var(--gold);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--text-dark);
+            font-weight: bold;
+        }
+        
+        .slot-number {
+            position: absolute;
+            bottom: -15px;
+            font-size: 10px;
+            color: #95A5A6;
+        }
+        
+        .item-hint {
+            font-size: 0.9em;
+            color: #95A5A6;
+            margin-top: 5px;
+        }
+        
+        .game-over-screen {
+            display: none;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(15px);
+            border: 2px solid var(--accent-color);
+        }
+        
+        .game-over-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5em;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+        
+        .final-score {
+            font-size: 1.8em;
+            color: var(--gold);
+            margin-bottom: 15px;
+        }
+        
+        .new-record {
+            color: #E74C3C;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .controls-info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            max-width: 300px;
+        }
+        
+        .controls-info h4 {
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+        
+        .controls-info div {
+            margin-bottom: 3px;
+        }
+        
+        .line-clear-effect {
+            position: absolute;
+            width: 100%;
+            height: 25px;
+            background: rgba(255, 255, 255, 0.8);
+            animation: flash 0.2s ease-out;
+            pointer-events: none;
+        }
+        
+        @keyframes flash {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        .item-get-effect {
+            position: absolute;
+            color: var(--gold);
+            font-size: 1.2em;
+            font-weight: bold;
+            animation: itemGet 1s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes itemGet {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px) scale(1.5);
+            }
+        }
+        
+        .level-up-effect {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
+            border: 5px solid var(--gold);
+            animation: levelUp 0.3s ease-out;
+            pointer-events: none;
             z-index: 1000;
-            backdrop-filter: blur(5px);
         }
-
-        .game-over-content {
-            background: var(--background);
-            border: 2px solid var(--secondary);
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        
+        @keyframes levelUp {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
         }
-
-        .game-over h2 {
-            font-family: 'Orbitron', monospace;
-            font-size: 28px;
-            color: var(--secondary);
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px var(--secondary);
-        }
-
-        .final-score-display {
-            font-size: 18px;
-            margin-bottom: 25px;
-            color: var(--accent);
-        }
-
-        .restart-btn {
-            background: linear-gradient(135deg, var(--primary), #1976D2);
-            color: var(--text);
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            margin-top: 10px;
-            font-family: 'Roboto Mono', monospace;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
-        }
-
-        .restart-btn:hover {
-            background: linear-gradient(135deg, #1976D2, var(--primary));
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
-        }
-
-        .restart-btn:active {
-            transform: translateY(0);
-        }
-
-        .title {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: 'Orbitron', monospace;
-            font-size: 48px;
-            font-weight: 900;
-            color: var(--primary);
-            text-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
-            z-index: 10;
-        }
-
-        .pause-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            border-radius: 8px;
-        }
-
-        .pause-text {
-            font-family: 'Orbitron', monospace;
-            font-size: 24px;
-            color: var(--text);
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        /* 모바일 대응 */
+        
         @media (max-width: 768px) {
-            .title {
-                font-size: 32px;
-                top: 10px;
-            }
-            
             .game-container {
-                flex-direction: column;
-                align-items: center;
-                gap: 20px;
                 padding: 10px;
             }
             
-            .side-panel {
-                width: 100%;
-                max-width: 300px;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: space-between;
-            }
-            
-            .panel-section {
-                flex: 1;
-                min-width: 120px;
-                margin: 5px;
-            }
-            
-            #gameCanvas {
-                width: 250px;
-                height: 500px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .title {
-                font-size: 24px;
-            }
-            
-            #gameCanvas {
-                width: 200px;
-                height: 400px;
+            .game-screen {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                text-align: center;
             }
             
             .side-panel {
-                flex-direction: column;
+                order: -1;
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .game-title {
+                font-size: 2.5em;
+            }
+            
+            .controls-info {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                margin-top: 20px;
+            }
+            
+            #gameCanvas {
+                max-width: 100%;
+                height: auto;
             }
         }
     </style>
 </head>
 <body>
-    <div class="title">TETRIS</div>
-    
     <div class="game-container">
-        <div class="game-board">
-            <canvas id="gameCanvas" width="300" height="600"></canvas>
-            <div class="pause-overlay" id="pauseOverlay">
-                <div class="pause-text">PAUSED</div>
+        <div id="mainScreen" class="main-screen">
+            <h1 class="game-title">아름이 테트리스</h1>
+            <button class="btn" onclick="startGame()" ontouchstart="">시작하기</button>
+            <div class="high-score">최고점수: <span id="displayHighScore">0</span></div>
+        </div>
+        
+        <div id="gameScreen" class="game-screen">
+            <div class="game-board-container">
+                <button class="pause-btn" onclick="togglePause()" ontouchstart="">일시정지 (P)</button>
+                <canvas id="gameCanvas" width="250" height="500"></canvas>
+            </div>
+            
+            <div class="side-panel">
+                <div class="next-piece">
+                    <h3>다음 블록</h3>
+                    <div id="nextPieceDisplay"></div>
+                </div>
+                
+                <div class="stats">
+                    <h3>게임 정보</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">점수</span>
+                        <span class="stat-value" id="score">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">레벨</span>
+                        <span class="stat-value" id="level">1</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">라인</span>
+                        <span class="stat-value" id="lines">0</span>
+                    </div>
+                </div>
+                
+                <div class="items-container">
+                    <h3>아이템 보관함</h3>
+                    <div class="items-slots">
+                        <div class="item-slot empty" id="slot1" onclick="useItem(0)" ontouchstart="">
+                            <span class="slot-number">1</span>
+                        </div>
+                        <div class="item-slot empty" id="slot2" onclick="useItem(1)" ontouchstart="">
+                            <span class="slot-number">2</span>
+                        </div>
+                        <div class="item-slot empty" id="slot3" onclick="useItem(2)" ontouchstart="">
+                            <span class="slot-number">3</span>
+                        </div>
+                    </div>
+                    <div class="item-hint">숫자키 1-3으로 사용</div>
+                </div>
             </div>
         </div>
         
-        <div class="side-panel">
-            <div class="panel-section next-block">
-                <h3>NEXT</h3>
-                <canvas id="nextCanvas" width="100" height="100"></canvas>
-            </div>
-            
-            <div class="panel-section score-panel">
-                <div class="score-item">
-                    <span class="score-label">SCORE</span>
-                    <span class="score-value" id="score">0</span>
-                </div>
-                <div class="score-item">
-                    <span class="score-label">LEVEL</span>
-                    <span class="score-value" id="level">1</span>
-                </div>
-                <div class="score-item">
-                    <span class="score-label">LINES</span>
-                    <span class="score-value" id="lines">0</span>
-                </div>
-                <button class="restart-btn" onclick="game.restart()">RESTART</button>
-            </div>
-            
-            <div class="panel-section controls">
-                <h4>조작법</h4>
-                <div>← → : 좌우 이동</div>
-                <div>↑ : 회전</div>
-                <div>↓ : 빠른 낙하</div>
-                <div>Space : 즉시 낙하</div>
-                <div>P : 일시정지</div>
-            </div>
+        <div id="gameOverScreen" class="game-over-screen">
+            <h2 class="game-over-title">게임 종료!</h2>
+            <div class="final-score">점수: <span id="finalScore">0</span></div>
+            <div id="newRecordMsg" class="new-record" style="display: none;">새로운 최고점수!</div>
+            <button class="btn" onclick="restartGame()" ontouchstart="">다시하기</button>
+            <button class="btn" onclick="goToMain()" ontouchstart="">메인으로</button>
         </div>
     </div>
-
-    <div class="game-over" id="gameOver">
-        <div class="game-over-content">
-            <h2>GAME OVER</h2>
-            <div class="final-score-display">최종 점수: <span id="finalScore">0</span></div>
-            <button class="restart-btn" onclick="game.restart()">다시 시작</button>
-        </div>
+    
+    <div class="controls-info">
+        <h4>조작법</h4>
+        <div>← → : 좌우 이동</div>
+        <div>↑ : 회전</div>
+        <div>↓ : 빠르게 내리기</div>
+        <div>스페이스 : 하드 드롭</div>
+        <div>1-3 : 아이템 사용</div>
+        <div>P : 일시정지</div>
     </div>
 
     <script>
@@ -313,181 +480,226 @@
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.nextCanvas = document.getElementById('nextCanvas');
-                this.nextCtx = this.nextCanvas.getContext('2d');
                 
                 this.BOARD_WIDTH = 10;
                 this.BOARD_HEIGHT = 20;
-                this.BLOCK_SIZE = 30;
+                this.CELL_SIZE = 25;
                 
-                this.gameState = 'playing';
-                this.board = [];
+                this.GAME_STATES = {
+                    MENU: 'menu',
+                    PLAYING: 'playing',
+                    PAUSED: 'paused',
+                    GAME_OVER: 'gameOver'
+                };
+                
+                this.currentState = this.GAME_STATES.MENU;
+                this.board = this.createEmptyBoard();
                 this.currentPiece = null;
                 this.nextPiece = null;
                 this.score = 0;
                 this.level = 1;
-                this.lines = 0;
-                this.dropTimer = 0;
-                this.dropInterval = 1000;
-                this.lastTime = 0;
+                this.linesCleared = 0;
+                this.dropTime = 1000;
+                this.lastDropTime = 0;
+                this.items = [];
+                this.maxItems = 3;
+                this.itemAcquisitionRate = 0.15;
+                this.selectedRow = -1;
+                this.awaitingRowSelection = false;
+                this.itemPendingUse = -1;
                 
                 this.pieces = {
-                    I: { shape: [[1, 1, 1, 1]], color: '#00FFFF' },
-                    O: { shape: [[1, 1], [1, 1]], color: '#FFFF00' },
-                    T: { shape: [[0, 1, 0], [1, 1, 1]], color: '#800080' },
-                    S: { shape: [[0, 1, 1], [1, 1, 0]], color: '#00FF00' },
-                    Z: { shape: [[1, 1, 0], [0, 1, 1]], color: '#FF0000' },
-                    J: { shape: [[1, 0, 0], [1, 1, 1]], color: '#0000FF' },
-                    L: { shape: [[0, 0, 1], [1, 1, 1]], color: '#FFA500' }
+                    I: {
+                        shape: [[1,1,1,1]],
+                        color: '#FF6B6B'
+                    },
+                    O: {
+                        shape: [[1,1],[1,1]],
+                        color: '#4ECDC4'
+                    },
+                    T: {
+                        shape: [[0,1,0],[1,1,1]],
+                        color: '#45B7D1'
+                    },
+                    S: {
+                        shape: [[0,1,1],[1,1,0]],
+                        color: '#96CEB4'
+                    },
+                    Z: {
+                        shape: [[1,1,0],[0,1,1]],
+                        color: '#FFEAA7'
+                    },
+                    J: {
+                        shape: [[1,0,0],[1,1,1]],
+                        color: '#DDA0DD'
+                    },
+                    L: {
+                        shape: [[0,0,1],[1,1,1]],
+                        color: '#98D8C8'
+                    }
                 };
                 
-                this.init();
+                this.keys = {};
+                this.setupEventListeners();
+                this.highScore = this.loadHighScore();
             }
             
-            init() {
-                this.board = Array(this.BOARD_HEIGHT).fill().map(() => Array(this.BOARD_WIDTH).fill(0));
-                this.nextPiece = this.createRandomPiece();
-                this.spawnNewPiece();
-                this.setupEventListeners();
-                this.gameLoop();
+            createEmptyBoard() {
+                const board = [];
+                for (let y = 0; y < this.BOARD_HEIGHT; y++) {
+                    board[y] = [];
+                    for (let x = 0; x < this.BOARD_WIDTH; x++) {
+                        board[y][x] = 0;
+                    }
+                }
+                return board;
             }
             
             setupEventListeners() {
-                // 키보드 이벤트
                 document.addEventListener('keydown', (e) => {
-                    this.handleKeyPress(e);
+                    this.keys[e.code] = true;
+                    this.handleKeyDown(e);
                 });
                 
-                // 터치 이벤트 (모바일 지원)
-                let touchStartX = 0;
-                let touchStartY = 0;
-                let touchStartTime = 0;
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.code] = false;
+                });
+                
+                this.canvas.addEventListener('click', (e) => {
+                    this.handleCanvasClick(e);
+                });
                 
                 this.canvas.addEventListener('touchstart', (e) => {
                     e.preventDefault();
-                    const touch = e.touches[0];
-                    touchStartX = touch.clientX;
-                    touchStartY = touch.clientY;
-                    touchStartTime = Date.now();
-                }, { passive: false });
+                    this.handleCanvasClick(e.touches[0]);
+                });
                 
-                this.canvas.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    if (this.gameState !== 'playing') return;
-                    
-                    const touch = e.changedTouches[0];
-                    const deltaX = touch.clientX - touchStartX;
-                    const deltaY = touch.clientY - touchStartY;
-                    const deltaTime = Date.now() - touchStartTime;
-                    
-                    if (deltaTime < 200) { // 빠른 탭
-                        this.rotatePiece();
-                    } else if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                        if (deltaX > 30) this.movePiece(1, 0);
-                        else if (deltaX < -30) this.movePiece(-1, 0);
-                    } else {
-                        if (deltaY > 30) this.movePiece(0, 1);
-                        else if (deltaY < -30) this.hardDrop();
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.currentState === this.GAME_STATES.PLAYING) {
+                        this.currentState = this.GAME_STATES.PAUSED;
                     }
-                }, { passive: false });
+                });
             }
             
-            handleKeyPress(e) {
-                if (this.gameState === 'gameover') return;
-                
-                switch(e.key.toLowerCase()) {
-                    case 'arrowleft':
-                        if (this.gameState === 'playing') this.movePiece(-1, 0);
-                        break;
-                    case 'arrowright':
-                        if (this.gameState === 'playing') this.movePiece(1, 0);
-                        break;
-                    case 'arrowdown':
-                        if (this.gameState === 'playing') this.movePiece(0, 1);
-                        break;
-                    case 'arrowup':
-                        if (this.gameState === 'playing') this.rotatePiece();
-                        break;
-                    case ' ':
-                        if (this.gameState === 'playing') this.hardDrop();
-                        break;
-                    case 'p':
+            handleKeyDown(e) {
+                if (this.currentState === this.GAME_STATES.PLAYING) {
+                    switch (e.code) {
+                        case 'ArrowLeft':
+                            this.movePiece(-1, 0);
+                            break;
+                        case 'ArrowRight':
+                            this.movePiece(1, 0);
+                            break;
+                        case 'ArrowDown':
+                            this.movePiece(0, 1);
+                            break;
+                        case 'ArrowUp':
+                            this.rotatePiece();
+                            break;
+                        case 'Space':
+                            this.hardDrop();
+                            e.preventDefault();
+                            break;
+                        case 'Digit1':
+                            this.useItem(0);
+                            break;
+                        case 'Digit2':
+                            this.useItem(1);
+                            break;
+                        case 'Digit3':
+                            this.useItem(2);
+                            break;
+                        case 'KeyP':
+                            this.togglePause();
+                            break;
+                    }
+                } else if (this.currentState === this.GAME_STATES.PAUSED) {
+                    if (e.code === 'KeyP') {
                         this.togglePause();
-                        break;
+                    }
                 }
-                e.preventDefault();
             }
             
-            createRandomPiece() {
+            handleCanvasClick(e) {
+                if (this.currentState !== this.GAME_STATES.PLAYING || !this.awaitingRowSelection) return;
+                
+                const rect = this.canvas.getBoundingClientRect();
+                const y = (e.clientY || e.pageY) - rect.top;
+                const row = Math.floor(y / this.CELL_SIZE);
+                
+                if (row >= 0 && row < this.BOARD_HEIGHT) {
+                    this.removeSelectedLine(row);
+                    this.items.splice(this.itemPendingUse, 1);
+                    this.updateItemsUI();
+                    this.awaitingRowSelection = false;
+                    this.itemPendingUse = -1;
+                    this.canvas.style.cursor = 'default';
+                }
+            }
+            
+            createNewPiece() {
                 const pieceTypes = Object.keys(this.pieces);
                 const randomType = pieceTypes[Math.floor(Math.random() * pieceTypes.length)];
                 const piece = this.pieces[randomType];
                 
                 return {
                     type: randomType,
-                    shape: piece.shape.map(row => [...row]),
+                    shape: JSON.parse(JSON.stringify(piece.shape)),
                     color: piece.color,
                     x: Math.floor(this.BOARD_WIDTH / 2) - Math.floor(piece.shape[0].length / 2),
                     y: 0
                 };
             }
             
-            spawnNewPiece() {
-                this.currentPiece = this.nextPiece;
-                this.nextPiece = this.createRandomPiece();
-                
-                if (this.checkCollision(this.currentPiece, 0, 0)) {
-                    this.gameOver();
-                }
+            startGame() {
+                this.currentState = this.GAME_STATES.PLAYING;
+                this.board = this.createEmptyBoard();
+                this.score = 0;
+                this.level = 1;
+                this.linesCleared = 0;
+                this.dropTime = 1000;
+                this.items = [];
+                this.selectedRow = -1;
+                this.awaitingRowSelection = false;
+                this.currentPiece = this.createNewPiece();
+                this.nextPiece = this.createNewPiece();
+                this.updateUI();
+                this.updateItemsUI();
             }
             
-            movePiece(deltaX, deltaY) {
-                if (this.checkCollision(this.currentPiece, deltaX, deltaY)) {
-                    if (deltaY > 0) {
-                        this.placePiece();
-                    }
-                    return false;
-                }
+            movePiece(dx, dy) {
+                if (!this.currentPiece) return false;
                 
-                this.currentPiece.x += deltaX;
-                this.currentPiece.y += deltaY;
-                return true;
+                const newX = this.currentPiece.x + dx;
+                const newY = this.currentPiece.y + dy;
+                
+                if (this.isValidPosition(this.currentPiece.shape, newX, newY)) {
+                    this.currentPiece.x = newX;
+                    this.currentPiece.y = newY;
+                    return true;
+                }
+                return false;
             }
             
             rotatePiece() {
-                const rotated = this.rotateMatrix(this.currentPiece.shape);
-                const originalShape = this.currentPiece.shape;
+                if (!this.currentPiece) return;
                 
-                this.currentPiece.shape = rotated;
+                const rotatedShape = this.rotateMatrix(this.currentPiece.shape);
                 
-                if (this.checkCollision(this.currentPiece, 0, 0)) {
-                    let canRotate = false;
-                    for (let offset = 1; offset <= 2; offset++) {
-                        if (!this.checkCollision(this.currentPiece, -offset, 0)) {
-                            this.currentPiece.x -= offset;
-                            canRotate = true;
-                            break;
-                        } else if (!this.checkCollision(this.currentPiece, offset, 0)) {
-                            this.currentPiece.x += offset;
-                            canRotate = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!canRotate) {
-                        this.currentPiece.shape = originalShape;
-                    }
+                if (this.isValidPosition(rotatedShape, this.currentPiece.x, this.currentPiece.y)) {
+                    this.currentPiece.shape = rotatedShape;
                 }
             }
             
             rotateMatrix(matrix) {
                 const rows = matrix.length;
                 const cols = matrix[0].length;
-                const rotated = Array(cols).fill().map(() => Array(rows).fill(0));
+                const rotated = [];
                 
-                for (let i = 0; i < rows; i++) {
-                    for (let j = 0; j < cols; j++) {
-                        rotated[j][rows - 1 - i] = matrix[i][j];
+                for (let i = 0; i < cols; i++) {
+                    rotated[i] = [];
+                    for (let j = 0; j < rows; j++) {
+                        rotated[i][j] = matrix[rows - 1 - j][i];
                     }
                 }
                 
@@ -495,45 +707,40 @@
             }
             
             hardDrop() {
-                let dropDistance = 0;
-                while (!this.checkCollision(this.currentPiece, 0, 1)) {
-                    this.currentPiece.y++;
-                    dropDistance++;
-                }
-                this.score += dropDistance * 2;
+                if (!this.currentPiece) return;
+                
+                while (this.movePiece(0, 1)) {}
                 this.placePiece();
             }
             
-            checkCollision(piece, deltaX, deltaY) {
-                const newX = piece.x + deltaX;
-                const newY = piece.y + deltaY;
-                
-                for (let y = 0; y < piece.shape.length; y++) {
-                    for (let x = 0; x < piece.shape[y].length; x++) {
-                        if (piece.shape[y][x]) {
-                            const boardX = newX + x;
-                            const boardY = newY + y;
+            isValidPosition(shape, x, y) {
+                for (let py = 0; py < shape.length; py++) {
+                    for (let px = 0; px < shape[py].length; px++) {
+                        if (shape[py][px] !== 0) {
+                            const newX = x + px;
+                            const newY = y + py;
                             
-                            if (boardX < 0 || boardX >= this.BOARD_WIDTH || boardY >= this.BOARD_HEIGHT) {
-                                return true;
+                            if (newX < 0 || newX >= this.BOARD_WIDTH || newY >= this.BOARD_HEIGHT) {
+                                return false;
                             }
                             
-                            if (boardY >= 0 && this.board[boardY][boardX]) {
-                                return true;
+                            if (newY >= 0 && this.board[newY][newX] !== 0) {
+                                return false;
                             }
                         }
                     }
                 }
-                
-                return false;
+                return true;
             }
             
             placePiece() {
-                for (let y = 0; y < this.currentPiece.shape.length; y++) {
-                    for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
-                        if (this.currentPiece.shape[y][x]) {
-                            const boardX = this.currentPiece.x + x;
-                            const boardY = this.currentPiece.y + y;
+                if (!this.currentPiece) return;
+                
+                for (let py = 0; py < this.currentPiece.shape.length; py++) {
+                    for (let px = 0; px < this.currentPiece.shape[py].length; px++) {
+                        if (this.currentPiece.shape[py][px] !== 0) {
+                            const boardX = this.currentPiece.x + px;
+                            const boardY = this.currentPiece.y + py;
                             
                             if (boardY >= 0) {
                                 this.board[boardY][boardX] = this.currentPiece.color;
@@ -542,234 +749,402 @@
                     }
                 }
                 
-                this.clearLines();
-                this.spawnNewPiece();
+                const clearedLines = this.clearLines();
+                this.updateScore(clearedLines);
+                
+                if (clearedLines > 0) {
+                    this.checkItemAcquisition();
+                }
+                
+                this.currentPiece = this.nextPiece;
+                this.nextPiece = this.createNewPiece();
+                
+                if (!this.isValidPosition(this.currentPiece.shape, this.currentPiece.x, this.currentPiece.y)) {
+                    this.gameOver();
+                }
             }
             
             clearLines() {
                 let linesCleared = 0;
                 
                 for (let y = this.BOARD_HEIGHT - 1; y >= 0; y--) {
-                    if (this.board[y].every(cell => cell !== 0)) {
-                        this.board.splice(y, 1);
-                        this.board.unshift(Array(this.BOARD_WIDTH).fill(0));
+                    if (this.isLineFull(y)) {
+                        this.removeLine(y);
                         linesCleared++;
                         y++;
                     }
                 }
                 
-                if (linesCleared > 0) {
-                    const baseScore = [0, 100, 300, 500, 800][linesCleared];
-                    this.score += baseScore * this.level;
-                    this.lines += linesCleared;
-                    
-                    const newLevel = Math.floor(this.lines / 10) + 1;
-                    if (newLevel > this.level) {
-                        this.level = newLevel;
-                        this.dropInterval = Math.max(50, 1000 - (this.level - 1) * 100);
+                return linesCleared;
+            }
+            
+            isLineFull(y) {
+                for (let x = 0; x < this.BOARD_WIDTH; x++) {
+                    if (this.board[y][x] === 0) {
+                        return false;
                     }
-                    
-                    this.updateUI();
+                }
+                return true;
+            }
+            
+            removeLine(lineY) {
+                for (let y = lineY; y > 0; y--) {
+                    for (let x = 0; x < this.BOARD_WIDTH; x++) {
+                        this.board[y][x] = this.board[y - 1][x];
+                    }
+                }
+                
+                for (let x = 0; x < this.BOARD_WIDTH; x++) {
+                    this.board[0][x] = 0;
                 }
             }
             
-            calculateGhostPiece() {
-                if (!this.currentPiece) return null;
+            removeSelectedLine(lineY) {
+                if (lineY < 0 || lineY >= this.BOARD_HEIGHT) return;
                 
-                const ghostPiece = {
-                    ...this.currentPiece,
-                    shape: this.currentPiece.shape.map(row => [...row])
-                };
+                this.removeLine(lineY);
+                this.score += 50;
+                this.updateUI();
+            }
+            
+            updateScore(linesCleared) {
+                if (linesCleared === 0) return;
                 
-                while (!this.checkCollision(ghostPiece, 0, 1)) {
-                    ghostPiece.y++;
+                const points = [0, 100, 300, 500, 800];
+                this.score += points[linesCleared] * this.level;
+                this.linesCleared += linesCleared;
+                
+                const newLevel = Math.floor(this.linesCleared / 10) + 1;
+                if (newLevel > this.level) {
+                    this.level = newLevel;
+                    this.dropTime = Math.max(100, 1000 - (this.level - 1) * 50);
+                    this.showLevelUpEffect();
                 }
                 
-                return ghostPiece;
+                this.updateUI();
+            }
+            
+            showLevelUpEffect() {
+                const effect = document.createElement('div');
+                effect.className = 'level-up-effect';
+                document.body.appendChild(effect);
+                setTimeout(() => effect.remove(), 300);
+            }
+            
+            checkItemAcquisition() {
+                if (this.items.length >= this.maxItems) return;
+                
+                if (Math.random() < this.itemAcquisitionRate) {
+                    this.items.push({
+                        type: 'lineRemover',
+                        name: '라인 제거',
+                        icon: '×'
+                    });
+                    this.updateItemsUI();
+                    this.showItemAcquisitionEffect();
+                }
+            }
+            
+            showItemAcquisitionEffect() {
+                const effect = document.createElement('div');
+                effect.className = 'item-get-effect';
+                effect.textContent = 'ITEM GET!';
+                effect.style.left = '50%';
+                effect.style.top = '50%';
+                effect.style.transform = 'translateX(-50%)';
+                effect.style.position = 'fixed';
+                effect.style.zIndex = '1000';
+                document.body.appendChild(effect);
+                setTimeout(() => effect.remove(), 1000);
+            }
+            
+            useItem(slotIndex) {
+                if (slotIndex >= this.items.length || this.currentState !== this.GAME_STATES.PLAYING) return;
+                
+                const item = this.items[slotIndex];
+                if (item.type === 'lineRemover') {
+                    this.awaitingRowSelection = true;
+                    this.itemPendingUse = slotIndex;
+                    this.canvas.style.cursor = 'crosshair';
+                    
+                    setTimeout(() => {
+                        if (this.awaitingRowSelection) {
+                            this.awaitingRowSelection = false;
+                            this.itemPendingUse = -1;
+                            this.canvas.style.cursor = 'default';
+                        }
+                    }, 5000);
+                }
             }
             
             togglePause() {
-                if (this.gameState === 'playing') {
-                    this.gameState = 'paused';
-                    document.getElementById('pauseOverlay').style.display = 'flex';
-                } else if (this.gameState === 'paused') {
-                    this.gameState = 'playing';
-                    document.getElementById('pauseOverlay').style.display = 'none';
+                if (this.currentState === this.GAME_STATES.PLAYING) {
+                    this.currentState = this.GAME_STATES.PAUSED;
+                    document.querySelector('.pause-btn').textContent = '재개 (P)';
+                } else if (this.currentState === this.GAME_STATES.PAUSED) {
+                    this.currentState = this.GAME_STATES.PLAYING;
+                    document.querySelector('.pause-btn').textContent = '일시정지 (P)';
                 }
             }
             
             gameOver() {
-                this.gameState = 'gameover';
-                document.getElementById('finalScore').textContent = this.score.toLocaleString();
-                document.getElementById('gameOver').style.display = 'flex';
-            }
-            
-            restart() {
-                this.gameState = 'playing';
-                this.score = 0;
-                this.level = 1;
-                this.lines = 0;
-                this.dropTimer = 0;
-                this.dropInterval = 1000;
+                this.currentState = this.GAME_STATES.GAME_OVER;
                 
-                document.getElementById('gameOver').style.display = 'none';
-                document.getElementById('pauseOverlay').style.display = 'none';
-                
-                this.updateUI();
-                this.init();
-            }
-            
-            updateUI() {
-                document.getElementById('score').textContent = this.score.toLocaleString();
-                document.getElementById('level').textContent = this.level;
-                document.getElementById('lines').textContent = this.lines;
-            }
-            
-            gameLoop(currentTime = 0) {
-                const deltaTime = currentTime - this.lastTime;
-                this.lastTime = currentTime;
-                
-                if (this.gameState === 'playing') {
-                    this.dropTimer += deltaTime;
-                    if (this.dropTimer >= this.dropInterval) {
-                        this.movePiece(0, 1);
-                        this.dropTimer = 0;
-                    }
+                if (this.score > this.highScore) {
+                    this.highScore = this.score;
+                    this.saveHighScore();
                 }
                 
-                this.render();
-                requestAnimationFrame((time) => this.gameLoop(time));
+                showGameOverScreen(this.score);
+            }
+            
+            saveHighScore() {
+                try {
+                    localStorage.setItem('tetris_high_score', this.highScore.toString());
+                } catch (e) {
+                    console.warn('최고점수 저장 실패:', e);
+                }
+            }
+            
+            loadHighScore() {
+                try {
+                    const saved = localStorage.getItem('tetris_high_score');
+                    return saved ? parseInt(saved) : 0;
+                } catch (e) {
+                    console.warn('최고점수 로드 실패:', e);
+                    return 0;
+                }
+            }
+            
+            update(deltaTime) {
+                if (this.currentState !== this.GAME_STATES.PLAYING) return;
+                
+                this.lastDropTime += deltaTime;
+                if (this.lastDropTime >= this.dropTime) {
+                    if (!this.movePiece(0, 1)) {
+                        this.placePiece();
+                    }
+                    this.lastDropTime = 0;
+                }
             }
             
             render() {
-                // 메인 캔버스 클리어
-                this.ctx.fillStyle = '#000000';
+                this.ctx.fillStyle = '#2C3E50';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 
-                this.drawGrid();
                 this.renderBoard();
                 
-                if (this.currentPiece && this.gameState === 'playing') {
-                    const ghostPiece = this.calculateGhostPiece();
-                    if (ghostPiece && ghostPiece.y !== this.currentPiece.y) {
-                        this.renderPiece(ghostPiece, 0.3);
-                    }
-                    this.renderPiece(this.currentPiece, 1.0);
+                if (this.currentPiece) {
+                    this.renderPiece(this.currentPiece);
+                    this.renderGhost();
                 }
                 
-                this.renderNextPiece();
+                if (this.currentState === this.GAME_STATES.PAUSED) {
+                    this.renderPauseOverlay();
+                }
             }
             
-            drawGrid() {
-                this.ctx.strokeStyle = '#333333';
-                this.ctx.lineWidth = 0.5;
+            renderBoard() {
+                this.ctx.strokeStyle = '#34495E';
+                this.ctx.lineWidth = 1;
                 
                 for (let x = 0; x <= this.BOARD_WIDTH; x++) {
                     this.ctx.beginPath();
-                    this.ctx.moveTo(x * this.BLOCK_SIZE, 0);
-                    this.ctx.lineTo(x * this.BLOCK_SIZE, this.canvas.height);
+                    this.ctx.moveTo(x * this.CELL_SIZE, 0);
+                    this.ctx.lineTo(x * this.CELL_SIZE, this.canvas.height);
                     this.ctx.stroke();
                 }
                 
                 for (let y = 0; y <= this.BOARD_HEIGHT; y++) {
                     this.ctx.beginPath();
-                    this.ctx.moveTo(0, y * this.BLOCK_SIZE);
-                    this.ctx.lineTo(this.canvas.width, y * this.BLOCK_SIZE);
+                    this.ctx.moveTo(0, y * this.CELL_SIZE);
+                    this.ctx.lineTo(this.canvas.width, y * this.CELL_SIZE);
                     this.ctx.stroke();
                 }
-            }
-            
-            renderBoard() {
+                
                 for (let y = 0; y < this.BOARD_HEIGHT; y++) {
                     for (let x = 0; x < this.BOARD_WIDTH; x++) {
                         if (this.board[y][x]) {
-                            this.ctx.fillStyle = this.board[y][x];
-                            this.ctx.fillRect(
-                                x * this.BLOCK_SIZE + 1,
-                                y * this.BLOCK_SIZE + 1,
-                                this.BLOCK_SIZE - 2,
-                                this.BLOCK_SIZE - 2
-                            );
-                            
-                            // 블록 테두리
-                            this.ctx.strokeStyle = '#FFFFFF';
-                            this.ctx.lineWidth = 1;
-                            this.ctx.strokeRect(
-                                x * this.BLOCK_SIZE + 1,
-                                y * this.BLOCK_SIZE + 1,
-                                this.BLOCK_SIZE - 2,
-                                this.BLOCK_SIZE - 2
-                            );
+                            this.drawBlock(x * this.CELL_SIZE, y * this.CELL_SIZE, this.board[y][x]);
                         }
                     }
                 }
+                
+                if (this.awaitingRowSelection) {
+                    this.ctx.fillStyle = 'rgba(199, 62, 29, 0.3)';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                }
             }
             
-            renderPiece(piece, opacity = 1.0) {
-                const alpha = Math.round(opacity * 255).toString(16).padStart(2, '0');
-                this.ctx.fillStyle = piece.color + alpha;
-                
+            renderPiece(piece) {
                 for (let y = 0; y < piece.shape.length; y++) {
                     for (let x = 0; x < piece.shape[y].length; x++) {
                         if (piece.shape[y][x]) {
-                            const drawX = (piece.x + x) * this.BLOCK_SIZE;
-                            const drawY = (piece.y + y) * this.BLOCK_SIZE;
-                            
-                            if (drawY >= 0) {
-                                this.ctx.fillRect(
-                                    drawX + 1,
-                                    drawY + 1,
-                                    this.BLOCK_SIZE - 2,
-                                    this.BLOCK_SIZE - 2
-                                );
-                                
-                                if (opacity === 1.0) {
-                                    this.ctx.strokeStyle = '#FFFFFF';
-                                    this.ctx.lineWidth = 1;
-                                    this.ctx.strokeRect(
-                                        drawX + 1,
-                                        drawY + 1,
-                                        this.BLOCK_SIZE - 2,
-                                        this.BLOCK_SIZE - 2
-                                    );
-                                }
-                            }
+                            const drawX = (piece.x + x) * this.CELL_SIZE;
+                            const drawY = (piece.y + y) * this.CELL_SIZE;
+                            this.drawBlock(drawX, drawY, piece.color);
                         }
                     }
                 }
             }
             
-            renderNextPiece() {
-                this.nextCtx.fillStyle = '#000000';
-                this.nextCtx.fillRect(0, 0, this.nextCanvas.width, this.nextCanvas.height);
+            renderGhost() {
+                if (!this.currentPiece) return;
                 
-                if (this.nextPiece) {
-                    const blockSize = 20;
-                    const offsetX = (this.nextCanvas.width - this.nextPiece.shape[0].length * blockSize) / 2;
-                    const offsetY = (this.nextCanvas.height - this.nextPiece.shape.length * blockSize) / 2;
-                    
-                    this.nextCtx.fillStyle = this.nextPiece.color;
-                    
-                    for (let y = 0; y < this.nextPiece.shape.length; y++) {
-                        for (let x = 0; x < this.nextPiece.shape[y].length; x++) {
-                            if (this.nextPiece.shape[y][x]) {
-                                this.nextCtx.fillRect(
-                                    offsetX + x * blockSize + 1,
-                                    offsetY + y * blockSize + 1,
-                                    blockSize - 2,
-                                    blockSize - 2
-                                );
-                            }
+                let ghostY = this.currentPiece.y;
+                while (this.isValidPosition(this.currentPiece.shape, this.currentPiece.x, ghostY + 1)) {
+                    ghostY++;
+                }
+                
+                this.ctx.globalAlpha = 0.3;
+                for (let y = 0; y < this.currentPiece.shape.length; y++) {
+                    for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
+                        if (this.currentPiece.shape[y][x]) {
+                            const drawX = (this.currentPiece.x + x) * this.CELL_SIZE;
+                            const drawY = (ghostY + y) * this.CELL_SIZE;
+                            this.drawBlock(drawX, drawY, this.currentPiece.color);
                         }
+                    }
+                }
+                this.ctx.globalAlpha = 1;
+            }
+            
+            drawBlock(x, y, color) {
+                this.ctx.fillStyle = color;
+                this.ctx.fillRect(x + 1, y + 1, this.CELL_SIZE - 2, this.CELL_SIZE - 2);
+                
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                this.ctx.fillRect(x + 1, y + 1, this.CELL_SIZE - 2, 3);
+                this.ctx.fillRect(x + 1, y + 1, 3, this.CELL_SIZE - 2);
+                
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                this.ctx.fillRect(x + this.CELL_SIZE - 4, y + 1, 3, this.CELL_SIZE - 2);
+                this.ctx.fillRect(x + 1, y + this.CELL_SIZE - 4, this.CELL_SIZE - 2, 3);
+            }
+            
+            renderPauseOverlay() {
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = 'bold 24px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('일시정지', this.canvas.width / 2, this.canvas.height / 2);
+                
+                this.ctx.font = '16px Arial';
+                this.ctx.fillText('P키를 눌러 재개', this.canvas.width / 2, this.canvas.height / 2 + 30);
+            }
+            
+            updateUI() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('lines').textContent = this.linesCleared;
+            }
+            
+            updateItemsUI() {
+                for (let i = 0; i < 3; i++) {
+                    const slot = document.getElementById(`slot${i + 1}`);
+                    if (i < this.items.length) {
+                        slot.className = 'item-slot has-item';
+                        slot.innerHTML = `<div class="item-icon">${this.items[i].icon}</div><span class="slot-number">${i + 1}</span>`;
+                    } else {
+                        slot.className = 'item-slot empty';
+                        slot.innerHTML = `<span class="slot-number">${i + 1}</span>`;
                     }
                 }
             }
         }
         
-        let game;
+        let game = null;
+        let lastTime = 0;
+        let animationId = null;
         
-        document.addEventListener('DOMContentLoaded', () => {
+        function gameLoop(currentTime) {
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+            
+            if (game) {
+                game.update(deltaTime);
+                game.render();
+            }
+            
+            animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        function startGame() {
+            document.getElementById('mainScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'grid';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
             game = new TetrisGame();
+            game.startGame();
+            
+            if (!animationId) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        function restartGame() {
+            startGame();
+        }
+        
+        function goToMain() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            document.getElementById('mainScreen').style.display = 'block';
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
+            updateHighScore();
+            game = null;
+        }
+        
+        function showGameOverScreen(finalScore) {
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'block';
+            document.getElementById('finalScore').textContent = finalScore;
+            
+            const highScore = game ? game.highScore : 0;
+            if (finalScore > highScore) {
+                document.getElementById('newRecordMsg').style.display = 'block';
+            } else {
+                document.getElementById('newRecordMsg').style.display = 'none';
+            }
+        }
+        
+        function togglePause() {
+            if (game) {
+                game.togglePause();
+            }
+        }
+        
+        function useItem(index) {
+            if (game) {
+                game.useItem(index);
+            }
+        }
+        
+        function updateHighScore() {
+            try {
+                const highScore = localStorage.getItem('tetris_high_score') || 0;
+                document.getElementById('displayHighScore').textContent = highScore;
+            } catch (e) {
+                console.warn('최고점수 로드 실패:', e);
+                document.getElementById('displayHighScore').textContent = '0';
+            }
+        }
+        
+        updateHighScore();
+        
+        window.addEventListener('error', (e) => {
+            console.error('게임 오류:', e.error);
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('처리되지 않은 Promise 에러:', e.reason);
         });
     </script>
 </body>
