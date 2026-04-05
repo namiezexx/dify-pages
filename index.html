@@ -3,21 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>우주 전쟁 - Space War</title>
+    <title>Tetris Game</title>
     <style>
         :root {
-            --bg-primary: #000011;
-            --text-primary: #FFFFFF;
-            --text-secondary: #CCCCCC;
-            --accent-cyan: #00FFFF;
-            --accent-orange: #FF6600;
-            --accent-red: #FF0000;
-            --accent-yellow: #FFFF00;
-            --accent-green: #00FF00;
-            --accent-blue: #0066FF;
-            --overlay-dark: rgba(0, 0, 0, 0.8);
-            --overlay-pause: rgba(128, 128, 128, 0.7);
-            --overlay-gameover: rgba(128, 0, 0, 0.8);
+            --primary-color: #2E86AB;
+            --secondary-color: #A23B72;
+            --background-color: #F18F01;
+            --accent-color: #C73E1D;
+            --game-bg: #0F0F0F;
+            --board-bg: #1A1A1A;
+            --grid-color: #333333;
+            --text-white: #FFFFFF;
+            --overlay-bg: rgba(0, 0, 0, 0.8);
         }
 
         * {
@@ -27,87 +24,137 @@
         }
 
         body {
-            background: var(--bg-primary);
             font-family: 'Courier New', monospace;
-            color: var(--text-primary);
+            background: var(--game-bg);
+            color: var(--text-white);
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
             user-select: none;
         }
 
-        #game-container {
+        .game-container {
             position: relative;
-            width: 600px;
-            height: 800px;
-            border: 2px solid var(--accent-cyan);
-            box-shadow: 0 0 20px var(--accent-cyan);
+            width: 800px;
+            height: 600px;
+            margin: 50px auto;
+            display: flex;
+            background: linear-gradient(45deg, #111111, #222222);
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(46, 134, 171, 0.5);
+        }
+
+        .game-area {
+            width: 400px;
+            height: 100%;
+            position: relative;
+            background: var(--board-bg);
+            border-right: 2px solid var(--primary-color);
         }
 
         #game-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            background: var(--bg-primary);
+            width: 400px;
+            height: 600px;
+            background: var(--board-bg);
             display: block;
-            touch-action: none;
         }
 
-        #hud-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+        .ui-panel {
+            width: 398px;
             height: 100%;
-            z-index: 2;
-            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background: linear-gradient(180deg, #1A1A1A, #2A2A2A);
         }
 
-        #score-display {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 20px;
+        .score-panel {
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary-color), #1E5F7F);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid var(--secondary-color);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-panel h2 {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .score-value {
             font-weight: bold;
-            color: var(--text-primary);
+            color: #00FFFF;
+            text-shadow: 0 0 5px #00FFFF;
         }
 
-        #lives-display {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 20px;
+        .next-panel {
+            height: 150px;
+            background: var(--grid-color);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid var(--primary-color);
+            text-align: center;
+        }
+
+        .next-panel h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--text-white);
+        }
+
+        #next-canvas {
+            width: 80px;
+            height: 80px;
+            background: var(--board-bg);
+            border: 1px solid var(--primary-color);
+            margin: 0 auto;
+            display: block;
+        }
+
+        .control-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .game-button {
+            width: 120px;
+            height: 40px;
+            background: var(--secondary-color);
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            color: var(--text-white);
+            font-family: inherit;
+            font-size: 14px;
             font-weight: bold;
-            color: var(--accent-red);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
-        #weapon-level {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--accent-green);
+        .game-button:hover {
+            background: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
         }
 
-        #enemy-count {
-            position: absolute;
-            top: 50px;
-            left: 20px;
-            font-size: 16px;
-            color: var(--text-secondary);
-        }
-
-        #high-score-display {
-            position: absolute;
-            top: 50px;
-            right: 20px;
-            font-size: 16px;
-            color: var(--accent-yellow);
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .screen-overlay {
@@ -116,946 +163,1130 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 10;
+            background: var(--overlay-bg);
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .screen-content {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 40px;
+            border-radius: 15px;
             text-align: center;
+            border: 3px solid var(--accent-color);
+            box-shadow: 0 0 30px rgba(199, 62, 29, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 30px rgba(199, 62, 29, 0.5); }
+            to { box-shadow: 0 0 40px rgba(199, 62, 29, 0.8); }
+        }
+
+        .screen-content h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
+            color: #00FFFF;
+        }
+
+        .screen-content h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .screen-content p {
+            font-size: 18px;
+            margin-bottom: 25px;
+        }
+
+        .big-button {
+            width: 200px;
+            height: 60px;
+            background: linear-gradient(45deg, var(--accent-color), #FF4500);
+            border: 3px solid var(--text-white);
+            border-radius: 15px;
+            color: var(--text-white);
+            font-family: inherit;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+            margin: 0 auto;
+            display: block;
+        }
+
+        .big-button:hover {
+            transform: scale(1.05);
+            background: linear-gradient(45deg, #FF4500, var(--accent-color));
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
         }
 
         #start-screen {
-            background: var(--overlay-dark);
             display: flex;
         }
 
         #pause-screen {
-            background: var(--overlay-pause);
             display: none;
         }
 
         #gameover-screen {
-            background: var(--overlay-gameover);
             display: none;
         }
 
-        .game-title {
-            font-size: 48px;
-            color: var(--accent-cyan);
-            margin-bottom: 40px;
-            text-shadow: 0 0 10px var(--accent-cyan);
-        }
-
-        .pause-title {
-            font-size: 36px;
-            color: var(--text-primary);
-            margin-bottom: 20px;
-        }
-
-        .gameover-title {
-            font-size: 42px;
-            color: var(--accent-red);
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px var(--accent-red);
-        }
-
-        .score-info {
-            font-size: 24px;
-            color: var(--text-primary);
-            margin: 20px 0;
-        }
-
-        .final-score {
-            font-size: 30px;
-            color: var(--text-primary);
-            margin: 20px 0;
-        }
-
-        .high-score-info {
-            font-size: 24px;
-            color: var(--accent-yellow);
-            margin: 20px 0;
-        }
-
-        .new-record {
-            font-size: 24px;
-            color: var(--accent-yellow);
-            margin: 10px 0;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.3; }
-        }
-
-        .game-button {
-            background: var(--accent-orange);
-            color: var(--text-primary);
-            border: 2px solid var(--text-primary);
-            padding: 15px 40px;
-            font-size: 20px;
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 20px 10px;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-            min-width: 200px;
-            touch-action: manipulation;
-        }
-
-        .game-button:hover {
-            background: var(--text-primary);
-            color: var(--accent-orange);
-            transform: scale(1.05);
-            box-shadow: 0 0 15px var(--accent-orange);
-        }
-
-        .restart-button {
-            background: var(--accent-blue);
-        }
-
-        .restart-button:hover {
-            background: var(--text-primary);
-            color: var(--accent-blue);
-            box-shadow: 0 0 15px var(--accent-blue);
-        }
-
-        #controls-info {
+        .high-score {
             position: absolute;
-            bottom: 40px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 16px;
-            color: var(--text-secondary);
+            color: #FFD700;
+            text-shadow: 0 0 10px #FFD700;
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
             text-align: center;
+            color: #CCCCCC;
             line-height: 1.5;
         }
 
-        .controls-text {
-            margin: 5px 0;
-        }
-
-        .pause-info {
-            font-size: 18px;
-            color: var(--text-secondary);
-            margin-top: 20px;
-        }
-
-        @media (max-width: 650px) {
-            #game-container {
-                width: 90vw;
-                height: calc(90vw * 4/3);
-                max-width: 600px;
-                max-height: 800px;
+        @media (max-width: 850px) {
+            .game-container {
+                width: 95vw;
+                height: 70vh;
+                margin: 20px auto;
+                flex-direction: column;
             }
 
-            #game-canvas {
+            .game-area {
                 width: 100%;
+                height: 60%;
+                border-right: none;
+                border-bottom: 2px solid var(--primary-color);
+            }
+
+            .ui-panel {
+                width: 100%;
+                height: 40%;
+                flex-direction: row;
+                padding: 10px;
+            }
+
+            .score-panel, .next-panel {
                 height: 100%;
+                flex: 1;
+                margin-bottom: 0;
+                margin-right: 10px;
             }
 
-            .game-title {
-                font-size: 36px;
-            }
-
-            .game-button {
-                font-size: 18px;
-                padding: 12px 30px;
-                min-width: 180px;
-            }
-
-            .controls-text {
-                font-size: 14px;
+            .control-panel {
+                flex: 0 0 120px;
+                margin-right: 0;
             }
         }
 
-        .transition-fade {
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .transition-fade.active {
-            opacity: 1;
-        }
-
-        .score-popup {
+        .particle-effect {
             position: absolute;
-            font-size: 16px;
-            color: var(--accent-yellow);
-            font-weight: bold;
+            width: 4px;
+            height: 4px;
+            background: #FFFFFF;
             pointer-events: none;
-            z-index: 5;
-            animation: scoreFloat 1s ease-out forwards;
+            animation: particle-explosion 0.8s ease-out forwards;
         }
 
-        @keyframes scoreFloat {
+        @keyframes particle-explosion {
             0% {
+                transform: scale(1);
                 opacity: 1;
-                transform: translateY(0);
             }
             100% {
+                transform: scale(0) translateX(var(--dx)) translateY(var(--dy));
                 opacity: 0;
-                transform: translateY(-50px);
+            }
+        }
+
+        .line-flash {
+            position: absolute;
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.5);
+            animation: line-flash 0.5s ease-out forwards;
+        }
+
+        @keyframes line-flash {
+            0% {
+                transform: scaleX(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scaleX(1.1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scaleX(0);
+                opacity: 0;
             }
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="game-canvas" width="600" height="800"></canvas>
-        
-        <div id="hud-container">
-            <div id="score-display">SCORE: 000000</div>
-            <div id="lives-display">LIVES: ♥♥♥</div>
-            <div id="weapon-level">WEAPON LV.1</div>
-            <div id="enemy-count">ENEMIES: 0</div>
-            <div id="high-score-display">HIGH: 000000</div>
+    <div class="game-container">
+        <!-- 게임 영역 -->
+        <div class="game-area">
+            <canvas id="game-canvas" width="400" height="600"></canvas>
         </div>
 
-        <div id="start-screen" class="screen-overlay">
-            <h1 class="game-title">우주 전쟁</h1>
-            <div class="high-score-info">최고 점수: <span id="menu-high-score">000000</span></div>
-            <button id="btn-start" class="game-button">게임 시작</button>
-            <div id="controls-info">
-                <div class="controls-text">🎮 조작법</div>
-                <div class="controls-text">키보드: 방향키 이동, 스페이스바 발사</div>
-                <div class="controls-text">모바일: 터치로 이동 및 발사</div>
-                <div class="controls-text">ESC: 일시정지</div>
+        <!-- UI 패널 -->
+        <div class="ui-panel">
+            <!-- 점수판 -->
+            <div class="score-panel">
+                <h2>SCORE BOARD</h2>
+                <div class="score-item">
+                    <span>Score:</span>
+                    <span class="score-value" id="score-display">0</span>
+                </div>
+                <div class="score-item">
+                    <span>Level:</span>
+                    <span class="score-value" id="level-display">1</span>
+                </div>
+                <div class="score-item">
+                    <span>Lines:</span>
+                    <span class="score-value" id="lines-display">0</span>
+                </div>
+                <div class="score-item">
+                    <span>High Score:</span>
+                    <span class="score-value" id="high-score-display">0</span>
+                </div>
+            </div>
+
+            <!-- 다음 블록 미리보기 -->
+            <div class="next-panel">
+                <h3>NEXT BLOCK</h3>
+                <canvas id="next-canvas" width="80" height="80"></canvas>
+            </div>
+
+            <!-- 컨트롤 패널 -->
+            <div class="control-panel">
+                <button class="game-button" id="btn-pause">PAUSE</button>
             </div>
         </div>
 
-        <div id="pause-screen" class="screen-overlay">
-            <h2 class="pause-title">PAUSED</h2>
-            <div class="pause-info">ESC 키를 눌러 게임을 계속하세요</div>
+        <!-- 시작 화면 -->
+        <div class="screen-overlay" id="start-screen">
+            <div class="screen-content">
+                <h1>TETRIS</h1>
+                <p>Neon Cyber Arcade</p>
+                <button class="big-button" id="btn-start">START GAME</button>
+                <div class="high-score">
+                    High Score: <span id="start-high-score">0</span>
+                </div>
+                <div class="instructions">
+                    ← → : Move | ↑ : Rotate | ↓ : Soft Drop<br>
+                    SPACE : Hard Drop | P : Pause
+                </div>
+            </div>
         </div>
 
-        <div id="gameover-screen" class="screen-overlay">
-            <h2 class="gameover-title">GAME OVER</h2>
-            <div class="final-score">최종 점수: <span id="final-score">000000</span></div>
-            <div class="score-info">처치한 적: <span id="final-enemy-count">0</span>마리</div>
-            <div id="new-record-msg" class="new-record" style="display: none;">🎉 신기록 달성!</div>
-            <button id="btn-restart" class="game-button restart-button">다시 시작</button>
+        <!-- 일시정지 화면 -->
+        <div class="screen-overlay" id="pause-screen">
+            <div class="screen-content">
+                <h2>PAUSED</h2>
+                <p>Game is paused</p>
+                <button class="big-button" id="btn-resume">RESUME</button>
+            </div>
+        </div>
+
+        <!-- 게임오버 화면 -->
+        <div class="screen-overlay" id="gameover-screen">
+            <div class="screen-content">
+                <h2>GAME OVER</h2>
+                <p>Final Score: <span id="final-score">0</span></p>
+                <button class="big-button" id="btn-restart">RESTART</button>
+            </div>
         </div>
     </div>
 
     <script>
+        // 테트리스 게임 - 상태머신 기반 모듈 패턴
         (function() {
             'use strict';
-
-            // Game Constants
+            
+            // 게임 상수 정의
             const GAME_CONFIG = {
-                CANVAS_WIDTH: 600,
-                CANVAS_HEIGHT: 800,
-                PLAYER_SPEED: 300,
-                BULLET_SPEED: 500,
-                ENEMY_SPEED: 100,
-                ENEMY_BULLET_SPEED: 200,
-                FIRE_RATE: 250,
-                INITIAL_ENEMY_SPAWN_RATE: 2000,
-                MIN_ENEMY_SPAWN_RATE: 800,
-                WEAPON_UPGRADE_KILLS: [10, 25],
-                INITIAL_LIVES: 3,
-                DIFFICULTY_INCREASE_INTERVAL: 30000
+                BOARD_WIDTH: 10,
+                BOARD_HEIGHT: 20,
+                BLOCK_SIZE: 30,
+                CANVAS_WIDTH: 400,
+                CANVAS_HEIGHT: 600,
+                NEXT_CANVAS_SIZE: 80
             };
 
-            // Game States
+            // 게임 상태 열거형
             const GAME_STATES = {
                 READY: 'ready',
                 PLAYING: 'playing',
                 PAUSED: 'paused',
-                GAME_OVER: 'game_over'
+                GAME_OVER: 'gameover'
             };
 
-            // Colors
-            const COLORS = {
-                BACKGROUND: '#000011',
-                PLAYER: '#FFFFFF',
-                PLAYER_OUTLINE: '#00FFFF',
-                ENEMY: '#FF0000',
-                ENEMY_OUTLINE: '#FF6600',
-                PLAYER_BULLET: '#FFFF00',
-                ENEMY_BULLET: '#FF6600',
-                TEXT: '#FFFFFF',
-                ACCENT: '#00FFFF',
-                WEAPON_LEVEL: '#00FF00'
-            };
-
-            // Game Variables
-            let canvas, ctx;
-            let gameState = GAME_STATES.READY;
-            let lastTime = 0;
-            let keys = {};
-            let audioContext;
-            let audioEnabled = false;
-
-            // Touch control variables
-            let touchControls = {
-                isTouch: false,
-                startX: 0,
-                startY: 0,
-                currentX: 0,
-                currentY: 0,
-                isFiring: false
-            };
-
-            // Game Objects
-            let player = {
-                x: 300,
-                y: 720,
-                width: 20,
-                height: 20,
-                lives: GAME_CONFIG.INITIAL_LIVES,
-                weaponLevel: 1,
-                lastFire: 0,
-                speed: GAME_CONFIG.PLAYER_SPEED
-            };
-
-            let gameData = {
-                score: 0,
-                highScore: 0,
-                enemiesKilled: 0,
-                lastEnemySpawn: 0,
-                enemySpawnRate: GAME_CONFIG.INITIAL_ENEMY_SPAWN_RATE,
-                gameStartTime: 0,
-                lastDifficultyIncrease: 0
-            };
-
-            let bullets = [];
-            let enemies = [];
-            let enemyBullets = [];
-            let particles = [];
-            let stars = [];
-
-            // Object pools for performance
-            const objectPools = {
-                bullets: [],
-                enemies: [],
-                particles: []
-            };
-
-            // DOM Elements
-            const elements = {};
-
-            // Initialize game
-            function init() {
-                // Get canvas and context
-                canvas = document.getElementById('game-canvas');
-                ctx = canvas.getContext('2d');
-                
-                // Set canvas size
-                const rect = canvas.getBoundingClientRect();
-                canvas.width = GAME_CONFIG.CANVAS_WIDTH;
-                canvas.height = GAME_CONFIG.CANVAS_HEIGHT;
-
-                // Get DOM elements
-                elements.scoreDisplay = document.getElementById('score-display');
-                elements.livesDisplay = document.getElementById('lives-display');
-                elements.weaponLevel = document.getElementById('weapon-level');
-                elements.enemyCount = document.getElementById('enemy-count');
-                elements.highScoreDisplay = document.getElementById('high-score-display');
-                elements.finalScore = document.getElementById('final-score');
-                elements.finalEnemyCount = document.getElementById('final-enemy-count');
-                elements.menuHighScore = document.getElementById('menu-high-score');
-                elements.startScreen = document.getElementById('start-screen');
-                elements.pauseScreen = document.getElementById('pause-screen');
-                elements.gameoverScreen = document.getElementById('gameover-screen');
-                elements.btnStart = document.getElementById('btn-start');
-                elements.btnRestart = document.getElementById('btn-restart');
-                elements.newRecordMsg = document.getElementById('new-record-msg');
-
-                // Load high score
-                loadHighScore();
-                updateUI();
-
-                // Initialize audio
-                initAudio();
-
-                // Generate stars
-                generateStars();
-
-                // Event listeners
-                setupEventListeners();
-
-                // Start game loop
-                requestAnimationFrame(gameLoop);
-            }
-
-            function initAudio() {
-                try {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    audioEnabled = true;
-                } catch (e) {
-                    console.log('Audio not supported');
-                    audioContext = null;
-                    audioEnabled = false;
+            // 테트로미노 블록 정의 (4방향 회전 포함)
+            const TETROMINOES = {
+                I: {
+                    shape: [
+                        [[1,1,1,1]],
+                        [[1],[1],[1],[1]],
+                        [[1,1,1,1]],
+                        [[1],[1],[1],[1]]
+                    ],
+                    color: '#00FFFF'
+                },
+                O: {
+                    shape: [
+                        [[1,1],[1,1]],
+                        [[1,1],[1,1]],
+                        [[1,1],[1,1]],
+                        [[1,1],[1,1]]
+                    ],
+                    color: '#FFFF00'
+                },
+                T: {
+                    shape: [
+                        [[0,1,0],[1,1,1]],
+                        [[1,0],[1,1],[1,0]],
+                        [[1,1,1],[0,1,0]],
+                        [[0,1],[1,1],[0,1]]
+                    ],
+                    color: '#800080'
+                },
+                S: {
+                    shape: [
+                        [[0,1,1],[1,1,0]],
+                        [[1,0],[1,1],[0,1]],
+                        [[0,1,1],[1,1,0]],
+                        [[1,0],[1,1],[0,1]]
+                    ],
+                    color: '#00FF00'
+                },
+                Z: {
+                    shape: [
+                        [[1,1,0],[0,1,1]],
+                        [[0,1],[1,1],[1,0]],
+                        [[1,1,0],[0,1,1]],
+                        [[0,1],[1,1],[1,0]]
+                    ],
+                    color: '#FF0000'
+                },
+                J: {
+                    shape: [
+                        [[1,0,0],[1,1,1]],
+                        [[1,1],[1,0],[1,0]],
+                        [[1,1,1],[0,0,1]],
+                        [[0,1],[0,1],[1,1]]
+                    ],
+                    color: '#0000FF'
+                },
+                L: {
+                    shape: [
+                        [[0,0,1],[1,1,1]],
+                        [[1,0],[1,0],[1,1]],
+                        [[1,1,1],[1,0,0]],
+                        [[1,1],[0,1],[0,1]]
+                    ],
+                    color: '#FFA500'
                 }
-            }
+            };
 
-            function playSound(frequency, duration, waveType = 'sine') {
-                if (!audioEnabled || !audioContext) return;
+            // 점수 계산 상수
+            const SCORE_VALUES = {
+                SOFT_DROP: 1,
+                HARD_DROP: 2,
+                SINGLE: 100,
+                DOUBLE: 300,
+                TRIPLE: 500,
+                TETRIS: 800
+            };
 
-                try {
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-
-                    oscillator.frequency.value = frequency;
-                    oscillator.type = waveType;
-
-                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-
-                    oscillator.start();
-                    oscillator.stop(audioContext.currentTime + duration);
-                } catch (e) {
-                    console.log('Sound playback failed:', e);
+            // 게임 메인 클래스
+            class TetrisGame {
+                constructor() {
+                    this.state = GAME_STATES.READY;
+                    this.board = this.createEmptyBoard();
+                    this.currentPiece = null;
+                    this.nextPiece = null;
+                    this.score = 0;
+                    this.level = 1;
+                    this.lines = 0;
+                    this.dropTimer = 0;
+                    this.dropInterval = 1000; // 초기 1초
+                    this.particles = [];
+                    this.audioContext = null;
+                    this.eventsInitialized = false;
+                    
+                    this.initializeElements();
+                    this.initializeAudio();
+                    this.bindEvents();
+                    this.loadHighScore();
+                    this.updateStartScreenHighScore();
+                    this.generateNextPiece();
+                    this.spawnNewPiece();
                 }
-            }
 
-            function generateStars() {
-                stars = [];
-                for (let i = 0; i < 50; i++) {
-                    stars.push({
-                        x: Math.random() * GAME_CONFIG.CANVAS_WIDTH,
-                        y: Math.random() * GAME_CONFIG.CANVAS_HEIGHT,
-                        speed: Math.random() * 50 + 25
-                    });
+                // DOM 엘리먼트 초기화
+                initializeElements() {
+                    this.canvas = document.getElementById('game-canvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    this.nextCanvas = document.getElementById('next-canvas');
+                    this.nextCtx = this.nextCanvas.getContext('2d');
+                    
+                    this.scoreDisplay = document.getElementById('score-display');
+                    this.levelDisplay = document.getElementById('level-display');
+                    this.linesDisplay = document.getElementById('lines-display');
+                    this.highScoreDisplay = document.getElementById('high-score-display');
+                    this.finalScoreDisplay = document.getElementById('final-score');
+                    this.startHighScoreDisplay = document.getElementById('start-high-score');
+                    
+                    this.startScreen = document.getElementById('start-screen');
+                    this.gameoverScreen = document.getElementById('gameover-screen');
+                    this.pauseScreen = document.getElementById('pause-screen');
+                    
+                    this.btnStart = document.getElementById('btn-start');
+                    this.btnRestart = document.getElementById('btn-restart');
+                    this.btnPause = document.getElementById('btn-pause');
+                    this.btnResume = document.getElementById('btn-resume');
                 }
-            }
 
-            function setupEventListeners() {
-                // Keyboard events
-                document.addEventListener('keydown', handleKeyDown);
-                document.addEventListener('keyup', handleKeyUp);
-
-                // Touch events
-                canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-                canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-                canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-                // Button events
-                elements.btnStart.addEventListener('click', startGame);
-                elements.btnRestart.addEventListener('click', restartGame);
-
-                // Canvas click for audio activation
-                canvas.addEventListener('click', () => {
-                    if (audioContext && audioContext.state === 'suspended') {
-                        audioContext.resume();
-                    }
-                });
-
-                // Prevent context menu
-                canvas.addEventListener('contextmenu', e => e.preventDefault());
-            }
-
-            function handleTouchStart(e) {
-                e.preventDefault();
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                
-                touchControls.isTouch = true;
-                touchControls.startX = (e.touches[0].clientX - rect.left) * scaleX;
-                touchControls.startY = (e.touches[0].clientY - rect.top) * scaleY;
-                touchControls.currentX = touchControls.startX;
-                touchControls.currentY = touchControls.startY;
-                touchControls.isFiring = true;
-            }
-
-            function handleTouchMove(e) {
-                e.preventDefault();
-                if (!touchControls.isTouch) return;
-                
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                
-                touchControls.currentX = (e.touches[0].clientX - rect.left) * scaleX;
-                touchControls.currentY = (e.touches[0].clientY - rect.top) * scaleY;
-            }
-
-            function handleTouchEnd(e) {
-                e.preventDefault();
-                touchControls.isTouch = false;
-                touchControls.isFiring = false;
-            }
-
-            function handleKeyDown(e) {
-                keys[e.code] = true;
-
-                if (e.code === 'Escape') {
-                    if (gameState === GAME_STATES.PLAYING) {
-                        pauseGame();
-                    } else if (gameState === GAME_STATES.PAUSED) {
-                        resumeGame();
+                // Web Audio API 초기화
+                initializeAudio() {
+                    try {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    } catch (e) {
+                        console.warn('Web Audio API 지원되지 않음');
                     }
                 }
 
-                if (e.code === 'Space' && gameState === GAME_STATES.READY) {
-                    startGame();
+                // 이벤트 바인딩
+                bindEvents() {
+                    if (this.eventsInitialized) return;
+                    
+                    // 버튼 이벤트
+                    this.btnStart.addEventListener('click', () => this.startGame());
+                    this.btnRestart.addEventListener('click', () => this.restartGame());
+                    this.btnPause.addEventListener('click', () => this.togglePause());
+                    if (this.btnResume) {
+                        this.btnResume.addEventListener('click', () => this.togglePause());
+                    }
+
+                    // 키보드 이벤트
+                    document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+                    
+                    this.eventsInitialized = true;
+                    
+                    // 게임 루프 시작
+                    this.gameLoop();
                 }
 
-                e.preventDefault();
-            }
-
-            function handleKeyUp(e) {
-                keys[e.code] = false;
-                e.preventDefault();
-            }
-
-            function startGame() {
-                gameState = GAME_STATES.PLAYING;
-                resetGame();
-                elements.startScreen.style.display = 'none';
-                gameData.gameStartTime = performance.now();
-                gameData.lastDifficultyIncrease = gameData.gameStartTime;
-            }
-
-            function pauseGame() {
-                gameState = GAME_STATES.PAUSED;
-                elements.pauseScreen.style.display = 'flex';
-            }
-
-            function resumeGame() {
-                gameState = GAME_STATES.PLAYING;
-                elements.pauseScreen.style.display = 'none';
-            }
-
-            function restartGame() {
-                gameState = GAME_STATES.PLAYING;
-                resetGame();
-                elements.gameoverScreen.style.display = 'none';
-                gameData.gameStartTime = performance.now();
-                gameData.lastDifficultyIncrease = gameData.gameStartTime;
-            }
-
-            function resetGame() {
-                player.x = GAME_CONFIG.CANVAS_WIDTH / 2;
-                player.y = GAME_CONFIG.CANVAS_HEIGHT - 80;
-                player.lives = GAME_CONFIG.INITIAL_LIVES;
-                player.weaponLevel = 1;
-                player.lastFire = 0;
-
-                gameData.score = 0;
-                gameData.enemiesKilled = 0;
-                gameData.lastEnemySpawn = 0;
-                gameData.enemySpawnRate = GAME_CONFIG.INITIAL_ENEMY_SPAWN_RATE;
-
-                bullets.length = 0;
-                enemies.length = 0;
-                enemyBullets.length = 0;
-                particles.length = 0;
-
-                updateUI();
-            }
-
-            function gameLoop(currentTime) {
-                const deltaTime = Math.min((currentTime - lastTime) / 1000, 1/60);
-                lastTime = currentTime;
-
-                if (gameState === GAME_STATES.PLAYING) {
-                    update(deltaTime);
+                // 빈 게임 보드 생성
+                createEmptyBoard() {
+                    return Array(GAME_CONFIG.BOARD_HEIGHT).fill().map(() => 
+                        Array(GAME_CONFIG.BOARD_WIDTH).fill(0)
+                    );
                 }
 
-                render();
-                requestAnimationFrame(gameLoop);
-            }
+                // 다음 피스 생성
+                generateNextPiece() {
+                    const pieces = Object.keys(TETROMINOES);
+                    const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
+                    this.nextPiece = {
+                        type: randomPiece,
+                        shape: TETROMINOES[randomPiece].shape[0],
+                        color: TETROMINOES[randomPiece].color
+                    };
+                }
 
-            function update(deltaTime) {
-                updatePlayer(deltaTime);
-                updateBullets(deltaTime);
-                updateEnemies(deltaTime);
-                updateEnemyBullets(deltaTime);
-                updateParticles(deltaTime);
-                updateStars(deltaTime);
-                checkCollisions();
-                spawnEnemies(deltaTime);
-                updateDifficulty();
-                updateUI();
-            }
+                // 새로운 피스 스폰
+                spawnNewPiece() {
+                    if (this.nextPiece) {
+                        this.currentPiece = {
+                            ...this.nextPiece,
+                            x: Math.floor(GAME_CONFIG.BOARD_WIDTH / 2) - 1,
+                            y: 0,
+                            rotation: 0
+                        };
+                        this.generateNextPiece();
+                        
+                        // 게임오버 체크
+                        if (this.checkCollision(this.currentPiece)) {
+                            this.gameOver();
+                        }
+                    }
+                }
 
-            function updatePlayer(deltaTime) {
-                // Touch controls
-                if (touchControls.isTouch && gameState === GAME_STATES.PLAYING) {
-                    const targetX = touchControls.currentX;
-                    const targetY = touchControls.currentY;
+                // 충돌 감지
+                checkCollision(piece, dx = 0, dy = 0, rotation = piece.rotation) {
+                    const shape = this.getRotatedShape(piece.type, rotation);
+                    const newX = piece.x + dx;
+                    const newY = piece.y + dy;
                     
-                    // Move player towards touch position
-                    const dx = targetX - player.x;
-                    const dy = targetY - player.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    for (let y = 0; y < shape.length; y++) {
+                        for (let x = 0; x < shape[y].length; x++) {
+                            if (shape[y][x]) {
+                                const boardX = newX + x;
+                                const boardY = newY + y;
+                                
+                                // 경계 체크
+                                if (boardX < 0 || boardX >= GAME_CONFIG.BOARD_WIDTH || 
+                                    boardY >= GAME_CONFIG.BOARD_HEIGHT) {
+                                    return true;
+                                }
+                                
+                                // 기존 블록과의 충돌 체크
+                                if (boardY >= 0 && this.board[boardY][boardX]) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    return false;
+                }
+
+                // 회전된 블록 모양 반환
+                getRotatedShape(pieceType, rotation) {
+                    const shapes = TETROMINOES[pieceType].shape;
+                    return shapes[rotation % shapes.length];
+                }
+
+                // 벽 킥 테스트 (개선된 회전 로직)
+                tryWallKick(piece, newRotation) {
+                    const wallKickTests = [
+                        [0, 0],   // 기본 위치
+                        [-1, 0],  // 왼쪽으로 1칸
+                        [1, 0],   // 오른쪽으로 1칸
+                        [0, -1],  // 위로 1칸
+                        [-1, -1], // 왼쪽 위 대각선
+                        [1, -1]   // 오른쪽 위 대각선
+                    ];
+
+                    for (let [dx, dy] of wallKickTests) {
+                        if (!this.checkCollision(piece, dx, dy, newRotation)) {
+                            return { dx, dy };
+                        }
+                    }
+                    return null;
+                }
+
+                // 피스를 보드에 배치
+                placePiece() {
+                    const shape = this.getRotatedShape(this.currentPiece.type, this.currentPiece.rotation);
                     
-                    if (distance > 5) {
-                        const moveSpeed = Math.min(player.speed * deltaTime, distance);
-                        player.x += (dx / distance) * moveSpeed;
-                        player.y += (dy / distance) * moveSpeed;
+                    for (let y = 0; y < shape.length; y++) {
+                        for (let x = 0; x < shape[y].length; x++) {
+                            if (shape[y][x]) {
+                                const boardY = this.currentPiece.y + y;
+                                const boardX = this.currentPiece.x + x;
+                                if (boardY >= 0) {
+                                    this.board[boardY][boardX] = this.currentPiece.color;
+                                }
+                            }
+                        }
                     }
                     
-                    // Auto-fire when touching
-                    if (touchControls.isFiring && performance.now() - player.lastFire > GAME_CONFIG.FIRE_RATE) {
-                        fireBullet();
-                        player.lastFire = performance.now();
+                    // 착지 사운드 재생
+                    this.playSound(100, 0.2);
+                    
+                    // 라인 체크 및 제거
+                    this.checkLines();
+                    
+                    // 새로운 피스 스폰
+                    this.spawnNewPiece();
+                }
+
+                // 완성된 라인 체크 및 제거
+                checkLines() {
+                    let linesCleared = 0;
+                    const linesToClear = [];
+                    
+                    for (let y = GAME_CONFIG.BOARD_HEIGHT - 1; y >= 0; y--) {
+                        if (this.board[y].every(cell => cell !== 0)) {
+                            linesToClear.push(y);
+                            linesCleared++;
+                        }
                     }
-                }
-
-                // Keyboard movement
-                if (keys['ArrowLeft'] || keys['KeyA']) {
-                    player.x -= player.speed * deltaTime;
-                }
-                if (keys['ArrowRight'] || keys['KeyD']) {
-                    player.x += player.speed * deltaTime;
-                }
-                if (keys['ArrowUp'] || keys['KeyW']) {
-                    player.y -= player.speed * deltaTime;
-                }
-                if (keys['ArrowDown'] || keys['KeyS']) {
-                    player.y += player.speed * deltaTime;
-                }
-
-                // Boundary check
-                player.x = Math.max(player.width/2, Math.min(GAME_CONFIG.CANVAS_WIDTH - player.width/2, player.x));
-                player.y = Math.max(player.height/2, Math.min(GAME_CONFIG.CANVAS_HEIGHT - player.height/2, player.y));
-
-                // Shooting
-                if (keys['Space'] && performance.now() - player.lastFire > GAME_CONFIG.FIRE_RATE) {
-                    fireBullet();
-                    player.lastFire = performance.now();
-                }
-            }
-
-            function fireBullet() {
-                playSound(800, 0.15);
-
-                if (player.weaponLevel === 1) {
-                    bullets.push(createBullet(player.x, player.y - 10, 0, -GAME_CONFIG.BULLET_SPEED));
-                } else if (player.weaponLevel === 2) {
-                    bullets.push(createBullet(player.x - 8, player.y - 10, 0, -GAME_CONFIG.BULLET_SPEED));
-                    bullets.push(createBullet(player.x + 8, player.y - 10, 0, -GAME_CONFIG.BULLET_SPEED));
-                } else if (player.weaponLevel === 3) {
-                    bullets.push(createBullet(player.x, player.y - 10, 0, -GAME_CONFIG.BULLET_SPEED));
-                    bullets.push(createBullet(player.x - 12, player.y - 10, -50, -GAME_CONFIG.BULLET_SPEED));
-                    bullets.push(createBullet(player.x + 12, player.y - 10, 50, -GAME_CONFIG.BULLET_SPEED));
-                }
-            }
-
-            function createBullet(x, y, vx, vy) {
-                let bullet = objectPools.bullets.pop();
-                if (!bullet) {
-                    bullet = { width: 2, height: 8 };
-                }
-                bullet.x = x;
-                bullet.y = y;
-                bullet.vx = vx;
-                bullet.vy = vy;
-                return bullet;
-            }
-
-            function updateBullets(deltaTime) {
-                for (let i = bullets.length - 1; i >= 0; i--) {
-                    const bullet = bullets[i];
-                    bullet.x += bullet.vx * deltaTime;
-                    bullet.y += bullet.vy * deltaTime;
-
-                    if (bullet.y < -10) {
-                        objectPools.bullets.push(bullets.splice(i, 1)[0]);
-                    }
-                }
-            }
-
-            function spawnEnemies(deltaTime) {
-                if (performance.now() - gameData.lastEnemySpawn > gameData.enemySpawnRate) {
-                    enemies.push(createEnemy());
-                    gameData.lastEnemySpawn = performance.now();
-                }
-            }
-
-            function createEnemy() {
-                let enemy = objectPools.enemies.pop();
-                if (!enemy) {
-                    enemy = { width: 16, height: 16 };
-                }
-                enemy.x = Math.random() * (GAME_CONFIG.CANVAS_WIDTH - 32) + 16;
-                enemy.y = -20;
-                enemy.lastFire = 0;
-                enemy.speed = GAME_CONFIG.ENEMY_SPEED;
-                return enemy;
-            }
-
-            function updateEnemies(deltaTime) {
-                for (let i = enemies.length - 1; i >= 0; i--) {
-                    const enemy = enemies[i];
-                    enemy.y += enemy.speed * deltaTime;
-
-                    // Enemy shooting
-                    if (Math.random() < 0.005 && performance.now() - enemy.lastFire > 1000) {
-                        enemyBullets.push({
-                            x: enemy.x,
-                            y: enemy.y + enemy.height,
-                            width: 2,
-                            height: 6,
-                            vy: GAME_CONFIG.ENEMY_BULLET_SPEED
+                    
+                    if (linesCleared > 0) {
+                        // 파티클 효과 생성
+                        this.createParticles(linesToClear);
+                        
+                        // 라인 제거 애니메이션
+                        this.animateLineRemoval(linesToClear, () => {
+                            // 라인 제거
+                            linesToClear.sort((a, b) => b - a); // 내림차순 정렬
+                            linesToClear.forEach(lineY => {
+                                this.board.splice(lineY, 1);
+                                this.board.unshift(new Array(GAME_CONFIG.BOARD_WIDTH).fill(0));
+                            });
+                            
+                            // 점수 계산
+                            this.updateScore(linesCleared);
+                            
+                            // 레벨 업데이트
+                            this.lines += linesCleared;
+                            const newLevel = Math.floor(this.lines / 10) + 1;
+                            if (newLevel > this.level) {
+                                this.level = newLevel;
+                                this.updateDropInterval();
+                                this.playSound(800, 0.3); // 레벨업 사운드
+                            }
+                            
+                            this.updateDisplay();
                         });
-                        enemy.lastFire = performance.now();
-                    }
-
-                    if (enemy.y > GAME_CONFIG.CANVAS_HEIGHT + 20) {
-                        objectPools.enemies.push(enemies.splice(i, 1)[0]);
-                    }
-                }
-            }
-
-            function updateEnemyBullets(deltaTime) {
-                for (let i = enemyBullets.length - 1; i >= 0; i--) {
-                    const bullet = enemyBullets[i];
-                    bullet.y += bullet.vy * deltaTime;
-
-                    if (bullet.y > GAME_CONFIG.CANVAS_HEIGHT + 10) {
-                        enemyBullets.splice(i, 1);
-                    }
-                }
-            }
-
-            function updateParticles(deltaTime) {
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    const particle = particles[i];
-                    particle.x += particle.vx * deltaTime;
-                    particle.y += particle.vy * deltaTime;
-                    particle.life -= deltaTime;
-                    particle.alpha = particle.life / particle.maxLife;
-
-                    if (particle.life <= 0) {
-                        particles.splice(i, 1);
-                    }
-                }
-            }
-
-            function updateStars(deltaTime) {
-                stars.forEach(star => {
-                    star.y += star.speed * deltaTime;
-                    if (star.y > GAME_CONFIG.CANVAS_HEIGHT) {
-                        star.y = -5;
-                        star.x = Math.random() * GAME_CONFIG.CANVAS_WIDTH;
-                    }
-                });
-            }
-
-            function checkCollisions() {
-                // Player bullets vs enemies
-                for (let i = bullets.length - 1; i >= 0; i--) {
-                    for (let j = enemies.length - 1; j >= 0; j--) {
-                        if (isColliding(bullets[i], enemies[j])) {
-                            createExplosion(enemies[j].x, enemies[j].y);
-                            objectPools.bullets.push(bullets.splice(i, 1)[0]);
-                            objectPools.enemies.push(enemies.splice(j, 1)[0]);
-                            
-                            gameData.score += 100;
-                            gameData.enemiesKilled++;
-                            
-                            playSound(400, 0.2, 'sawtooth');
-                            checkWeaponUpgrade();
-                            break;
-                        }
-                    }
-                }
-
-                // Player vs enemies
-                enemies.forEach((enemy, index) => {
-                    if (isColliding(player, enemy)) {
-                        createExplosion(enemy.x, enemy.y);
-                        objectPools.enemies.push(enemies.splice(index, 1)[0]);
-                        player.lives--;
                         
-                        if (player.lives <= 0) {
-                            gameOver();
-                        }
+                        // 라인 제거 사운드
+                        this.playSweepSound(400, 800, 0.5);
                     }
-                });
+                }
 
-                // Player vs enemy bullets
-                enemyBullets.forEach((bullet, index) => {
-                    if (isColliding(player, bullet)) {
-                        enemyBullets.splice(index, 1);
-                        player.lives--;
-                        
-                        if (player.lives <= 0) {
-                            gameOver();
+                // 파티클 효과 생성
+                createParticles(lines) {
+                    lines.forEach(lineY => {
+                        for (let x = 0; x < GAME_CONFIG.BOARD_WIDTH; x++) {
+                            const color = this.board[lineY][x];
+                            if (color) {
+                                // 각 블록마다 3-5개의 파티클 생성
+                                const particleCount = 3 + Math.floor(Math.random() * 3);
+                                for (let i = 0; i < particleCount; i++) {
+                                    this.particles.push({
+                                        x: x * GAME_CONFIG.BLOCK_SIZE + GAME_CONFIG.BLOCK_SIZE / 2,
+                                        y: lineY * GAME_CONFIG.BLOCK_SIZE + GAME_CONFIG.BLOCK_SIZE / 2,
+                                        vx: (Math.random() - 0.5) * 200,
+                                        vy: (Math.random() - 0.5) * 200,
+                                        size: 4,
+                                        color: color,
+                                        life: 0.8,
+                                        maxLife: 0.8
+                                    });
+                                }
+                            }
                         }
-                    }
-                });
-            }
-
-            function isColliding(rect1, rect2) {
-                return rect1.x - rect1.width/2 < rect2.x + rect2.width/2 &&
-                       rect1.x + rect1.width/2 > rect2.x - rect2.width/2 &&
-                       rect1.y - rect1.height/2 < rect2.y + rect2.height/2 &&
-                       rect1.y + rect1.height/2 > rect2.y - rect2.height/2;
-            }
-
-            function createExplosion(x, y) {
-                for (let i = 0; i < 5; i++) {
-                    particles.push({
-                        x: x,
-                        y: y,
-                        vx: (Math.random() - 0.5) * 200,
-                        vy: (Math.random() - 0.5) * 200,
-                        life: 0.5,
-                        maxLife: 0.5,
-                        alpha: 1,
-                        size: Math.random() * 3 + 2
                     });
                 }
+
+                // 라인 제거 애니메이션
+                animateLineRemoval(lines, callback) {
+                    let animationTime = 0;
+                    const animationDuration = 500; // 0.5초
+                    
+                    const animate = () => {
+                        animationTime += 16; // 약 60fps
+                        
+                        if (animationTime >= animationDuration) {
+                            callback();
+                            return;
+                        }
+                        
+                        // 라인 플래시 효과
+                        const alpha = Math.sin((animationTime / animationDuration) * Math.PI * 6) * 0.5 + 0.5;
+                        this.ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+                        
+                        lines.forEach(lineY => {
+                            this.ctx.fillRect(0, lineY * GAME_CONFIG.BLOCK_SIZE, 
+                                GAME_CONFIG.CANVAS_WIDTH, GAME_CONFIG.BLOCK_SIZE);
+                        });
+                        
+                        requestAnimationFrame(animate);
+                    };
+                    
+                    animate();
+                }
+
+                // 점수 업데이트
+                updateScore(linesCleared) {
+                    let points = 0;
+                    switch (linesCleared) {
+                        case 1: points = SCORE_VALUES.SINGLE; break;
+                        case 2: points = SCORE_VALUES.DOUBLE; break;
+                        case 3: points = SCORE_VALUES.TRIPLE; break;
+                        case 4: points = SCORE_VALUES.TETRIS; break;
+                    }
+                    this.score += points * this.level;
+                }
+
+                // 낙하 간격 업데이트
+                updateDropInterval() {
+                    if (this.level <= 9) {
+                        this.dropInterval = Math.max(100, 1000 - (this.level - 1) * 100);
+                    } else {
+                        this.dropInterval = 100; // 최소 0.1초
+                    }
+                }
+
+                // 키보드 입력 처리
+                handleKeyPress(e) {
+                    if (this.state !== GAME_STATES.PLAYING) {
+                        if (e.code === 'KeyP' && this.state === GAME_STATES.PAUSED) {
+                            e.preventDefault();
+                            this.togglePause();
+                        }
+                        return;
+                    }
+                    
+                    e.preventDefault();
+                    
+                    switch (e.code) {
+                        case 'ArrowLeft':
+                            this.movePiece(-1, 0);
+                            break;
+                        case 'ArrowRight':
+                            this.movePiece(1, 0);
+                            break;
+                        case 'ArrowDown':
+                            this.softDrop();
+                            break;
+                        case 'ArrowUp':
+                            this.rotatePiece();
+                            break;
+                        case 'Space':
+                            this.hardDrop();
+                            break;
+                        case 'KeyP':
+                            this.togglePause();
+                            break;
+                    }
+                }
+
+                // 피스 이동
+                movePiece(dx, dy) {
+                    if (this.currentPiece && !this.checkCollision(this.currentPiece, dx, dy)) {
+                        this.currentPiece.x += dx;
+                        this.currentPiece.y += dy;
+                        return true;
+                    }
+                    return false;
+                }
+
+                // 피스 회전 (개선된 벽 킥 로직 포함)
+                rotatePiece() {
+                    if (this.currentPiece) {
+                        const newRotation = (this.currentPiece.rotation + 1) % 4;
+                        const wallKick = this.tryWallKick(this.currentPiece, newRotation);
+                        
+                        if (wallKick) {
+                            this.currentPiece.rotation = newRotation;
+                            this.currentPiece.x += wallKick.dx;
+                            this.currentPiece.y += wallKick.dy;
+                            this.playSound(200, 0.1); // 회전 사운드
+                        }
+                    }
+                }
+
+                // 소프트 드롭 (아래 화살표)
+                softDrop() {
+                    if (this.movePiece(0, 1)) {
+                        this.score += SCORE_VALUES.SOFT_DROP;
+                        this.updateDisplay();
+                    }
+                }
+
+                // 하드 드롭 (스페이스바)
+                hardDrop() {
+                    if (this.currentPiece) {
+                        let dropDistance = 0;
+                        while (this.movePiece(0, 1)) {
+                            dropDistance++;
+                        }
+                        this.score += dropDistance * SCORE_VALUES.HARD_DROP;
+                        this.placePiece();
+                        this.updateDisplay();
+                    }
+                }
+
+                // 게임 시작
+                startGame() {
+                    this.state = GAME_STATES.PLAYING;
+                    this.resetGameData();
+                    this.showScreen('game');
+                    this.updateDisplay();
+                }
+
+                // 게임 재시작
+                restartGame() {
+                    this.startGame();
+                }
+
+                // 일시정지 토글
+                togglePause() {
+                    if (this.state === GAME_STATES.PLAYING) {
+                        this.state = GAME_STATES.PAUSED;
+                        this.showScreen('pause');
+                    } else if (this.state === GAME_STATES.PAUSED) {
+                        this.state = GAME_STATES.PLAYING;
+                        this.showScreen('game');
+                    }
+                }
+
+                // 게임 오버
+                gameOver() {
+                    this.state = GAME_STATES.GAME_OVER;
+                    this.saveHighScore();
+                    this.finalScoreDisplay.textContent = this.score;
+                    this.showScreen('gameover');
+                }
+
+                // 게임 데이터 리셋
+                resetGameData() {
+                    this.board = this.createEmptyBoard();
+                    this.score = 0;
+                    this.level = 1;
+                    this.lines = 0;
+                    this.dropInterval = 1000;
+                    this.dropTimer = 0;
+                    this.particles = [];
+                    this.generateNextPiece();
+                    this.spawnNewPiece();
+                }
+
+                // 화면 전환
+                showScreen(screenType) {
+                    // 모든 화면 숨기기
+                    this.startScreen.style.display = 'none';
+                    this.gameoverScreen.style.display = 'none';
+                    this.pauseScreen.style.display = 'none';
+                    
+                    // 선택된 화면 표시
+                    switch (screenType) {
+                        case 'start':
+                            this.startScreen.style.display = 'flex';
+                            this.updateStartScreenHighScore();
+                            break;
+                        case 'gameover':
+                            this.gameoverScreen.style.display = 'flex';
+                            break;
+                        case 'pause':
+                            this.pauseScreen.style.display = 'flex';
+                            break;
+                        case 'game':
+                        default:
+                            // 게임 화면은 기본으로 표시됨
+                            break;
+                    }
+                }
+
+                // 디스플레이 업데이트
+                updateDisplay() {
+                    this.scoreDisplay.textContent = this.score;
+                    this.levelDisplay.textContent = this.level;
+                    this.linesDisplay.textContent = this.lines;
+                }
+
+                // 시작 화면 최고 점수 업데이트
+                updateStartScreenHighScore() {
+                    const highScore = this.getHighScore();
+                    if (this.startHighScoreDisplay) {
+                        this.startHighScoreDisplay.textContent = highScore;
+                    }
+                }
+
+                // 최고 점수 조회
+                getHighScore() {
+                    try {
+                        return parseInt(localStorage.getItem('tetris_highscore') || '0');
+                    } catch (e) {
+                        console.warn('localStorage 접근 실패');
+                        return 0;
+                    }
+                }
+
+                // 최고 점수 로드
+                loadHighScore() {
+                    const highScore = this.getHighScore();
+                    this.highScoreDisplay.textContent = highScore;
+                }
+
+                // 최고 점수 저장
+                saveHighScore() {
+                    try {
+                        const currentHigh = this.getHighScore();
+                        if (this.score > currentHigh) {
+                            localStorage.setItem('tetris_highscore', this.score.toString());
+                            this.highScoreDisplay.textContent = this.score;
+                            this.updateStartScreenHighScore();
+                        }
+                    } catch (e) {
+                        console.warn('localStorage 저장 실패');
+                    }
+                }
+
+                // 사운드 재생
+                playSound(frequency, duration) {
+                    if (!this.audioContext) return;
+                    
+                    try {
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                        oscillator.type = 'square';
+                        
+                        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                        
+                        oscillator.start(this.audioContext.currentTime);
+                        oscillator.stop(this.audioContext.currentTime + duration);
+                    } catch (e) {
+                        console.warn('사운드 재생 실패');
+                    }
+                }
+
+                // 스윕 사운드 (라인 제거)
+                playSweepSound(startFreq, endFreq, duration) {
+                    if (!this.audioContext) return;
+                    
+                    try {
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(startFreq, this.audioContext.currentTime);
+                        oscillator.frequency.linearRampToValueAtTime(endFreq, this.audioContext.currentTime + duration);
+                        oscillator.type = 'sawtooth';
+                        
+                        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                        
+                        oscillator.start(this.audioContext.currentTime);
+                        oscillator.stop(this.audioContext.currentTime + duration);
+                    } catch (e) {
+                        console.warn('스윕 사운드 재생 실패');
+                    }
+                }
+
+                // 파티클 업데이트
+                updateParticles(deltaTime) {
+                    this.particles = this.particles.filter(particle => {
+                        particle.x += particle.vx * deltaTime / 1000;
+                        particle.y += particle.vy * deltaTime / 1000;
+                        particle.life -= deltaTime / 1000;
+                        particle.size = Math.max(1, particle.size * (particle.life / particle.maxLife));
+                        
+                        return particle.life > 0;
+                    });
+                }
+
+                // 게임 렌더링
+                render() {
+                    // 캔버스 클리어
+                    this.ctx.fillStyle = '#1A1A1A';
+                    this.ctx.fillRect(0, 0, GAME_CONFIG.CANVAS_WIDTH, GAME_CONFIG.CANVAS_HEIGHT);
+                    
+                    // 그리드 그리기
+                    this.drawGrid();
+                    
+                    // 보드 블록 그리기
+                    this.drawBoard();
+                    
+                    // 현재 피스 그리기
+                    if (this.currentPiece) {
+                        this.drawPiece(this.currentPiece);
+                    }
+                    
+                    // 파티클 그리기
+                    this.drawParticles();
+                    
+                    // 다음 블록 그리기
+                    this.drawNextPiece();
+                }
+
+                // 그리드 그리기
+                drawGrid() {
+                    this.ctx.strokeStyle = '#333333';
+                    this.ctx.lineWidth = 1;
+                    
+                    for (let x = 0; x <= GAME_CONFIG.BOARD_WIDTH; x++) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x * GAME_CONFIG.BLOCK_SIZE, 0);
+                        this.ctx.lineTo(x * GAME_CONFIG.BLOCK_SIZE, GAME_CONFIG.CANVAS_HEIGHT);
+                        this.ctx.stroke();
+                    }
+                    
+                    for (let y = 0; y <= GAME_CONFIG.BOARD_HEIGHT; y++) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(0, y * GAME_CONFIG.BLOCK_SIZE);
+                        this.ctx.lineTo(GAME_CONFIG.CANVAS_WIDTH, y * GAME_CONFIG.BLOCK_SIZE);
+                        this.ctx.stroke();
+                    }
+                }
+
+                // 보드 블록 그리기
+                drawBoard() {
+                    for (let y = 0; y < GAME_CONFIG.BOARD_HEIGHT; y++) {
+                        for (let x = 0; x < GAME_CONFIG.BOARD_WIDTH; x++) {
+                            if (this.board[y][x]) {
+                                this.drawBlock(x, y, this.board[y][x]);
+                            }
+                        }
+                    }
+                }
+
+                // 단일 블록 그리기
+                drawBlock(x, y, color) {
+                    const pixelX = x * GAME_CONFIG.BLOCK_SIZE;
+                    const pixelY = y * GAME_CONFIG.BLOCK_SIZE;
+                    
+                    // 메인 블록
+                    this.ctx.fillStyle = color;
+                    this.ctx.fillRect(pixelX, pixelY, GAME_CONFIG.BLOCK_SIZE, GAME_CONFIG.BLOCK_SIZE);
+                    
+                    // 밝은 테두리 (네온 효과)
+                    this.ctx.strokeStyle = this.lightenColor(color, 40);
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(pixelX + 1, pixelY + 1, 
+                        GAME_CONFIG.BLOCK_SIZE - 2, GAME_CONFIG.BLOCK_SIZE - 2);
+                }
+
+                // 피스 그리기
+                drawPiece(piece) {
+                    const shape = this.getRotatedShape(piece.type, piece.rotation);
+                    
+                    for (let y = 0; y < shape.length; y++) {
+                        for (let x = 0; x < shape[y].length; x++) {
+                            if (shape[y][x]) {
+                                this.drawBlock(piece.x + x, piece.y + y, piece.color);
+                            }
+                        }
+                    }
+                }
+
+                // 파티클 그리기
+                drawParticles() {
+                    this.particles.forEach(particle => {
+                        const alpha = particle.life / particle.maxLife;
+                        this.ctx.fillStyle = this.hexToRgba(particle.color, alpha);
+                        this.ctx.fillRect(
+                            particle.x - particle.size / 2,
+                            particle.y - particle.size / 2,
+                            particle.size,
+                            particle.size
+                        );
+                    });
+                }
+
+                // 다음 블록 그리기
+                drawNextPiece() {
+                    if (!this.nextPiece) return;
+                    
+                    // 다음 블록 캔버스 클리어
+                    this.nextCtx.fillStyle = '#333333';
+                    this.nextCtx.fillRect(0, 0, GAME_CONFIG.NEXT_CANVAS_SIZE, GAME_CONFIG.NEXT_CANVAS_SIZE);
+                    
+                    const shape = this.nextPiece.shape;
+                    const blockSize = 15; // 작은 블록 크기
+                    const offsetX = (GAME_CONFIG.NEXT_CANVAS_SIZE - shape[0].length * blockSize) / 2;
+                    const offsetY = (GAME_CONFIG.NEXT_CANVAS_SIZE - shape.length * blockSize) / 2;
+                    
+                    for (let y = 0; y < shape.length; y++) {
+                        for (let x = 0; x < shape[y].length; x++) {
+                            if (shape[y][x]) {
+                                const pixelX = offsetX + x * blockSize;
+                                const pixelY = offsetY + y * blockSize;
+                                
+                                // 메인 블록
+                                this.nextCtx.fillStyle = this.nextPiece.color;
+                                this.nextCtx.fillRect(pixelX, pixelY, blockSize, blockSize);
+                                
+                                // 테두리
+                                this.nextCtx.strokeStyle = this.lightenColor(this.nextPiece.color, 40);
+                                this.nextCtx.lineWidth = 1;
+                                this.nextCtx.strokeRect(pixelX, pixelY, blockSize, blockSize);
+                            }
+                        }
+                    }
+                }
+
+                // 색상 밝게 만들기
+                lightenColor(color, amount) {
+                    const num = parseInt(color.replace('#', ''), 16);
+                    const amt = Math.round(2.55 * amount);
+                    const R = (num >> 16) + amt;
+                    const G = (num >> 8 & 0x00FF) + amt;
+                    const B = (num & 0x0000FF) + amt;
+                    
+                    return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                        (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                        (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+                }
+
+                // Hex 색상을 RGBA로 변환
+                hexToRgba(hex, alpha) {
+                    const r = parseInt(hex.slice(1, 3), 16);
+                    const g = parseInt(hex.slice(3, 5), 16);
+                    const b = parseInt(hex.slice(5, 7), 16);
+                    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                }
+
+                // 게임 루프
+                gameLoop() {
+                    let lastTime = 0;
+                    
+                    const loop = (currentTime) => {
+                        const deltaTime = currentTime - lastTime;
+                        lastTime = currentTime;
+                        
+                        if (this.state === GAME_STATES.PLAYING) {
+                            // 자동 낙하 처리
+                            this.dropTimer += deltaTime;
+                            if (this.dropTimer >= this.dropInterval) {
+                                if (!this.movePiece(0, 1)) {
+                                    this.placePiece();
+                                }
+                                this.dropTimer = 0;
+                            }
+                            
+                            // 파티클 업데이트
+                            this.updateParticles(deltaTime);
+                        }
+                        
+                        // 렌더링
+                        this.render();
+                        
+                        // 다음 프레임 요청
+                        requestAnimationFrame(loop);
+                    };
+                    
+                    requestAnimationFrame(loop);
+                }
             }
 
-            function checkWeaponUpgrade() {
-                const currentLevel = player.weaponLevel;
-                
-                if (gameData.enemiesKilled >= GAME_CONFIG.WEAPON_UPGRADE_KILLS[1] && player.weaponLevel < 3) {
-                    player.weaponLevel = 3;
-                } else if (gameData.enemiesKilled >= GAME_CONFIG.WEAPON_UPGRADE_KILLS[0] && player.weaponLevel < 2) {
-                    player.weaponLevel = 2;
-                }
-
-                if (player.weaponLevel > currentLevel) {
-                    playSound(1200, 0.3);
-                    gameData.score += 500;
-                }
-            }
-
-            function updateDifficulty() {
-                const currentTime = performance.now();
-                const gameTime = currentTime - gameData.gameStartTime;
-
-                if (currentTime - gameData.lastDifficultyIncrease > GAME_CONFIG.DIFFICULTY_INCREASE_INTERVAL) {
-                    gameData.enemySpawnRate = Math.max(GAME_CONFIG.MIN_ENEMY_SPAWN_RATE, gameData.enemySpawnRate * 0.9);
-                    gameData.lastDifficultyIncrease = currentTime;
-                }
-            }
-
-            function gameOver() {
-                gameState = GAME_STATES.GAME_OVER;
-                
-                if (gameData.score > gameData.highScore) {
-                    gameData.highScore = gameData.score;
-                    saveHighScore();
-                    elements.newRecordMsg.style.display = 'block';
-                } else {
-                    elements.newRecordMsg.style.display = 'none';
-                }
-
-                elements.finalScore.textContent = gameData.score.toString().padStart(6, '0');
-                elements.finalEnemyCount.textContent = gameData.enemiesKilled.toString();
-                elements.gameoverScreen.style.display = 'flex';
-
-                playSound(200, 1, 'square');
-            }
-
-            function updateUI() {
-                if (elements.scoreDisplay) {
-                    elements.scoreDisplay.textContent = `SCORE: ${gameData.score.toString().padStart(6, '0')}`;
-                }
-                if (elements.livesDisplay) {
-                    elements.livesDisplay.textContent = `LIVES: ${'♥'.repeat(player.lives)}`;
-                }
-                if (elements.weaponLevel) {
-                    elements.weaponLevel.textContent = `WEAPON LV.${player.weaponLevel}`;
-                }
-                if (elements.enemyCount) {
-                    elements.enemyCount.textContent = `ENEMIES: ${gameData.enemiesKilled}`;
-                }
-                if (elements.highScoreDisplay) {
-                    elements.highScoreDisplay.textContent = `HIGH: ${gameData.highScore.toString().padStart(6, '0')}`;
-                }
-                if (elements.menuHighScore) {
-                    elements.menuHighScore.textContent = gameData.highScore.toString().padStart(6, '0');
-                }
-            }
-
-            function render() {
-                // Clear canvas
-                ctx.fillStyle = COLORS.BACKGROUND;
-                ctx.fillRect(0, 0, GAME_CONFIG.CANVAS_WIDTH, GAME_CONFIG.CANVAS_HEIGHT);
-
-                // Draw stars
-                ctx.fillStyle = COLORS.TEXT;
-                stars.forEach(star => {
-                    ctx.fillRect(star.x, star.y, 1, 1);
-                });
-
-                if (gameState !== GAME_STATES.PLAYING) return;
-
-                // Draw player
-                ctx.fillStyle = COLORS.PLAYER;
-                ctx.strokeStyle = COLORS.PLAYER_OUTLINE;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(player.x, player.y - player.height/2);
-                ctx.lineTo(player.x - player.width/2, player.y + player.height/2);
-                ctx.lineTo(player.x + player.width/2, player.y + player.height/2);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                // Draw bullets
-                ctx.fillStyle = COLORS.PLAYER_BULLET;
-                bullets.forEach(bullet => {
-                    ctx.fillRect(bullet.x - bullet.width/2, bullet.y - bullet.height/2, bullet.width, bullet.height);
-                });
-
-                // Draw enemies
-                ctx.fillStyle = COLORS.ENEMY;
-                ctx.strokeStyle = COLORS.ENEMY_OUTLINE;
-                ctx.lineWidth = 1;
-                enemies.forEach(enemy => {
-                    ctx.fillRect(enemy.x - enemy.width/2, enemy.y - enemy.height/2, enemy.width, enemy.height);
-                    ctx.strokeRect(enemy.x - enemy.width/2, enemy.y - enemy.height/2, enemy.width, enemy.height);
-                });
-
-                // Draw enemy bullets
-                ctx.fillStyle = COLORS.ENEMY_BULLET;
-                enemyBullets.forEach(bullet => {
-                    ctx.fillRect(bullet.x - bullet.width/2, bullet.y - bullet.height/2, bullet.width, bullet.height);
-                });
-
-                // Draw particles
-                particles.forEach(particle => {
-                    ctx.save();
-                    ctx.globalAlpha = particle.alpha;
-                    ctx.fillStyle = COLORS.TEXT;
-                    ctx.beginPath();
-                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-                });
-            }
-
-            function loadHighScore() {
+            // 게임 초기화 - DOM이 로드된 후 실행
+            document.addEventListener('DOMContentLoaded', () => {
                 try {
-                    const saved = localStorage.getItem('spacewar_highscore');
-                    gameData.highScore = saved ? parseInt(saved) || 0 : 0;
-                } catch (e) {
-                    console.log('Could not load high score:', e);
-                    gameData.highScore = 0;
+                    // Canvas 지원 여부 확인
+                    const canvas = document.getElementById('game-canvas');
+                    if (!canvas || !canvas.getContext) {
+                        throw new Error('Canvas가 지원되지 않습니다.');
+                    }
+                    
+                    // 게임 인스턴스 생성
+                    window.tetrisGame = new TetrisGame();
+                    
+                } catch (error) {
+                    console.error('테트리스 게임 초기화 실패:', error);
+                    alert('게임을 초기화할 수 없습니다. 브라우저가 Canvas를 지원하는지 확인해주세요.');
                 }
-            }
-
-            function saveHighScore() {
-                try {
-                    localStorage.setItem('spacewar_highscore', gameData.highScore.toString());
-                } catch (e) {
-                    console.log('Could not save high score:', e);
-                }
-            }
-
-            // Initialize game when DOM is loaded
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
-            } else {
-                init();
-            }
+            });
 
         })();
     </script>
