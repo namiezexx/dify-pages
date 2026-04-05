@@ -3,23 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>룰렛 미니게임</title>
+    <title>두더지 게임</title>
     <style>
         :root {
-            --primary-red: #FF6B6B;
-            --secondary-teal: #4ECDC4;
-            --background-ivory: #F7F1E3;
-            --text-dark: #2C3E50;
-            --gold: #FFD700;
-            --segment-yellow: #FFD93D;
-            --segment-green: #6BCF7F;
-            --segment-blue: #4D96FF;
-            --segment-red: #FF6B6B;
-            --segment-purple: #B983FF;
-            --segment-orange: #FF8E53;
-            --segment-light-blue: #5DADE2;
-            --segment-dark-orange: #F39C12;
-            --segment-dark-red: #E74C3C;
+            --primary-green: #2E7D2E;
+            --secondary-brown: #8B4513;
+            --accent-red: #FF6B6B;
+            --background-blue: #87CEEB;
+            --white: #FFFFFF;
+            --black: #000000;
+            --hole-size-mobile: 60px;
+            --hole-size-desktop: 80px;
+            --grid-gap-mobile: 10px;
+            --grid-gap-desktop: 15px;
         }
 
         * {
@@ -29,296 +25,327 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, var(--background-ivory) 0%, #F0E68C 100%);
-            color: var(--text-dark);
+            font-family: 'Comic Sans MS', sans-serif;
+            background: linear-gradient(135deg, var(--background-blue) 0%, #98D8F4 100%);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             overflow-x: hidden;
         }
 
         #game-container {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--primary-green);
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            padding: 30px;
-            max-width: 800px;
-            width: 90vw;
-            text-align: center;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 95%;
             position: relative;
+            overflow: hidden;
+        }
+
+        #game-container.paused::before {
+            content: "⏸️ PAUSED";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: bold;
+            z-index: 100;
+        }
+
+        #game-container.over::before {
+            content: "🎮 GAME OVER";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(139, 69, 19, 0.9);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            z-index: 100;
         }
 
         .game-header {
-            margin-bottom: 30px;
-        }
-
-        .game-title {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--primary-red);
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .score-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            background: var(--white);
             padding: 15px;
-            background: linear-gradient(90deg, var(--secondary-teal), var(--primary-red));
             border-radius: 15px;
-            color: white;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .game-title {
+            font-size: 1.5em;
             font-weight: bold;
+            color: var(--secondary-brown);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
-        .score-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .game-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        .score-label {
-            font-size: 0.9rem;
-            opacity: 0.9;
+        .stat-item {
+            background: var(--white);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .stat-label {
+            font-size: 0.7em;
+            color: var(--secondary-brown);
+            font-weight: bold;
             margin-bottom: 5px;
         }
 
-        .score-value {
-            font-size: 1.5rem;
+        .stat-value {
+            font-family: 'Arial Black', Arial, sans-serif;
+            font-size: 1.2em;
+            color: var(--accent-red);
             font-weight: bold;
         }
 
-        .game-canvas-container {
-            position: relative;
-            display: inline-block;
-            margin: 20px 0;
+        #game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: var(--grid-gap-mobile);
+            background: var(--secondary-brown);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
         }
 
-        #roulette-canvas {
-            border: 5px solid var(--primary-red);
+        .mole-hole {
+            width: var(--hole-size-mobile);
+            height: var(--hole-size-mobile);
+            background: var(--black);
             border-radius: 50%;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-            background: white;
-            display: block;
-            margin: 0 auto;
+            border: 5px solid var(--secondary-brown);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: inset 0 3px 10px rgba(0,0,0,0.8);
+            transition: transform 0.1s ease;
         }
 
-        .roulette-pointer {
+        .mole-hole:active {
+            transform: scale(0.95);
+        }
+
+        .mole {
+            width: 80%;
+            height: 90%;
+            background: var(--accent-red);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
             position: absolute;
-            top: -15px;
+            bottom: -100%;
             left: 50%;
             transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 30px solid var(--primary-red);
-            z-index: 10;
-            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+            transition: bottom 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .mole::before {
+            content: "👀";
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8em;
+        }
+
+        .mole::after {
+            content: "";
+            position: absolute;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 4px;
+            background: var(--black);
+            border-radius: 50%;
+        }
+
+        .mole.show {
+            bottom: 10%;
+            animation: moleUp 0.3s ease-out;
+        }
+
+        .mole.hide {
+            bottom: -100%;
+            animation: moleDown 0.3s ease-in;
+        }
+
+        .mole.hit {
+            animation: hit 0.4s ease-out;
+        }
+
+        .mole.active {
+            cursor: pointer;
+        }
+
+        .mole.active:hover {
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        @keyframes moleUp {
+            from { bottom: -100%; }
+            to { bottom: 10%; }
+        }
+
+        @keyframes moleDown {
+            from { bottom: 10%; }
+            to { bottom: -100%; }
+        }
+
+        @keyframes hit {
+            0% { background: var(--accent-red); transform: translateX(-50%) scale(1); }
+            25% { background: #FFD700; transform: translateX(-50%) scale(1.3); }
+            50% { background: #FF8C00; transform: translateX(-50%) scale(1.2); }
+            75% { background: var(--accent-red); transform: translateX(-50%) scale(1.1); }
+            100% { background: var(--accent-red); transform: translateX(-50%) scale(1); }
         }
 
         .game-controls {
-            margin-top: 30px;
             display: flex;
-            gap: 20px;
+            gap: 10px;
             justify-content: center;
-            flex-wrap: wrap;
         }
 
         .game-button {
-            padding: 15px 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
+            padding: 12px 24px;
             border: none;
-            border-radius: 50px;
+            border-radius: 25px;
+            font-family: 'Comic Sans MS', sans-serif;
+            font-weight: bold;
+            font-size: 1em;
             cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 120px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        #spin-button {
-            background: linear-gradient(135deg, var(--secondary-teal), #45B7AA);
-            color: white;
+        #start-button {
+            background: var(--accent-red);
+            color: var(--white);
         }
 
-        #spin-button:hover {
-            background: linear-gradient(135deg, #45B7AA, var(--secondary-teal));
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        #start-button:hover {
+            background: #FF5252;
+            transform: translateY(-2px);
         }
 
-        #spin-button:disabled {
-            background: #cccccc;
+        #pause-button {
+            background: #FFB74D;
+            color: var(--secondary-brown);
+        }
+
+        #pause-button:hover {
+            background: #FFA726;
+            transform: translateY(-2px);
+        }
+
+        #pause-button:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        #reset-button {
-            background: linear-gradient(135deg, var(--primary-red), #E55555);
-            color: white;
-        }
-
-        #reset-button:hover {
-            background: linear-gradient(135deg, #E55555, var(--primary-red));
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .score-animation {
-            animation: scorePopup 0.6s ease-in-out;
-        }
-
-        @keyframes scorePopup {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); color: var(--gold); }
-            100% { transform: scale(1); }
-        }
-
-        #result-modal {
-            position: fixed;
+        #game-over-screen {
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            right: 0;
+            bottom: 0;
+            background: rgba(139, 69, 19, 0.95);
             display: none;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            animation: modalFadeIn 0.3s ease-in-out;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 40px;
             border-radius: 20px;
+            color: var(--white);
             text-align: center;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            animation: modalSlideIn 0.4s ease-out;
+            z-index: 50;
         }
 
-        @keyframes modalFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes modalSlideIn {
-            from { transform: translateY(-50px) scale(0.8); opacity: 0; }
-            to { transform: translateY(0) scale(1); opacity: 1; }
-        }
-
-        .modal-title {
-            font-size: 2rem;
-            color: var(--primary-red);
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
-        .modal-score {
-            font-size: 2.5rem;
-            color: var(--gold);
-            font-weight: bold;
-            margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .modal-message {
-            font-size: 1.2rem;
-            color: var(--text-dark);
-            margin-bottom: 30px;
-        }
-
-        .modal-button {
-            background: linear-gradient(135deg, var(--secondary-teal), #45B7AA);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .modal-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .segment-legend {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 10px;
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 15px;
-        }
-
-        .legend-item {
+        #game-over-screen.show {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            font-weight: bold;
         }
 
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 2px solid var(--text-dark);
+        .game-over-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: var(--accent-red);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
-        .jackpot-effect {
-            animation: jackpotGlow 2s infinite;
+        .game-over-stats {
+            margin-bottom: 30px;
+            font-size: 1.1em;
         }
 
-        @keyframes jackpotGlow {
-            0%, 100% { box-shadow: 0 15px 30px rgba(255, 107, 107, 0.3); }
-            50% { box-shadow: 0 15px 40px rgba(255, 107, 107, 0.8), 0 0 20px var(--gold); }
+        .game-over-stat {
+            margin: 8px 0;
+            color: var(--white);
         }
 
-        @media (max-width: 768px) {
+        /* 태블릿 이상 */
+        @media (min-width: 768px) {
             #game-container {
-                padding: 20px;
-                width: 95vw;
+                max-width: 500px;
+                padding: 30px;
+            }
+
+            #game-grid {
+                gap: var(--grid-gap-desktop);
+                padding: 30px;
+            }
+
+            .mole-hole {
+                width: var(--hole-size-desktop);
+                height: var(--hole-size-desktop);
             }
 
             .game-title {
-                font-size: 2rem;
+                font-size: 2em;
             }
 
-            .score-info {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .game-controls {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .segment-legend {
-                grid-template-columns: repeat(2, 1fr);
+            .stat-value {
+                font-size: 1.4em;
             }
         }
 
-        @media (max-width: 480px) {
-            .game-title {
-                font-size: 1.5rem;
+        /* 데스크톱 */
+        @media (min-width: 1024px) {
+            #game-container {
+                max-width: 600px;
             }
 
             .game-button {
-                min-width: 100px;
-                padding: 12px 24px;
+                font-size: 1.1em;
+                padding: 15px 30px;
             }
         }
     </style>
@@ -326,324 +353,680 @@
 <body>
     <div id="game-container">
         <div class="game-header">
-            <h1 class="game-title">🎰 룰렛 게임</h1>
-            
-            <div class="score-info">
-                <div class="score-item">
-                    <div class="score-label">현재 점수</div>
-                    <div id="score-display" class="score-value">0</div>
-                </div>
-                <div class="score-item">
-                    <div class="score-label">최고 점수</div>
-                    <div id="high-score-display" class="score-value">0</div>
-                </div>
-                <div class="score-item">
-                    <div class="score-label">남은 회전</div>
-                    <div id="spin-count-display" class="score-value">5</div>
-                </div>
+            <div class="game-title">🐹 두더지 게임</div>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat-item">
+                <div class="stat-label">SCORE</div>
+                <div id="score-display" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">TIME</div>
+                <div id="time-display" class="stat-value">60</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">LEVEL</div>
+                <div id="level-display" class="stat-value">1</div>
             </div>
         </div>
 
-        <div class="game-canvas-container">
-            <div class="roulette-pointer"></div>
-            <canvas id="roulette-canvas" width="400" height="400"></canvas>
+        <div id="game-grid">
+            <div class="mole-hole" data-hole-index="0">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-hole-index="1">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-hole-index="2">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-hole-index="3">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-hole-index="4">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-hole-index="5">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-hole-index="6">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-hole-index="7">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-hole-index="8">
+                <div class="mole"></div>
+            </div>
         </div>
 
         <div class="game-controls">
-            <button id="spin-button" class="game-button">
-                🎯 스핀!
-            </button>
-            <button id="reset-button" class="game-button">
-                🔄 리셋
-            </button>
+            <button id="start-button" class="game-button">🎮 게임 시작</button>
+            <button id="pause-button" class="game-button" disabled>⏸️ 일시정지</button>
         </div>
 
-        <div class="segment-legend">
-            <div class="legend-item">
-                <div class="legend-color" style="background: #FFD93D;"></div>
-                <span>100점</span>
+        <div id="game-over-screen">
+            <div class="game-over-title">🎯 게임 종료!</div>
+            <div class="game-over-stats">
+                <div class="game-over-stat">최종 점수: <span id="final-score">0</span>점</div>
+                <div class="game-over-stat">잡은 두더지: <span id="final-moles">0</span>마리</div>
+                <div class="game-over-stat">달성 레벨: <span id="final-level">1</span></div>
             </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #6BCF7F;"></div>
-                <span>50점</span>
+            <div class="game-controls">
+                <button id="restart-button" class="game-button" style="background: var(--primary-green); color: var(--white);">🔄 다시 시작</button>
+                <button id="main-button" class="game-button" style="background: var(--white); color: var(--secondary-brown);">🏠 메인으로</button>
             </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #4D96FF;"></div>
-                <span>200점</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #FF6B6B;"></div>
-                <span>실패</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #B983FF;"></div>
-                <span>150점</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #FF8E53;"></div>
-                <span>75점</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #5DADE2;"></div>
-                <span>300점</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #F39C12;"></div>
-                <span>실패</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #E74C3C;"></div>
-                <span>잭팟 500점</span>
-            </div>
-        </div>
-    </div>
-
-    <div id="result-modal">
-        <div class="modal-content">
-            <div class="modal-title" id="modal-title">결과</div>
-            <div class="modal-score" id="modal-score">+0</div>
-            <div class="modal-message" id="modal-message">메시지</div>
-            <button class="modal-button" onclick="handleResultModalClose()">확인</button>
         </div>
     </div>
 
     <script>
+        // 두더지 게임 (Whack-a-Mole) - 완전한 JavaScript 구현
+        // 상태머신 패턴을 활용한 게임 엔진
+
+        // 글로벌 게임 상태 객체 - 기획서 인터페이스 계약 준수
         const gameState = {
-            currentScore: 0,
-            highScore: parseInt(localStorage.getItem('rouletteHighScore')) || 0,
-            spinsLeft: 5,
-            isSpinning: false,
-            isGameOver: false,
-            currentAngle: 0,
-            targetAngle: 0,
-            angularVelocity: 0,
-            lastResult: null,
-            gameMode: 'ready'
+            score: 0,                    // 현재 점수
+            timeLeft: 60,               // 남은 시간(초)
+            level: 1,                   // 현재 레벨
+            molesCaught: 0,             // 잡은 두더지 총 개수
+            consecutiveHits: 0,         // 연속 히트 수
+            consecutiveMisses: 0,       // 연속 실패 수
+            isGameActive: false,        // 게임 진행 상태
+            isPaused: false,            // 일시정지 상태
+            moleVisibilityTime: 2000,   // 두더지 노출 시간(ms)
+            activeMoles: [],            // 현재 활성 두더지 배열 [홀인덱스]
+            gameTimer: null,            // 게임 타이머 ID
+            moleSpawnTimer: null,       // 두더지 생성 타이머 ID
+            gameLoop: null,             // 게임 루프 ID
+            highScore: 0                // 최고 점수
         };
 
-        const rouletteConfig = {
-            segments: [
-                { id: 1, score: 100, color: '#FFD93D', label: '100' },
-                { id: 2, score: 50, color: '#6BCF7F', label: '50' },
-                { id: 3, score: 200, color: '#4D96FF', label: '200' },
-                { id: 4, score: 0, color: '#FF6B6B', label: 'MISS' },
-                { id: 5, score: 150, color: '#B983FF', label: '150' },
-                { id: 6, score: 75, color: '#FF8E53', label: '75' },
-                { id: 7, score: 300, color: '#5DADE2', label: '300' },
-                { id: 8, score: 0, color: '#F39C12', label: 'MISS' },
-                { id: 9, score: 500, color: '#E74C3C', label: 'JACKPOT' }
-            ],
-            canvasSize: { width: 400, height: 400 },
-            rouletteRadius: 160,
-            centerX: 200,
-            centerY: 200
+        // 게임 초기화 및 DOM 요소 캐싱
+        const gameElements = {
+            gameContainer: null,
+            gameGrid: null,
+            holes: [],
+            scoreDisplay: null,
+            timeDisplay: null,
+            levelDisplay: null,
+            startButton: null,
+            pauseButton: null,
+            gameOverScreen: null
         };
 
-        let canvas, ctx, animationId;
-
-        function initGame() {
-            canvas = document.getElementById('roulette-canvas');
-            ctx = canvas.getContext('2d');
-            
-            const isMobile = window.innerWidth <= 768;
-            const canvasSize = isMobile ? 300 : 400;
-            
-            canvas.width = canvasSize;
-            canvas.height = canvasSize;
-            canvas.style.width = canvasSize + 'px';
-            canvas.style.height = canvasSize + 'px';
-            
-            rouletteConfig.canvasSize = { width: canvasSize, height: canvasSize };
-            rouletteConfig.centerX = canvasSize / 2;
-            rouletteConfig.centerY = canvasSize / 2;
-            rouletteConfig.rouletteRadius = canvasSize * 0.4;
-            
-            updateUI();
-            renderRoulette();
-        }
-
-        function updateUI() {
-            document.getElementById('score-display').textContent = gameState.currentScore;
-            document.getElementById('high-score-display').textContent = gameState.highScore;
-            document.getElementById('spin-count-display').textContent = gameState.spinsLeft;
-            
-            const spinButton = document.getElementById('spin-button');
-            spinButton.disabled = gameState.isSpinning || gameState.spinsLeft <= 0 || gameState.isGameOver;
-            
-            if (gameState.spinsLeft <= 0 && !gameState.isSpinning && !gameState.isGameOver) {
-                gameState.isGameOver = true;
-                setTimeout(() => {
-                    showResult('게임 종료!', '모든 회전을 사용했습니다.', gameState.currentScore);
-                }, 1000);
-            }
-        }
-
-        function renderRoulette() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const { centerX, centerY, rouletteRadius } = rouletteConfig;
-            const segmentAngle = 40;
-            
-            for (let i = 0; i < rouletteConfig.segments.length; i++) {
-                const segment = rouletteConfig.segments[i];
-                const startAngle = (i * segmentAngle + gameState.currentAngle) * Math.PI / 180;
-                const endAngle = ((i + 1) * segmentAngle + gameState.currentAngle) * Math.PI / 180;
-                
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, rouletteRadius, startAngle, endAngle);
-                ctx.closePath();
-                ctx.fillStyle = segment.color;
-                ctx.fill();
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                
-                const textAngle = startAngle + (endAngle - startAngle) / 2;
-                const textRadius = rouletteRadius * 0.7;
-                const textX = centerX + Math.cos(textAngle) * textRadius;
-                const textY = centerY + Math.sin(textAngle) * textRadius;
-                
-                ctx.save();
-                ctx.translate(textX, textY);
-                ctx.rotate(textAngle);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold ' + Math.max(14, canvas.width / 25) + 'px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(segment.label, 0, 0);
-                ctx.restore();
-            }
-            
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 25, 0, 2 * Math.PI);
-            ctx.fillStyle = '#FFD700';
-            ctx.fill();
-            ctx.strokeStyle = '#FFA500';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-        }
-
-        function startSpin() {
-            if (gameState.isSpinning || gameState.spinsLeft <= 0) return;
-            
-            gameState.isSpinning = true;
-            gameState.spinsLeft--;
-            gameState.gameMode = 'spinning';
-            
-            const randomRotation = 1800 + Math.random() * 720;
-            gameState.targetAngle = gameState.currentAngle + randomRotation;
-            gameState.angularVelocity = 20;
-            
-            updateUI();
-            animateRoulette();
-        }
-
-        function animateRoulette() {
-            if (gameState.angularVelocity > 0.1) {
-                gameState.currentAngle += gameState.angularVelocity;
-                gameState.angularVelocity *= 0.98;
-                
-                if (gameState.currentAngle >= 360) {
-                    gameState.currentAngle %= 360;
-                }
-                
-                renderRoulette();
-                animationId = requestAnimationFrame(animateRoulette);
-            } else {
-                gameState.isSpinning = false;
-                gameState.angularVelocity = 0;
-                checkResult();
-            }
-        }
-
-        function checkResult() {
-            const normalizedAngle = (360 - gameState.currentAngle) % 360;
-            const segmentIndex = Math.floor(normalizedAngle / 40);
-            const resultSegment = rouletteConfig.segments[segmentIndex];
-            
-            gameState.lastResult = resultSegment.id;
-            gameState.currentScore += resultSegment.score;
-            
-            if (gameState.currentScore > gameState.highScore) {
-                gameState.highScore = gameState.currentScore;
-                saveHighScore();
-            }
-            
-            updateUI();
-            
-            setTimeout(() => {
-                let title, message;
-                
-                if (resultSegment.id === 9) {
-                    title = '🎉 잭팟!';
-                    message = '축하합니다! 최고 점수를 획득했습니다!';
-                    document.getElementById('game-container').classList.add('jackpot-effect');
-                } else if (resultSegment.score === 0) {
-                    title = '💥 실패!';
-                    message = '아쉽지만 점수를 얻지 못했습니다.';
-                } else {
-                    title = '🎯 성공!';
-                    message = resultSegment.score + '점을 획득했습니다!';
-                }
-                
-                showResult(title, message, resultSegment.score);
-            }, 500);
-        }
-
-        function showResult(title, message, score) {
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-score').textContent = score > 0 ? '+' + score : '0';
-            document.getElementById('modal-message').textContent = message;
-            document.getElementById('result-modal').style.display = 'flex';
-        }
-
-        function saveHighScore() {
-            localStorage.setItem('rouletteHighScore', gameState.highScore);
-        }
-
-        function handleSpinButtonClick() {
-            startSpin();
-        }
-
-        function handleResetButtonClick() {
-            gameState.currentScore = 0;
-            gameState.spinsLeft = 5;
-            gameState.isGameOver = false;
-            gameState.currentAngle = 0;
-            gameState.gameMode = 'ready';
-            document.getElementById('game-container').classList.remove('jackpot-effect');
-            document.getElementById('result-modal').style.display = 'none';
-            updateUI();
-            renderRoulette();
-        }
-
-        function handleResultModalClose() {
-            document.getElementById('result-modal').style.display = 'none';
-            document.getElementById('game-container').classList.remove('jackpot-effect');
-        }
-
-        window.addEventListener('load', initGame);
-        
-        window.addEventListener('resize', () => {
-            const isMobile = window.innerWidth <= 768;
-            const canvasSize = isMobile ? 300 : 400;
-            
-            canvas.width = canvasSize;
-            canvas.height = canvasSize;
-            canvas.style.width = canvasSize + 'px';
-            canvas.style.height = canvasSize + 'px';
-            
-            rouletteConfig.canvasSize = { width: canvasSize, height: canvasSize };
-            rouletteConfig.centerX = canvasSize / 2;
-            rouletteConfig.centerY = canvasSize / 2;
-            rouletteConfig.rouletteRadius = canvasSize * 0.4;
-            
-            renderRoulette();
+        // DOM 로드 완료 시 게임 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeGame();
         });
-        
-        document.getElementById('spin-button').addEventListener('click', handleSpinButtonClick);
-        document.getElementById('reset-button').addEventListener('click', handleResetButtonClick);
+
+        // 게임 초기화 함수
+        function initializeGame() {
+            // DOM 요소 캐싱
+            cacheGameElements();
+            
+            // 로컬스토리지에서 최고점수 불러오기
+            loadHighScore();
+            
+            // 이벤트 리스너 등록
+            setupEventListeners();
+            
+            // 게임 화면 초기 설정
+            setupInitialGameState();
+            
+            console.log('두더지 게임이 초기화되었습니다.');
+        }
+
+        // DOM 요소들을 캐싱하여 성능 최적화
+        function cacheGameElements() {
+            gameElements.gameContainer = document.getElementById('game-container');
+            gameElements.gameGrid = document.getElementById('game-grid');
+            gameElements.scoreDisplay = document.getElementById('score-display');
+            gameElements.timeDisplay = document.getElementById('time-display');
+            gameElements.levelDisplay = document.getElementById('level-display');
+            gameElements.startButton = document.getElementById('start-button');
+            gameElements.pauseButton = document.getElementById('pause-button');
+            gameElements.gameOverScreen = document.getElementById('game-over-screen');
+            
+            // 9개의 홀 요소들 캐싱 - 수정된 부분
+            for (let i = 0; i < 9; i++) {
+                const hole = document.querySelector(`.mole-hole[data-hole-index="${i}"]`);
+                if (hole) {
+                    gameElements.holes[i] = hole;
+                }
+            }
+        }
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            // 시작 버튼 클릭 이벤트
+            if (gameElements.startButton) {
+                gameElements.startButton.addEventListener('click', handleStartGame);
+            }
+            
+            // 일시정지 버튼 클릭 이벤트
+            if (gameElements.pauseButton) {
+                gameElements.pauseButton.addEventListener('click', handlePauseGame);
+            }
+            
+            // 두더지 클릭 이벤트 (이벤트 위임 패턴 사용)
+            if (gameElements.gameGrid) {
+                gameElements.gameGrid.addEventListener('click', function(event) {
+                    const hole = event.target.closest('.mole-hole');
+                    const mole = event.target.closest('.mole');
+                    
+                    if (hole && mole && mole.classList.contains('active')) {
+                        const holeIndex = parseInt(hole.getAttribute('data-hole-index'));
+                        handleMoleClick(holeIndex);
+                    }
+                });
+            }
+            
+            // 키보드 이벤트 (스페이스바로 일시정지)
+            document.addEventListener('keydown', function(event) {
+                if (event.code === 'Space' && gameState.isGameActive) {
+                    event.preventDefault();
+                    handlePauseGame();
+                }
+            });
+            
+            // 터치 이벤트 지원 (모바일) - 개선된 부분
+            if (gameElements.gameGrid) {
+                gameElements.gameGrid.addEventListener('touchstart', function(event) {
+                    const touch = event.touches[0];
+                    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const hole = element?.closest('.mole-hole');
+                    const mole = element?.closest('.mole');
+                    
+                    if (hole && mole && mole.classList.contains('active')) {
+                        event.preventDefault();
+                        const holeIndex = parseInt(hole.getAttribute('data-hole-index'));
+                        handleMoleClick(holeIndex);
+                    }
+                }, { passive: false });
+            }
+        }
+
+        // 게임 초기 상태 설정
+        function setupInitialGameState() {
+            updateScoreDisplay();
+            updateTimeDisplay();
+            updateLevelDisplay();
+            
+            // 최고점수 표시
+            if (gameState.highScore > 0) {
+                const highScoreElement = document.getElementById('high-score');
+                if (highScoreElement) {
+                    highScoreElement.textContent = gameState.highScore;
+                }
+            }
+        }
+
+        // 로컬스토리지에서 최고점수 불러오기
+        function loadHighScore() {
+            const savedHighScore = localStorage.getItem('whackamole-highscore');
+            if (savedHighScore) {
+                gameState.highScore = parseInt(savedHighScore);
+            }
+        }
+
+        // 최고점수 저장
+        function saveHighScore() {
+            if (gameState.score > gameState.highScore) {
+                gameState.highScore = gameState.score;
+                localStorage.setItem('whackamole-highscore', gameState.highScore.toString());
+            }
+        }
+
+        // 게임 시작 버튼 클릭 핸들러
+        function handleStartGame() {
+            if (gameState.isGameActive) return;
+            
+            // 게임 상태 초기화
+            resetGameState();
+            
+            // 게임 활성화
+            gameState.isGameActive = true;
+            gameState.isPaused = false;
+            
+            // UI 업데이트
+            updateGameUI();
+            
+            // 게임 타이머 시작 (60초)
+            startGameTimer();
+            
+            // 두더지 스폰 시작
+            startMoleSpawning();
+            
+            // 게임 루프 시작
+            startGameLoop();
+            
+            console.log('게임이 시작되었습니다!');
+        }
+
+        // 게임 상태 초기화
+        function resetGameState() {
+            gameState.score = 0;
+            gameState.timeLeft = 60;
+            gameState.level = 1;
+            gameState.molesCaught = 0;
+            gameState.consecutiveHits = 0;
+            gameState.consecutiveMisses = 0;
+            gameState.moleVisibilityTime = 2000;
+            gameState.activeMoles = [];
+            
+            // 모든 두더지 숨기기
+            hideAllMoles();
+        }
+
+        // 게임 UI 업데이트
+        function updateGameUI() {
+            // 게임 컨테이너 클래스 관리
+            if (gameElements.gameContainer) {
+                gameElements.gameContainer.classList.remove('paused', 'over');
+                if (gameState.isGameActive && !gameState.isPaused) {
+                    gameElements.gameContainer.classList.add('active');
+                }
+            }
+            
+            // 버튼 상태 업데이트
+            if (gameElements.startButton) {
+                gameElements.startButton.style.display = gameState.isGameActive ? 'none' : 'block';
+            }
+            
+            if (gameElements.pauseButton) {
+                gameElements.pauseButton.style.display = gameState.isGameActive ? 'block' : 'none';
+                gameElements.pauseButton.textContent = gameState.isPaused ? '▶️ 재개' : '⏸️ 일시정지';
+                gameElements.pauseButton.disabled = false;
+            }
+            
+            // 게임 오버 스크린 숨기기
+            if (gameElements.gameOverScreen) {
+                gameElements.gameOverScreen.style.display = 'none';
+            }
+        }
+
+        // 게임 타이머 시작
+        function startGameTimer() {
+            gameState.gameTimer = setInterval(function() {
+                if (gameState.isPaused) return;
+                
+                gameState.timeLeft--;
+                updateTimeDisplay();
+                
+                if (gameState.timeLeft <= 0) {
+                    handleGameOver();
+                }
+            }, 1000);
+        }
+
+        // 두더지 스폰 시작
+        function startMoleSpawning() {
+            function spawnNextMole() {
+                if (!gameState.isGameActive || gameState.isPaused) {
+                    if (gameState.isGameActive) {
+                        setTimeout(spawnNextMole, 100);
+                    }
+                    return;
+                }
+                
+                spawnMole();
+                
+                // 레벨에 따른 스폰 간격 조정
+                const baseDelay = 2000;
+                const levelMultiplier = Math.max(0.7, 1 - (gameState.level - 1) * 0.1);
+                const nextSpawnDelay = Math.random() * baseDelay * levelMultiplier + 1000;
+                
+                gameState.moleSpawnTimer = setTimeout(spawnNextMole, nextSpawnDelay);
+            }
+            
+            spawnNextMole();
+        }
+
+        // 게임 루프 시작 (60fps)
+        function startGameLoop() {
+            function gameLoop() {
+                if (!gameState.isGameActive) return;
+                
+                // 게임 상태 업데이트
+                updateGameLogic();
+                
+                // 다음 프레임 예약
+                gameState.gameLoop = requestAnimationFrame(gameLoop);
+            }
+            
+            gameLoop();
+        }
+
+        // 게임 로직 업데이트
+        function updateGameLogic() {
+            if (gameState.isPaused) return;
+            
+            // 현재 시간 기준으로 두더지 상태 체크
+            const currentTime = Date.now();
+            
+            // 활성 두더지들의 타이머 체크 및 자동 제거
+            gameState.activeMoles = gameState.activeMoles.filter(moleData => {
+                if (currentTime - moleData.spawnTime >= gameState.moleVisibilityTime) {
+                    // 시간 초과로 두더지 제거
+                    hideMole(moleData.holeIndex);
+                    handleMoleMissed();
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        // 두더지 스폰 함수
+        function spawnMole() {
+            const maxConcurrentMoles = Math.min(3 + Math.floor(gameState.level / 3), 5);
+            if (gameState.activeMoles.length >= maxConcurrentMoles) return;
+            
+            // 사용 가능한 홀 찾기
+            const availableHoles = [];
+            for (let i = 0; i < 9; i++) {
+                const isOccupied = gameState.activeMoles.some(mole => mole.holeIndex === i);
+                if (!isOccupied) {
+                    availableHoles.push(i);
+                }
+            }
+            
+            if (availableHoles.length === 0) return;
+            
+            // 랜덤 홀 선택
+            const randomIndex = Math.floor(Math.random() * availableHoles.length);
+            const holeIndex = availableHoles[randomIndex];
+            
+            // 두더지 활성화
+            showMole(holeIndex);
+            
+            // 활성 두더지 목록에 추가
+            gameState.activeMoles.push({
+                holeIndex: holeIndex,
+                spawnTime: Date.now()
+            });
+        }
+
+        // 두더지 표시
+        function showMole(holeIndex) {
+            const hole = gameElements.holes[holeIndex];
+            if (!hole) return;
+            
+            const mole = hole.querySelector('.mole');
+            if (!mole) return;
+            
+            mole.classList.add('active', 'show');
+            mole.classList.remove('hide');
+        }
+
+        // 두더지 숨기기
+        function hideMole(holeIndex) {
+            const hole = gameElements.holes[holeIndex];
+            if (!hole) return;
+            
+            const mole = hole.querySelector('.mole');
+            if (!mole) return;
+            
+            mole.classList.remove('active', 'show');
+            mole.classList.add('hide');
+            
+            // 애니메이션 완료 후 클래스 제거
+            setTimeout(() => {
+                mole.classList.remove('hide');
+            }, 300);
+        }
+
+        // 모든 두더지 숨기기
+        function hideAllMoles() {
+            for (let i = 0; i < 9; i++) {
+                hideMole(i);
+            }
+            gameState.activeMoles = [];
+        }
+
+        // 두더지 클릭 핸들러
+        function handleMoleClick(holeIndex) {
+            if (!gameState.isGameActive || gameState.isPaused) return;
+            
+            // 활성 두더지인지 확인
+            const moleIndex = gameState.activeMoles.findIndex(mole => mole.holeIndex === holeIndex);
+            if (moleIndex === -1) return;
+            
+            // 두더지 제거
+            gameState.activeMoles.splice(moleIndex, 1);
+            
+            // 히트 이펙트 표시
+            showHitEffect(holeIndex);
+            
+            // 두더지 숨기기
+            hideMole(holeIndex);
+            
+            // 점수 계산 및 업데이트
+            calculateScore();
+            
+            // 게임 상태 업데이트
+            gameState.molesCaught++;
+            gameState.consecutiveHits++;
+            gameState.consecutiveMisses = 0; // 연속 실패 리셋
+            
+            // 레벨 업 체크
+            checkLevelUp();
+            
+            // UI 업데이트
+            updateScoreDisplay();
+            updateLevelDisplay();
+            
+            console.log(`두더지를 잡았습니다! 점수: ${gameState.score}, 연속 히트: ${gameState.consecutiveHits}`);
+        }
+
+        // 점수 계산 (연속 히트 보너스 포함)
+        function calculateScore() {
+            let points = 10; // 기본 점수
+            
+            // 연속 히트 보너스 (최대 +20점)
+            const bonus = Math.min(gameState.consecutiveHits * 2, 20);
+            points += bonus;
+            
+            // 레벨 보너스
+            points += (gameState.level - 1) * 5;
+            
+            gameState.score += points;
+        }
+
+        // 히트 이펙트 표시
+        function showHitEffect(holeIndex) {
+            const hole = gameElements.holes[holeIndex];
+            if (!hole) return;
+            
+            const mole = hole.querySelector('.mole');
+            if (!mole) return;
+            
+            mole.classList.add('hit');
+            
+            // 이펙트 제거
+            setTimeout(() => {
+                mole.classList.remove('hit');
+            }, 400);
+        }
+
+        // 두더지를 놓친 경우 처리
+        function handleMoleMissed() {
+            gameState.consecutiveMisses++;
+            gameState.consecutiveHits = 0; // 연속 히트 리셋
+            
+            console.log(`두더지를 놓쳤습니다! 연속 실패: ${gameState.consecutiveMisses}`);
+        }
+
+        // 레벨업 체크 및 처리
+        function checkLevelUp() {
+            const newLevel = Math.floor(gameState.molesCaught / 10) + 1;
+            
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                
+                // 난이도 증가: 두더지 노출 시간 감소
+                gameState.moleVisibilityTime = Math.max(
+                    2000 - (gameState.level - 1) * 150, 
+                    800 // 최소 0.8초
+                );
+                
+                console.log(`레벨업! 레벨 ${gameState.level}, 노출시간: ${gameState.moleVisibilityTime}ms`);
+            }
+        }
+
+        // 일시정지 버튼 클릭 핸들러
+        function handlePauseGame() {
+            if (!gameState.isGameActive) return;
+            
+            gameState.isPaused = !gameState.isPaused;
+            
+            if (gameElements.gameContainer) {
+                if (gameState.isPaused) {
+                    gameElements.gameContainer.classList.add('paused');
+                } else {
+                    gameElements.gameContainer.classList.remove('paused');
+                }
+            }
+            
+            updateGameUI();
+            
+            console.log(gameState.isPaused ? '게임이 일시정지되었습니다.' : '게임이 재개되었습니다.');
+        }
+
+        // 게임 종료 처리
+        function handleGameOver() {
+            // 게임 상태 비활성화
+            gameState.isGameActive = false;
+            gameState.isPaused = false;
+            
+            // 타이머들 정리
+            clearTimeout(gameState.moleSpawnTimer);
+            clearInterval(gameState.gameTimer);
+            cancelAnimationFrame(gameState.gameLoop);
+            
+            // 모든 두더지 숨기기
+            hideAllMoles();
+            
+            // 최고점수 저장
+            saveHighScore();
+            
+            // UI 업데이트
+            if (gameElements.gameContainer) {
+                gameElements.gameContainer.classList.remove('active', 'paused');
+                gameElements.gameContainer.classList.add('over');
+            }
+            
+            // 게임 오버 스크린 표시
+            showGameOverScreen();
+            
+            updateGameUI();
+            
+            console.log(`게임 종료! 최종 점수: ${gameState.score}, 잡은 두더지: ${gameState.molesCaught}, 달성 레벨: ${gameState.level}`);
+        }
+
+        // 게임 오버 스크린 표시 - 수정된 부분
+        function showGameOverScreen() {
+            if (!gameElements.gameOverScreen) return;
+            
+            // 결과 정보 업데이트
+            const finalScoreElement = gameElements.gameOverScreen.querySelector('#final-score');
+            const finalMolesElement = gameElements.gameOverScreen.querySelector('#final-moles');
+            const finalLevelElement = gameElements.gameOverScreen.querySelector('#final-level');
+            
+            if (finalScoreElement) finalScoreElement.textContent = gameState.score;
+            if (finalMolesElement) finalMolesElement.textContent = gameState.molesCaught;
+            if (finalLevelElement) finalLevelElement.textContent = gameState.level;
+            
+            gameElements.gameOverScreen.style.display = 'flex';
+            
+            // 재시작 및 메인 버튼 이벤트 - 개선된 부분
+            const restartButton = gameElements.gameOverScreen.querySelector('#restart-button');
+            const mainMenuButton = gameElements.gameOverScreen.querySelector('#main-button');
+            
+            if (restartButton) {
+                restartButton.onclick = handleRestartGame;
+            }
+            
+            if (mainMenuButton) {
+                mainMenuButton.onclick = handleMainMenu;
+            }
+        }
+
+        // 게임 재시작 핸들러 - 개선된 부분
+        function handleRestartGame() {
+            if (gameElements.gameOverScreen) {
+                gameElements.gameOverScreen.style.display = 'none';
+            }
+            
+            if (gameElements.gameContainer) {
+                gameElements.gameContainer.classList.remove('over');
+            }
+            
+            // 약간의 지연 후 게임 시작
+            setTimeout(() => {
+                handleStartGame();
+            }, 100);
+        }
+
+        // 메인 메뉴로 돌아가기 핸들러
+        function handleMainMenu() {
+            if (gameElements.gameOverScreen) {
+                gameElements.gameOverScreen.style.display = 'none';
+            }
+            
+            if (gameElements.gameContainer) {
+                gameElements.gameContainer.classList.remove('active', 'paused', 'over');
+            }
+            
+            // 모든 타이머 정리
+            clearTimeout(gameState.moleSpawnTimer);
+            clearInterval(gameState.gameTimer);
+            cancelAnimationFrame(gameState.gameLoop);
+            
+            updateGameUI();
+            setupInitialGameState();
+        }
+
+        // 점수 표시 업데이트
+        function updateScoreDisplay() {
+            if (gameElements.scoreDisplay) {
+                gameElements.scoreDisplay.textContent = gameState.score;
+            }
+        }
+
+        // 시간 표시 업데이트
+        function updateTimeDisplay() {
+            if (gameElements.timeDisplay) {
+                gameElements.timeDisplay.textContent = gameState.timeLeft;
+            }
+        }
+
+        // 레벨 표시 업데이트
+        function updateLevelDisplay() {
+            if (gameElements.levelDisplay) {
+                gameElements.levelDisplay.textContent = gameState.level;
+            }
+        }
+
+        // 게임 상태 디버깅용 함수
+        function getGameStatus() {
+            return {
+                ...gameState,
+                activeMolesCount: gameState.activeMoles.length,
+                gameElementsLoaded: Object.keys(gameElements).filter(key => gameElements[key] !== null).length
+            };
+        }
+
+        // 전역 스코프에 게임 제어 함수들 노출 (디버깅 및 외부 제어용)
+        window.whackamoleGame = {
+            start: handleStartGame,
+            pause: handlePauseGame,
+            restart: handleRestartGame,
+            getStatus: getGameStatus,
+            state: gameState
+        };
+
+        console.log('두더지 게임 엔진 로드 완료! window.whackamoleGame 객체를 통해 제어 가능합니다.');
     </script>
 </body>
 </html>
