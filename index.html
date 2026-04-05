@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Roulette Game</title>
+    <style>
+        :root {
+            --primary-gold: #FFD700;
+            --secondary-gold: #FFA500;
+            --dark-bg: #1a1a2e;
+            --darker-bg: #16213e;
+            --accent-red: #e74c3c;
+            --accent-green: #27ae60;
+            --text-light: #ffffff;
+            --text-gold: #FFD700;
+            --shadow-dark: rgba(0, 0, 0, 0.5);
+            --glow-gold: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            max-width: 1200px;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .game-title {
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            background: linear-gradient(45deg, var(--primary-gold), var(--secondary-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px var(--shadow-dark);
+            margin-bottom: 20px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3)); }
+            to { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); }
+        }
+
+        .roulette-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .roulette-wheel {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--accent-red) 0deg 36deg,
+                var(--primary-gold) 36deg 72deg,
+                var(--accent-green) 72deg 108deg,
+                var(--secondary-gold) 108deg 144deg,
+                var(--accent-red) 144deg 180deg,
+                var(--primary-gold) 180deg 216deg,
+                var(--accent-green) 216deg 252deg,
+                var(--secondary-gold) 252deg 288deg,
+                var(--accent-red) 288deg 324deg,
+                var(--primary-gold) 324deg 360deg
+            );
+            box-shadow: var(--glow-gold), inset 0 0 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s ease-out;
+        }
+
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-gold), var(--secondary-gold));
+            border-radius: 50%;
+            box-shadow: 0 4px 15px var(--shadow-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--dark-bg);
+            z-index: 10;
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 30px solid var(--text-light);
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px var(--shadow-dark));
+        }
+
+        .wheel-numbers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .wheel-number {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: var(--text-light);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            transform-origin: 200px 200px;
+        }
+
+        .wheel-number:nth-child(1) { transform: rotate(18deg); }
+        .wheel-number:nth-child(2) { transform: rotate(54deg); }
+        .wheel-number:nth-child(3) { transform: rotate(90deg); }
+        .wheel-number:nth-child(4) { transform: rotate(126deg); }
+        .wheel-number:nth-child(5) { transform: rotate(162deg); }
+        .wheel-number:nth-child(6) { transform: rotate(198deg); }
+        .wheel-number:nth-child(7) { transform: rotate(234deg); }
+        .wheel-number:nth-child(8) { transform: rotate(270deg); }
+        .wheel-number:nth-child(9) { transform: rotate(306deg); }
+        .wheel-number:nth-child(10) { transform: rotate(342deg); }
+
+        .game-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .spin-button {
+            width: 200px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-gold), var(--secondary-gold));
+            border: none;
+            border-radius: 30px;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--dark-bg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .spin-button:hover, .spin-button:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+            outline: 2px solid var(--primary-gold);
+            outline-offset: 2px;
+        }
+
+        .spin-button:active {
+            transform: translateY(0);
+        }
+
+        .spin-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spin-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .spin-button:hover::before {
+            left: 100%;
+        }
+
+        .game-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 150px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-gold);
+        }
+
+        .result-display {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .result-display.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--text-light);
+        }
+
+        .result-score {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--text-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .celebrate {
+            animation: celebrate 0.6s ease-in-out;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .roulette-wheel {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .wheel-center {
+                width: 45px;
+                height: 45px;
+                font-size: 14px;
+            }
+            
+            .wheel-number {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+                transform-origin: 150px 150px;
+            }
+            
+            .spin-button {
+                width: 160px;
+                height: 50px;
+                font-size: 18px;
+            }
+            
+            .game-container {
+                padding: 15px;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .roulette-wheel {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .wheel-number {
+                transform-origin: 125px 125px;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .info-card {
+                min-width: 120px;
+            }
+        }
+
+        /* 접근성 개선 */
+        .spin-button:focus-visible {
+            outline: 3px solid var(--primary-gold);
+            outline-offset: 3px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .roulette-wheel {
+                transition: none;
+            }
+            .glow {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">🎰 Lucky Roulette</h1>
+        
+        <div class="roulette-container">
+            <div class="wheel-pointer"></div>
+            
+            <div class="roulette-wheel" id="rouletteWheel">
+                <div class="wheel-center">🎯</div>
+                
+                <div class="wheel-numbers">
+                    <div class="wheel-number" data-points="1000">1000</div>
+                    <div class="wheel-number" data-points="50">50</div>
+                    <div class="wheel-number" data-points="100">100</div>
+                    <div class="wheel-number" data-points="10">10</div>
+                    <div class="wheel-number" data-points="500">500</div>
+                    <div class="wheel-number" data-points="25">25</div>
+                    <div class="wheel-number" data-points="200">200</div>
+                    <div class="wheel-number" data-points="75">75</div>
+                    <div class="wheel-number" data-points="300">300</div>
+                    <div class="wheel-number" data-points="150">150</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-controls">
+            <button class="spin-button" id="spinButton" aria-label="룰렛 회전하기" tabindex="0">
+                🎲 SPIN
+            </button>
+            
+            <div class="result-display" id="resultDisplay" role="status" aria-live="polite">
+                <div class="result-text">축하합니다!</div>
+                <div class="result-score" id="resultScore">0점</div>
+            </div>
+        </div>
+        
+        <div class="game-info">
+            <div class="info-card">
+                <div class="info-label">총 점수</div>
+                <div class="info-value" id="totalScore">0</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">플레이 횟수</div>
+                <div class="info-value" id="playCount">0</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">최고 점수</div>
+                <div class="info-value" id="bestScore">0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // 게임 상태 열거형
+        const GameState = {
+            IDLE: 'idle',
+            SPINNING: 'spinning',
+            RESULT: 'result'
+        };
+
+        // 룰렛 게임 엔진 클래스
+        class RouletteGameEngine {
+            constructor() {
+                this.currentState = GameState.IDLE;
+                
+                this.gameData = {
+                    totalScore: 0,
+                    playCount: 0,
+                    bestScore: 0,
+                    lastResult: 0
+                };
+                
+                this.physics = {
+                    rotation: 0,
+                    velocity: 0,
+                    friction: 0.97,
+                    minVelocity: 0.5
+                };
+                
+                this.sections = [
+                    { points: 1000, startAngle: 0, endAngle: 36 },
+                    { points: 50, startAngle: 36, endAngle: 72 },
+                    { points: 100, startAngle: 72, endAngle: 108 },
+                    { points: 10, startAngle: 108, endAngle: 144 },
+                    { points: 500, startAngle: 144, endAngle: 180 },
+                    { points: 25, startAngle: 180, endAngle: 216 },
+                    { points: 200, startAngle: 216, endAngle: 252 },
+                    { points: 75, startAngle: 252, endAngle: 288 },
+                    { points: 300, startAngle: 288, endAngle: 324 },
+                    { points: 150, startAngle: 324, endAngle: 360 }
+                ];
+                
+                this.elements = {};
+                this.audioContext = null;
+                this.animationFrameId = null;
+                
+                this.boundHandlers = {
+                    spin: this.handleSpin.bind(this),
+                    keydown: this.handleKeydown.bind(this)
+                };
+            }
+
+            init() {
+                try {
+                    console.log('[RouletteGameEngine] 초기화 시작');
+                    
+                    this.bindDOMElements();
+                    this.bindEventListeners();
+                    this.loadGameData();
+                    this.updateUI();
+                    this.initAudio();
+                    this.startGameLoop();
+                    
+                    console.log('[RouletteGameEngine] 초기화 완료');
+                    
+                } catch (error) {
+                    console.error('[RouletteGameEngine] 초기화 오류:', error);
+                    this.showError('게임 초기화에 실패했습니다.');
+                }
+            }
+
+            bindDOMElements() {
+                const elementIds = {
+                    wheel: 'rouletteWheel',
+                    spinButton: 'spinButton',
+                    resultDisplay: 'resultDisplay',
+                    resultScore: 'resultScore',
+                    totalScore: 'totalScore',
+                    playCount: 'playCount',
+                    bestScore: 'bestScore'
+                };
+
+                for (const [key, id] of Object.entries(elementIds)) {
+                    this.elements[key] = document.getElementById(id);
+                    if (!this.elements[key]) {
+                        throw new Error(`필수 DOM 요소를 찾을 수 없습니다: ${id}`);
+                    }
+                }
+            }
+
+            bindEventListeners() {
+                this.elements.spinButton.addEventListener('click', this.boundHandlers.spin);
+                this.elements.spinButton.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.handleSpin();
+                    }
+                });
+                
+                document.addEventListener('keydown', this.boundHandlers.keydown);
+                
+                // 터치 이벤트 최적화
+                if ('ontouchstart' in window) {
+                    this.elements.spinButton.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.handleSpin();
+                    }, { passive: false });
+                }
+            }
+
+            startGameLoop() {
+                const gameLoop = () => {
+                    this.update();
+                    this.render();
+                    this.animationFrameId = requestAnimationFrame(gameLoop);
+                };
+                
+                gameLoop();
+            }
+
+            update() {
+                if (this.currentState === GameState.SPINNING) {
+                    this.updatePhysics();
+                }
+            }
+
+            updatePhysics() {
+                this.physics.velocity *= this.physics.friction;
+                this.physics.rotation += this.physics.velocity;
+                
+                this.physics.rotation = this.physics.rotation % 360;
+                if (this.physics.rotation < 0) {
+                    this.physics.rotation += 360;
+                }
+                
+                if (Math.abs(this.physics.velocity) < this.physics.minVelocity) {
+                    this.physics.velocity = 0;
+                    this.onSpinComplete();
+                }
+            }
+
+            render() {
+                if (this.currentState === GameState.SPINNING) {
+                    this.elements.wheel.style.transform = `rotate(${this.physics.rotation}deg)`;
+                }
+            }
+
+            changeState(newState) {
+                if (this.currentState === newState) return;
+                
+                console.log(`[RouletteGameEngine] 상태 변경: ${this.currentState} → ${newState}`);
+                
+                this.currentState = newState;
+                
+                switch (newState) {
+                    case GameState.IDLE:
+                        this.onEnterIdle();
+                        break;
+                    case GameState.SPINNING:
+                        this.onEnterSpinning();
+                        break;
+                    case GameState.RESULT:
+                        this.onEnterResult();
+                        break;
+                }
+            }
+
+            onEnterIdle() {
+                this.elements.spinButton.disabled = false;
+                this.elements.spinButton.textContent = '🎲 SPIN';
+                this.elements.resultDisplay.classList.remove('show');
+            }
+
+            onEnterSpinning() {
+                this.elements.spinButton.disabled = true;
+                this.elements.spinButton.textContent = '회전 중...';
+                this.elements.resultDisplay.classList.remove('show');
+                this.playSpinSound();
+            }
+
+            onEnterResult() {
+                const result = this.calculateResult();
+                this.showResult(result);
+                
+                setTimeout(() => {
+                    this.changeState(GameState.IDLE);
+                }, 3000);
+            }
+
+            handleSpin() {
+                if (this.currentState !== GameState.IDLE) return;
+                
+                try {
+                    this.startSpin();
+                    this.changeState(GameState.SPINNING);
+                } catch (error) {
+                    console.error('[RouletteGameEngine] 스핀 처리 오류:', error);
+                    this.showError('게임 실행 중 오류가 발생했습니다.');
+                }
+            }
+
+            startSpin() {
+                // 3-8초간 회전하도록 초기 속도 설정
+                this.physics.velocity = -(Math.random() * 15 + 10);
+                console.log(`[RouletteGameEngine] 스핀 시작 - 초기 속도: ${this.physics.velocity}`);
+            }
+
+            onSpinComplete() {
+                console.log(`[RouletteGameEngine] 스핀 완료 - 최종 각도: ${this.physics.rotation}`);
+                this.changeState(GameState.RESULT);
+            }
+
+            calculateResult() {
+                let targetAngle = (360 - this.physics.rotation + 18) % 360;
+                
+                for (const section of this.sections) {
+                    if (targetAngle >= section.startAngle && targetAngle < section.endAngle) {
+                        return section;
+                    }
+                }
+                
+                return this.sections[0];
+            }
+
+            showResult(result) {
+                try {
+                    const earnedPoints = result.points;
+                    
+                    this.gameData.totalScore += earnedPoints;
+                    this.gameData.playCount += 1;
+                    this.gameData.lastResult = earnedPoints;
+                    
+                    if (this.gameData.totalScore > this.gameData.bestScore) {
+                        this.gameData.bestScore = this.gameData.totalScore;
+                    }
+                    
+                    this.elements.resultScore.textContent = earnedPoints + '점';
+                    this.elements.resultDisplay.classList.add('show');
+                    
+                    if (earnedPoints >= 500) {
+                        this.elements.resultDisplay.classList.add('celebrate');
+                        setTimeout(() => {
+                            this.elements.resultDisplay.classList.remove('celebrate');
+                        }, 600);
+                    }
+                    
+                    this.updateUI();
+                    this.saveGameData();
+                    this.playResultSound(earnedPoints);
+                    
+                    console.log(`[RouletteGameEngine] 결과: ${earnedPoints}점, 총점: ${this.gameData.totalScore}`);
+                    
+                } catch (error) {
+                    console.error('[RouletteGameEngine] 결과 표시 오류:', error);
+                }
+            }
+
+            updateUI() {
+                try {
+                    this.elements.totalScore.textContent = this.gameData.totalScore.toLocaleString();
+                    this.elements.playCount.textContent = this.gameData.playCount.toString();
+                    this.elements.bestScore.textContent = this.gameData.bestScore.toLocaleString();
+                } catch (error) {
+                    console.error('[RouletteGameEngine] UI 업데이트 오류:', error);
+                }
+            }
+
+            saveGameData() {
+                try {
+                    const dataToSave = {
+                        ...this.gameData,
+                        timestamp: Date.now(),
+                        version: '1.0'
+                    };
+                    
+                    localStorage.setItem('rouletteGameData', JSON.stringify(dataToSave));
+                    console.log('[RouletteGameEngine] 게임 데이터 저장 완료');
+                    
+                } catch (error) {
+                    console.warn('[RouletteGameEngine] 데이터 저장 실패:', error);
+                }
+            }
+
+            loadGameData() {
+                try {
+                    const savedData = localStorage.getItem('rouletteGameData');
+                    
+                    if (savedData) {
+                        const parsedData = JSON.parse(savedData);
+                        
+                        if (parsedData && typeof parsedData === 'object') {
+                            this.gameData.totalScore = parsedData.totalScore || 0;
+                            this.gameData.playCount = parsedData.playCount || 0;
+                            this.gameData.bestScore = parsedData.bestScore || 0;
+                            
+                            console.log('[RouletteGameEngine] 게임 데이터 로드 완료');
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.warn('[RouletteGameEngine] 데이터 로드 실패:', error);
+                }
+            }
+
+            initAudio() {
+                try {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContextClass) {
+                        // 사용자 상호작용 후에 초기화
+                        document.addEventListener('click', () => {
+                            if (!this.audioContext) {
+                                this.audioContext = new AudioContextClass();
+                                console.log('[RouletteGameEngine] Web Audio API 초기화 완료');
+                            }
+                        }, { once: true });
+                    } else {
+                        console.warn('[RouletteGameEngine] Web Audio API 미지원');
+                    }
+                } catch (error) {
+                    console.warn('[RouletteGameEngine] 오디오 초기화 실패:', error);
+                }
+            }
+
+            playSpinSound() {
+                if (!this.audioContext || this.audioContext.state !== 'running') return;
+                
+                try {
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 1);
+                    
+                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 1);
+                    
+                    oscillator.start(this.audioContext.currentTime);
+                    oscillator.stop(this.audioContext.currentTime + 1);
+                    
+                } catch (error) {
+                    console.warn('[RouletteGameEngine] 스핀 사운드 재생 오류:', error);
+                }
+            }
+
+            playResultSound(points) {
+                if (!this.audioContext || this.audioContext.state !== 'running') return;
+                
+                try {
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    let frequency = 400;
+                    if (points >= 1000) frequency = 1000;
+                    else if (points >= 500) frequency = 800;
+                    else if (points >= 200) frequency = 600;
+                    
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(frequency * 1.2, this.audioContext.currentTime + 0.1);
+                    
+                    gainNode.gain.setValueAtTime(0.15, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(this.audioContext.currentTime);
+                    oscillator.stop(this.audioContext.currentTime + 0.5);
+                    
+                } catch (error) {
+                    console.warn('[RouletteGameEngine] 결과 사운드 재생 오류:', error);
+                }
+            }
+
+            handleKeydown(event) {
+                if (event.code === 'Space' && this.currentState === GameState.IDLE) {
+                    event.preventDefault();
+                    this.handleSpin();
+                }
+                
+                if (event.code === 'KeyR' && event.ctrlKey) {
+                    event.preventDefault();
+                    this.resetGame();
+                }
+            }
+
+            showError(message) {
+                console.error('[RouletteGameEngine] 오류:', message);
+                
+                if (this.elements.resultScore) {
+                    this.elements.resultScore.textContent = message;
+                    this.elements.resultDisplay.classList.add('show');
+                    
+                    setTimeout(() => {
+                        this.elements.resultDisplay.classList.remove('show');
+                    }, 3000);
+                }
+            }
+
+            resetGame() {
+                if (confirm('게임 데이터를 초기화하시겠습니까?')) {
+                    this.gameData = {
+                        totalScore: 0,
+                        playCount: 0,
+                        bestScore: 0,
+                        lastResult: 0
+                    };
+                    
+                    this.updateUI();
+                    this.saveGameData();
+                    this.changeState(GameState.IDLE);
+                    
+                    console.log('[RouletteGameEngine] 게임 리셋 완료');
+                }
+            }
+
+            destroy() {
+                try {
+                    if (this.animationFrameId) {
+                        cancelAnimationFrame(this.animationFrameId);
+                    }
+                    
+                    this.elements.spinButton?.removeEventListener('click', this.boundHandlers.spin);
+                    document.removeEventListener('keydown', this.boundHandlers.keydown);
+                    
+                    if (this.audioContext && this.audioContext.state !== 'closed') {
+                        this.audioContext.close();
+                    }
+                    
+                    console.log('[RouletteGameEngine] 게임 엔진 정리 완료');
+                    
+                } catch (error) {
+                    console.error('[RouletteGameEngine] 정리 중 오류:', error);
+                }
+            }
+        }
+
+        // 게임 엔진 인스턴스 생성 및 초기화
+        let gameEngine = null;
+
+        function initializeGame() {
+            try {
+                console.log('[RouletteGame] 게임 초기화 시작');
+                
+                gameEngine = new RouletteGameEngine();
+                gameEngine.init();
+                
+                window.rouletteGame = gameEngine;
+                window.resetRouletteGame = () => gameEngine.resetGame();
+                
+                console.log('[RouletteGame] 게임 초기화 완료');
+                
+            } catch (error) {
+                console.error('[RouletteGame] 초기화 실패:', error);
+                
+                const errorElement = document.createElement('div');
+                errorElement.innerHTML = `
+                    <div style="
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: #e74c3c;
+                        color: white;
+                        padding: 20px;
+                        border-radius: 10px;
+                        text-align: center;
+                        z-index: 9999;
+                    ">
+                        <h3>게임 로드 오류</h3>
+                        <p>페이지를 새로고침해주세요.</p>
+                    </div>
+                `;
+                document.body.appendChild(errorElement);
+            }
+        }
+
+        // 페이지 로드 완료 후 게임 초기화
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeGame);
+        } else {
+            initializeGame();
+        }
+
+        // 페이지 언로드 시 정리
+        window.addEventListener('beforeunload', () => {
+            if (gameEngine) {
+                gameEngine.destroy();
+            }
+        });
+
+    })();
+    </script>
+</body>
+</html>
