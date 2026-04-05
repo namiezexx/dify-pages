@@ -3,1107 +3,647 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galaxy Reunion</title>
+    <title>룰렛 미니게임</title>
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
-
-    :root {
-        --neon-blue: #00bfff;
-        --neon-red: #ff4444;
-        --neon-green: #44ff44;
-        --neon-yellow: #ffaa00;
-        --space-black: #0a0a0a;
-        --dark-blue: #001122;
-        --glow-intensity: 0 0 20px;
-    }
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Orbitron', 'Courier New', monospace;
-        background: var(--space-black);
-        color: var(--neon-blue);
-        overflow: hidden;
-        height: 100vh;
-        position: relative;
-    }
-
-    /* 별똥별 배경 애니메이션 */
-    body::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: 
-            radial-gradient(2px 2px at 20px 30px, var(--neon-blue), transparent),
-            radial-gradient(2px 2px at 40px 70px, var(--neon-green), transparent),
-            radial-gradient(1px 1px at 90px 40px, var(--neon-yellow), transparent),
-            radial-gradient(1px 1px at 130px 80px, var(--neon-red), transparent),
-            radial-gradient(2px 2px at 160px 30px, var(--neon-blue), transparent);
-        background-repeat: repeat;
-        background-size: 200px 100px;
-        animation: starfield 20s linear infinite;
-        opacity: 0.3;
-        z-index: -1;
-    }
-
-    @keyframes starfield {
-        0% { transform: translateY(-100px); }
-        100% { transform: translateY(100vh); }
-    }
-
-    /* 메인 컨테이너 */
-    #game-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        padding: 20px;
-        position: relative;
-    }
-
-    /* 화면 공통 스타일 */
-    .screen {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        max-width: 900px;
-        width: 100%;
-        transition: all 0.5s ease;
-    }
-
-    .screen.hidden {
-        display: none;
-    }
-
-    /* 메뉴 화면 스타일 */
-    #menu-screen h1 {
-        font-size: clamp(2.5rem, 6vw, 4rem);
-        font-weight: 900;
-        color: var(--neon-blue);
-        text-shadow: var(--glow-intensity) var(--neon-blue);
-        margin-bottom: 1rem;
-        letter-spacing: 4px;
-        animation: titleGlow 2s ease-in-out infinite alternate;
-    }
-
-    @keyframes titleGlow {
-        0% { text-shadow: var(--glow-intensity) var(--neon-blue); }
-        100% { text-shadow: 0 0 40px var(--neon-blue), 0 0 60px var(--neon-blue); }
-    }
-
-    #menu-screen .subtitle {
-        font-size: clamp(0.8rem, 2vw, 1.2rem);
-        color: var(--neon-green);
-        margin-bottom: 3rem;
-        opacity: 0.8;
-    }
-
-    /* 네온 버튼 스타일 */
-    .neon-btn {
-        background: transparent;
-        border: 2px solid var(--neon-blue);
-        color: var(--neon-blue);
-        font-family: 'Orbitron', monospace;
-        font-size: clamp(1rem, 2.5vw, 1.4rem);
-        font-weight: 700;
-        padding: 15px 30px;
-        margin: 10px;
-        cursor: pointer;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        transition: all 0.3s ease;
-        position: relative;
-        min-width: 200px;
-    }
-
-    .neon-btn:hover {
-        background: var(--neon-blue);
-        color: var(--space-black);
-        box-shadow: 
-            0 0 20px var(--neon-blue),
-            0 0 40px var(--neon-blue),
-            inset 0 0 20px rgba(0, 191, 255, 0.1);
-        transform: scale(1.05);
-    }
-
-    .neon-btn:active {
-        transform: scale(0.98);
-    }
-
-    /* 최고점수 표시 */
-    #high-score-display {
-        font-size: clamp(1rem, 2vw, 1.3rem);
-        color: var(--neon-yellow);
-        margin-top: 2rem;
-        text-shadow: var(--glow-intensity) var(--neon-yellow);
-    }
-
-    /* 게임 화면 스타일 */
-    #game-screen {
-        gap: 20px;
-    }
-
-    #game-canvas {
-        border: 3px solid var(--neon-blue);
-        box-shadow: 
-            var(--glow-intensity) var(--neon-blue),
-            inset 0 0 20px rgba(0, 191, 255, 0.1);
-        background: radial-gradient(ellipse at center, var(--dark-blue) 0%, var(--space-black) 70%);
-        max-width: 100%;
-        height: auto;
-    }
-
-    /* HUD 스타일 */
-    #hud {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 800px;
-        max-width: 100%;
-        padding: 10px 20px;
-        background: linear-gradient(90deg, transparent, rgba(0, 191, 255, 0.1), transparent);
-        border: 1px solid rgba(0, 191, 255, 0.3);
-        border-radius: 10px;
-        font-size: clamp(0.9rem, 1.8vw, 1.1rem);
-        gap: 15px;
-    }
-
-    #hud > div {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    #score-display {
-        color: var(--neon-blue);
-        text-shadow: var(--glow-intensity) var(--neon-blue);
-    }
-
-    #missiles-display {
-        color: var(--neon-yellow);
-        text-shadow: var(--glow-intensity) var(--neon-yellow);
-    }
-
-    #lives-display {
-        color: var(--neon-green);
-        text-shadow: var(--glow-intensity) var(--neon-green);
-    }
-
-    /* 컨트롤 버튼 */
-    .control-btn {
-        background: transparent;
-        border: 1px solid var(--neon-green);
-        color: var(--neon-green);
-        font-family: 'Orbitron', monospace;
-        font-size: clamp(0.8rem, 1.5vw, 1rem);
-        padding: 8px 16px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border-radius: 5px;
-    }
-
-    .control-btn:hover {
-        background: var(--neon-green);
-        color: var(--space-black);
-        box-shadow: var(--glow-intensity) var(--neon-green);
-    }
-
-    /* 게임오버 화면 */
-    #gameover-screen h2 {
-        font-size: clamp(2rem, 4vw, 3rem);
-        color: var(--neon-red);
-        text-shadow: var(--glow-intensity) var(--neon-red);
-        margin-bottom: 2rem;
-        animation: gameOverPulse 1.5s ease-in-out infinite alternate;
-    }
-
-    @keyframes gameOverPulse {
-        0% { opacity: 0.7; transform: scale(1); }
-        100% { opacity: 1; transform: scale(1.05); }
-    }
-
-    #final-score, #enemies-killed {
-        font-size: clamp(1.2rem, 2.5vw, 1.6rem);
-        margin: 15px 0;
-        color: var(--neon-blue);
-        text-shadow: var(--glow-intensity) var(--neon-blue);
-    }
-
-    #final-score span, #enemies-killed span {
-        color: var(--neon-yellow);
-        font-weight: 700;
-    }
-
-    /* 반응형 디자인 */
-    @media (max-width: 900px) {
-        #game-canvas {
-            width: 100%;
-            max-width: 400px;
-            height: 300px;
+        :root {
+            --primary-red: #FF6B6B;
+            --secondary-teal: #4ECDC4;
+            --background-ivory: #F7F1E3;
+            --text-dark: #2C3E50;
+            --gold: #FFD700;
+            --segment-yellow: #FFD93D;
+            --segment-green: #6BCF7F;
+            --segment-blue: #4D96FF;
+            --segment-red: #FF6B6B;
+            --segment-purple: #B983FF;
+            --segment-orange: #FF8E53;
+            --segment-light-blue: #5DADE2;
+            --segment-dark-orange: #F39C12;
+            --segment-dark-red: #E74C3C;
         }
-        
-        #hud {
-            flex-direction: column;
-            gap: 10px;
-            width: 100%;
-            max-width: 400px;
-        }
-        
-        .neon-btn {
-            min-width: 150px;
-            padding: 12px 20px;
-        }
-    }
 
-    @media (max-width: 480px) {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, var(--background-ivory) 0%, #F0E68C 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
         #game-container {
-            padding: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            max-width: 800px;
+            width: 90vw;
+            text-align: center;
+            position: relative;
         }
-        
-        #hud {
-            font-size: 0.8rem;
-            padding: 8px 12px;
+
+        .game-header {
+            margin-bottom: 30px;
         }
-        
-        .neon-btn {
+
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-red);
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(90deg, var(--secondary-teal), var(--primary-red));
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .game-canvas-container {
+            position: relative;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        #roulette-canvas {
+            border: 5px solid var(--primary-red);
+            border-radius: 50%;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            background: white;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .roulette-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid var(--primary-red);
+            z-index: 10;
+            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+        }
+
+        .game-controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .game-button {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
             min-width: 120px;
-            padding: 10px 15px;
-            font-size: 1rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
-    }
 
-    /* 점수 카운트업 애니메이션 */
-    @keyframes countUp {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.2); color: var(--neon-yellow); }
-        100% { transform: scale(1); }
-    }
-
-    .score-animate {
-        animation: countUp 0.5s ease;
-    }
-
-    /* 로딩 및 전환 효과 */
-    .screen-transition {
-        opacity: 0;
-        transform: translateY(20px);
-        animation: fadeInUp 0.8s ease forwards;
-    }
-
-    @keyframes fadeInUp {
-        to {
-            opacity: 1;
-            transform: translateY(0);
+        #spin-button {
+            background: linear-gradient(135deg, var(--secondary-teal), #45B7AA);
+            color: white;
         }
-    }
 
-    /* 추가적인 네온 효과들 */
-    .neon-border {
-        position: relative;
-    }
+        #spin-button:hover {
+            background: linear-gradient(135deg, #45B7AA, var(--secondary-teal));
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
 
-    .neon-border::before {
-        content: '';
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
-        background: linear-gradient(45deg, var(--neon-blue), var(--neon-green), var(--neon-yellow), var(--neon-red));
-        border-radius: inherit;
-        z-index: -1;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
+        #spin-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
 
-    .neon-border:hover::before {
-        opacity: 0.7;
-    }
+        #reset-button {
+            background: linear-gradient(135deg, var(--primary-red), #E55555);
+            color: white;
+        }
+
+        #reset-button:hover {
+            background: linear-gradient(135deg, #E55555, var(--primary-red));
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-animation {
+            animation: scorePopup 0.6s ease-in-out;
+        }
+
+        @keyframes scorePopup {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); color: var(--gold); }
+            100% { transform: scale(1); }
+        }
+
+        #result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: modalFadeIn 0.3s ease-in-out;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.4s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px) scale(0.8); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            color: var(--primary-red);
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .modal-score {
+            font-size: 2.5rem;
+            color: var(--gold);
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-message {
+            font-size: 1.2rem;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+        }
+
+        .modal-button {
+            background: linear-gradient(135deg, var(--secondary-teal), #45B7AA);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .segment-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--text-dark);
+        }
+
+        .jackpot-effect {
+            animation: jackpotGlow 2s infinite;
+        }
+
+        @keyframes jackpotGlow {
+            0%, 100% { box-shadow: 0 15px 30px rgba(255, 107, 107, 0.3); }
+            50% { box-shadow: 0 15px 40px rgba(255, 107, 107, 0.8), 0 0 20px var(--gold); }
+        }
+
+        @media (max-width: 768px) {
+            #game-container {
+                padding: 20px;
+                width: 95vw;
+            }
+
+            .game-title {
+                font-size: 2rem;
+            }
+
+            .score-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .game-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .segment-legend {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-title {
+                font-size: 1.5rem;
+            }
+
+            .game-button {
+                min-width: 100px;
+                padding: 12px 24px;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <!-- 메뉴 화면 -->
-        <div id="menu-screen" class="screen">
-            <h1>GALAXY REUNION</h1>
-            <p class="subtitle">Classic Arcade Shooter Experience</p>
-            <button id="start-btn" class="neon-btn neon-border">START GAME</button>
-            <div id="high-score-display">HIGH SCORE: <span id="high-score">0</span></div>
-        </div>
-        
-        <!-- 게임 화면 -->
-        <div id="game-screen" class="screen hidden">
-            <canvas id="game-canvas" width="800" height="600"></canvas>
-            <div id="hud">
-                <div id="score-display">SCORE: <span id="current-score">0</span></div>
-                <div id="missiles-display">MISSILES: <span id="missile-count">0</span></div>
-                <div id="lives-display">LIVES: <span id="life-count">3</span></div>
+        <div class="game-header">
+            <h1 class="game-title">🎰 룰렛 게임</h1>
+            
+            <div class="score-info">
+                <div class="score-item">
+                    <div class="score-label">현재 점수</div>
+                    <div id="score-display" class="score-value">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">최고 점수</div>
+                    <div id="high-score-display" class="score-value">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">남은 회전</div>
+                    <div id="spin-count-display" class="score-value">5</div>
+                </div>
             </div>
-            <button id="pause-btn" class="control-btn">PAUSE</button>
         </div>
-        
-        <!-- 게임오버 화면 -->
-        <div id="gameover-screen" class="screen hidden">
-            <h2>GAME OVER</h2>
-            <div id="final-score">FINAL SCORE: <span id="game-final-score">0</span></div>
-            <div id="enemies-killed">ENEMIES DESTROYED: <span id="total-kills">0</span></div>
-            <button id="restart-btn" class="neon-btn neon-border">PLAY AGAIN</button>
-            <button id="menu-btn" class="neon-btn">MAIN MENU</button>
+
+        <div class="game-canvas-container">
+            <div class="roulette-pointer"></div>
+            <canvas id="roulette-canvas" width="400" height="400"></canvas>
+        </div>
+
+        <div class="game-controls">
+            <button id="spin-button" class="game-button">
+                🎯 스핀!
+            </button>
+            <button id="reset-button" class="game-button">
+                🔄 리셋
+            </button>
+        </div>
+
+        <div class="segment-legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FFD93D;"></div>
+                <span>100점</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #6BCF7F;"></div>
+                <span>50점</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4D96FF;"></div>
+                <span>200점</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FF6B6B;"></div>
+                <span>실패</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #B983FF;"></div>
+                <span>150점</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FF8E53;"></div>
+                <span>75점</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #5DADE2;"></div>
+                <span>300점</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #F39C12;"></div>
+                <span>실패</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #E74C3C;"></div>
+                <span>잭팟 500점</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modal-title">결과</div>
+            <div class="modal-score" id="modal-score">+0</div>
+            <div class="modal-message" id="modal-message">메시지</div>
+            <button class="modal-button" onclick="handleResultModalClose()">확인</button>
         </div>
     </div>
 
     <script>
-    // 갤럭시 리유니온 게임 - 메인 JavaScript 파일
-    // 종스크롤 슈팅 게임 엔진 구현
+        const gameState = {
+            currentScore: 0,
+            highScore: parseInt(localStorage.getItem('rouletteHighScore')) || 0,
+            spinsLeft: 5,
+            isSpinning: false,
+            isGameOver: false,
+            currentAngle: 0,
+            targetAngle: 0,
+            angularVelocity: 0,
+            lastResult: null,
+            gameMode: 'ready'
+        };
 
-    // 게임 설정 상수 정의
-    const GAME_CONFIG = {
-        CANVAS_WIDTH: 800,
-        CANVAS_HEIGHT: 600,
-        ENEMIES_PER_MISSILE: 10,
-        MAX_MISSILES: 5,
-        ENEMY_SPAWN_RATE: 60,
-        PROJECTILE_SPEED: 7,
-        ENEMY_SPEED: 2,
-        MISSILE_SPEED: 8,
-        PLAYER_SPEED: 5
-    };
+        const rouletteConfig = {
+            segments: [
+                { id: 1, score: 100, color: '#FFD93D', label: '100' },
+                { id: 2, score: 50, color: '#6BCF7F', label: '50' },
+                { id: 3, score: 200, color: '#4D96FF', label: '200' },
+                { id: 4, score: 0, color: '#FF6B6B', label: 'MISS' },
+                { id: 5, score: 150, color: '#B983FF', label: '150' },
+                { id: 6, score: 75, color: '#FF8E53', label: '75' },
+                { id: 7, score: 300, color: '#5DADE2', label: '300' },
+                { id: 8, score: 0, color: '#F39C12', label: 'MISS' },
+                { id: 9, score: 500, color: '#E74C3C', label: 'JACKPOT' }
+            ],
+            canvasSize: { width: 400, height: 400 },
+            rouletteRadius: 160,
+            centerX: 200,
+            centerY: 200
+        };
 
-    // 글로벌 게임 상태 객체
-    const gameState = {
-        currentScreen: 'menu', // 'menu', 'playing', 'paused', 'gameover'
-        score: 0,
-        highScore: 0,
-        lives: 3,
-        missileCount: 0,
-        enemiesKilled: 0,
-        isGameRunning: false,
-        isPaused: false,
-        level: 1,
-        player: {
-            x: 400,
-            y: 500,
-            width: 25,
-            height: 20,
-            speed: GAME_CONFIG.PLAYER_SPEED
-        },
-        enemies: [],
-        projectiles: [],
-        missiles: [],
-        enemyProjectiles: []
-    };
+        let canvas, ctx, animationId;
 
-    // 키보드 입력 상태 관리 객체
-    const keyState = {
-        ArrowUp: false,
-        ArrowDown: false,
-        ArrowLeft: false,
-        ArrowRight: false,
-        KeyW: false,
-        KeyA: false,
-        KeyS: false,
-        KeyD: false,
-        Space: false,
-        KeyX: false
-    };
-
-    // 캔버스와 컨텍스트 변수
-    let canvas, ctx;
-    let gameAnimationFrame;
-    let enemySpawnCounter = 0;
-    let lastProjectileTime = 0;
-    let lastMissileTime = 0;
-
-    // DOM 로드 완료 후 초기화
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeGame();
-    });
-
-    // 게임 초기화 함수
-    function initializeGame() {
-        try {
-            // 캔버스 요소 가져오기
-            canvas = document.getElementById('game-canvas');
-            if (!canvas) {
-                console.error('Canvas element not found');
-                return;
-            }
-            
+        function initGame() {
+            canvas = document.getElementById('roulette-canvas');
             ctx = canvas.getContext('2d');
             
-            // 고해상도 디스플레이 대응
-            const dpr = window.devicePixelRatio || 1;
-            const rect = canvas.getBoundingClientRect();
+            const isMobile = window.innerWidth <= 768;
+            const canvasSize = isMobile ? 300 : 400;
             
-            canvas.width = GAME_CONFIG.CANVAS_WIDTH * dpr;
-            canvas.height = GAME_CONFIG.CANVAS_HEIGHT * dpr;
-            canvas.style.width = GAME_CONFIG.CANVAS_WIDTH + 'px';
-            canvas.style.height = GAME_CONFIG.CANVAS_HEIGHT + 'px';
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+            canvas.style.width = canvasSize + 'px';
+            canvas.style.height = canvasSize + 'px';
             
-            ctx.scale(dpr, dpr);
+            rouletteConfig.canvasSize = { width: canvasSize, height: canvasSize };
+            rouletteConfig.centerX = canvasSize / 2;
+            rouletteConfig.centerY = canvasSize / 2;
+            rouletteConfig.rouletteRadius = canvasSize * 0.4;
             
-            // 저장된 최고점수 로드
-            loadHighScore();
-            
-            // 이벤트 리스너 등록
-            setupEventListeners();
-            
-            // 초기 화면 표시
-            showScreen('menu');
-            
-            console.log('갤럭시 리유니온 게임 초기화 완료');
-            
-        } catch (error) {
-            console.error('게임 초기화 중 오류 발생:', error);
+            updateUI();
+            renderRoulette();
         }
-    }
 
-    // 이벤트 리스너 설정
-    function setupEventListeners() {
-        // 키보드 이벤트 - 키 누름
-        document.addEventListener('keydown', function(e) {
-            if (keyState.hasOwnProperty(e.code)) {
-                keyState[e.code] = true;
-                e.preventDefault();
+        function updateUI() {
+            document.getElementById('score-display').textContent = gameState.currentScore;
+            document.getElementById('high-score-display').textContent = gameState.highScore;
+            document.getElementById('spin-count-display').textContent = gameState.spinsLeft;
+            
+            const spinButton = document.getElementById('spin-button');
+            spinButton.disabled = gameState.isSpinning || gameState.spinsLeft <= 0 || gameState.isGameOver;
+            
+            if (gameState.spinsLeft <= 0 && !gameState.isSpinning && !gameState.isGameOver) {
+                gameState.isGameOver = true;
+                setTimeout(() => {
+                    showResult('게임 종료!', '모든 회전을 사용했습니다.', gameState.currentScore);
+                }, 1000);
             }
-        });
-        
-        // 키보드 이벤트 - 키 뗌
-        document.addEventListener('keyup', function(e) {
-            if (keyState.hasOwnProperty(e.code)) {
-                keyState[e.code] = false;
-                e.preventDefault();
-            }
-        });
-        
-        // 버튼 이벤트 리스너
-        const startBtn = document.getElementById('start-btn');
-        const pauseBtn = document.getElementById('pause-btn');
-        const restartBtn = document.getElementById('restart-btn');
-        const menuBtn = document.getElementById('menu-btn');
-        
-        if (startBtn) startBtn.addEventListener('click', handleStartGame);
-        if (pauseBtn) pauseBtn.addEventListener('click', handlePauseGame);
-        if (restartBtn) restartBtn.addEventListener('click', handleRestartGame);
-        if (menuBtn) menuBtn.addEventListener('click', handleBackToMenu);
-    }
-
-    // 게임 시작 핸들러
-    function handleStartGame() {
-        try {
-            resetGameState();
-            gameState.currentScreen = 'playing';
-            gameState.isGameRunning = true;
-            gameState.isPaused = false;
-            
-            showScreen('game');
-            startGameLoop();
-            
-            console.log('게임 시작됨');
-        } catch (error) {
-            console.error('게임 시작 중 오류:', error);
         }
-    }
 
-    // 게임 일시정지 핸들러
-    function handlePauseGame() {
-        if (gameState.currentScreen !== 'playing') return;
-        
-        if (gameState.isPaused) {
-            gameState.isPaused = false;
-            startGameLoop();
-            const pauseBtn = document.getElementById('pause-btn');
-            if (pauseBtn) pauseBtn.textContent = 'PAUSE';
-        } else {
-            gameState.isPaused = true;
-            stopGameLoop();
-            const pauseBtn = document.getElementById('pause-btn');
-            if (pauseBtn) pauseBtn.textContent = 'RESUME';
-        }
-    }
-
-    // 게임 재시작 핸들러
-    function handleRestartGame() {
-        handleStartGame();
-    }
-
-    // 메인 메뉴로 돌아가기 핸들러
-    function handleBackToMenu() {
-        stopGameLoop();
-        gameState.currentScreen = 'menu';
-        gameState.isGameRunning = false;
-        showScreen('menu');
-    }
-
-    // 게임 상태 초기화
-    function resetGameState() {
-        gameState.score = 0;
-        gameState.lives = 3;
-        gameState.missileCount = 0;
-        gameState.enemiesKilled = 0;
-        gameState.level = 1;
-        
-        // 플레이어 위치 초기화
-        gameState.player.x = GAME_CONFIG.CANVAS_WIDTH / 2 - gameState.player.width / 2;
-        gameState.player.y = GAME_CONFIG.CANVAS_HEIGHT - 100;
-        
-        // 배열 초기화
-        gameState.enemies = [];
-        gameState.projectiles = [];
-        gameState.missiles = [];
-        gameState.enemyProjectiles = [];
-        
-        enemySpawnCounter = 0;
-        lastProjectileTime = 0;
-        lastMissileTime = 0;
-        
-        // UI 업데이트
-        updateScore(0);
-        updateMissileCount(0);
-        updateLives(3);
-    }
-
-    // 화면 전환 함수
-    function showScreen(screenId) {
-        const screens = ['menu-screen', 'game-screen', 'gameover-screen'];
-        
-        screens.forEach(screen => {
-            const element = document.getElementById(screen);
-            if (element) {
-                element.classList.add('hidden');
-            }
-        });
-        
-        const targetScreen = document.getElementById(screenId + '-screen');
-        if (targetScreen) {
-            targetScreen.classList.remove('hidden');
-        }
-    }
-
-    // 게임 루프 시작
-    function startGameLoop() {
-        if (gameState.isPaused || !gameState.isGameRunning) return;
-        
-        gameAnimationFrame = requestAnimationFrame(gameLoop);
-    }
-
-    // 게임 루프 정지
-    function stopGameLoop() {
-        if (gameAnimationFrame) {
-            cancelAnimationFrame(gameAnimationFrame);
-            gameAnimationFrame = null;
-        }
-    }
-
-    // 메인 게임 루프
-    function gameLoop() {
-        try {
-            if (!gameState.isGameRunning || gameState.isPaused) {
-                return;
-            }
+        function renderRoulette() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 게임 로직 업데이트
-            updateGame();
+            const { centerX, centerY, rouletteRadius } = rouletteConfig;
+            const segmentAngle = 40;
             
-            // 화면 렌더링
-            renderGame();
-            
-            // 다음 프레임 예약
-            gameAnimationFrame = requestAnimationFrame(gameLoop);
-            
-        } catch (error) {
-            console.error('게임 루프 오류:', error);
-            handleGameOver();
-        }
-    }
-
-    // 게임 로직 업데이트
-    function updateGame() {
-        // 플레이어 입력 처리
-        handlePlayerInput();
-        
-        // 적 생성
-        spawnEnemies();
-        
-        // 오브젝트 이동 업데이트
-        updateProjectiles();
-        updateMissiles();
-        updateEnemies();
-        updateEnemyProjectiles();
-        
-        // 충돌 감지
-        checkCollisions();
-        
-        // 게임 오버 체크
-        if (gameState.lives <= 0) {
-            handleGameOver();
-        }
-    }
-
-    // 플레이어 입력 처리
-    function handlePlayerInput() {
-        const player = gameState.player;
-        
-        // 이동 처리
-        if ((keyState.ArrowLeft || keyState.KeyA) && player.x > 0) {
-            player.x -= player.speed;
-        }
-        if ((keyState.ArrowRight || keyState.KeyD) && player.x < GAME_CONFIG.CANVAS_WIDTH - player.width) {
-            player.x += player.speed;
-        }
-        if ((keyState.ArrowUp || keyState.KeyW) && player.y > 0) {
-            player.y -= player.speed;
-        }
-        if ((keyState.ArrowDown || keyState.KeyS) && player.y < GAME_CONFIG.CANVAS_HEIGHT - player.height) {
-            player.y += player.speed;
-        }
-        
-        // 레이저 발사 (Space 키)
-        const currentTime = Date.now();
-        if (keyState.Space && currentTime - lastProjectileTime > 150) {
-            fireProjectile();
-            lastProjectileTime = currentTime;
-        }
-        
-        // 미사일 발사 (X 키)
-        if (keyState.KeyX && gameState.missileCount > 0 && currentTime - lastMissileTime > 500) {
-            fireMissile();
-            lastMissileTime = currentTime;
-        }
-    }
-
-    // 레이저 발사
-    function fireProjectile() {
-        const player = gameState.player;
-        gameState.projectiles.push({
-            x: player.x + player.width / 2 - 1.5,
-            y: player.y,
-            width: 3,
-            height: 10,
-            speed: GAME_CONFIG.PROJECTILE_SPEED,
-            active: true
-        });
-    }
-
-    // 미사일 발사
-    function fireMissile() {
-        const player = gameState.player;
-        gameState.missiles.push({
-            x: player.x + player.width / 2 - 2.5,
-            y: player.y,
-            width: 5,
-            height: 12,
-            speed: GAME_CONFIG.MISSILE_SPEED,
-            active: true
-        });
-        
-        gameState.missileCount--;
-        updateMissileCount(gameState.missileCount);
-    }
-
-    // 적 생성
-    function spawnEnemies() {
-        enemySpawnCounter++;
-        
-        if (enemySpawnCounter >= GAME_CONFIG.ENEMY_SPAWN_RATE) {
-            const enemy = {
-                x: Math.random() * (GAME_CONFIG.CANVAS_WIDTH - 20),
-                y: -20,
-                width: 20,
-                height: 15,
-                speed: GAME_CONFIG.ENEMY_SPEED + Math.random() * 1,
-                active: true,
-                shootTimer: Math.random() * 120 + 60
-            };
-            
-            gameState.enemies.push(enemy);
-            enemySpawnCounter = 0;
-        }
-    }
-
-    // 발사체 업데이트
-    function updateProjectiles() {
-        gameState.projectiles = gameState.projectiles.filter(projectile => {
-            if (!projectile.active) return false;
-            
-            projectile.y -= projectile.speed;
-            
-            // 화면 밖으로 나간 발사체 제거
-            if (projectile.y < -projectile.height) {
-                return false;
-            }
-            
-            return true;
-        });
-    }
-
-    // 미사일 업데이트
-    function updateMissiles() {
-        gameState.missiles = gameState.missiles.filter(missile => {
-            if (!missile.active) return false;
-            
-            missile.y -= missile.speed;
-            
-            // 화면 밖으로 나간 미사일 제거
-            if (missile.y < -missile.height) {
-                return false;
-            }
-            
-            return true;
-        });
-    }
-
-    // 적 업데이트
-    function updateEnemies() {
-        gameState.enemies = gameState.enemies.filter(enemy => {
-            if (!enemy.active) return false;
-            
-            enemy.y += enemy.speed;
-            
-            // 적 발사 로직
-            enemy.shootTimer--;
-            if (enemy.shootTimer <= 0 && Math.random() < 0.02) {
-                fireEnemyProjectile(enemy);
-                enemy.shootTimer = Math.random() * 180 + 90;
-            }
-            
-            // 화면 밖으로 나간 적 제거
-            if (enemy.y > GAME_CONFIG.CANVAS_HEIGHT) {
-                return false;
-            }
-            
-            return true;
-        });
-    }
-
-    // 적 발사체 생성
-    function fireEnemyProjectile(enemy) {
-        gameState.enemyProjectiles.push({
-            x: enemy.x + enemy.width / 2 - 1,
-            y: enemy.y + enemy.height,
-            width: 2,
-            height: 6,
-            speed: 3,
-            active: true
-        });
-    }
-
-    // 적 발사체 업데이트
-    function updateEnemyProjectiles() {
-        gameState.enemyProjectiles = gameState.enemyProjectiles.filter(projectile => {
-            if (!projectile.active) return false;
-            
-            projectile.y += projectile.speed;
-            
-            // 화면 밖으로 나간 발사체 제거
-            if (projectile.y > GAME_CONFIG.CANVAS_HEIGHT) {
-                return false;
-            }
-            
-            return true;
-        });
-    }
-
-    // 충돌 감지
-    function checkCollisions() {
-        // 플레이어 발사체와 적의 충돌
-        gameState.projectiles.forEach(projectile => {
-            if (!projectile.active) return;
-            
-            gameState.enemies.forEach(enemy => {
-                if (!enemy.active) return;
+            for (let i = 0; i < rouletteConfig.segments.length; i++) {
+                const segment = rouletteConfig.segments[i];
+                const startAngle = (i * segmentAngle + gameState.currentAngle) * Math.PI / 180;
+                const endAngle = ((i + 1) * segmentAngle + gameState.currentAngle) * Math.PI / 180;
                 
-                if (isColliding(projectile, enemy)) {
-                    projectile.active = false;
-                    enemy.active = false;
-                    
-                    // 점수 추가 (레이저로 격파)
-                    addScore(100);
-                    handleEnemyDestroyed();
-                }
-            });
-        });
-        
-        // 플레이어 미사일과 적의 충돌
-        gameState.missiles.forEach(missile => {
-            if (!missile.active) return;
-            
-            gameState.enemies.forEach(enemy => {
-                if (!enemy.active) return;
-                
-                if (isColliding(missile, enemy)) {
-                    missile.active = false;
-                    enemy.active = false;
-                    
-                    // 점수 추가 (미사일로 격파 - 보너스)
-                    addScore(150);
-                    handleEnemyDestroyed();
-                }
-            });
-        });
-        
-        // 플레이어와 적의 충돌
-        gameState.enemies.forEach(enemy => {
-            if (!enemy.active) return;
-            
-            if (isColliding(gameState.player, enemy)) {
-                enemy.active = false;
-                handlePlayerHit();
-            }
-        });
-        
-        // 플레이어와 적 발사체의 충돌
-        gameState.enemyProjectiles.forEach(projectile => {
-            if (!projectile.active) return;
-            
-            if (isColliding(gameState.player, projectile)) {
-                projectile.active = false;
-                handlePlayerHit();
-            }
-        });
-        
-        // 비활성화된 오브젝트 필터링
-        gameState.projectiles = gameState.projectiles.filter(p => p.active);
-        gameState.missiles = gameState.missiles.filter(m => m.active);
-        gameState.enemies = gameState.enemies.filter(e => e.active);
-        gameState.enemyProjectiles = gameState.enemyProjectiles.filter(p => p.active);
-    }
-
-    // 충돌 감지 함수 (AABB 충돌 감지)
-    function isColliding(rect1, rect2) {
-        return rect1.x < rect2.x + rect2.width &&
-               rect1.x + rect1.width > rect2.x &&
-               rect1.y < rect2.y + rect2.height &&
-               rect1.y + rect1.height > rect2.y;
-    }
-
-    // 적 파괴 처리
-    function handleEnemyDestroyed() {
-        gameState.enemiesKilled++;
-        
-        // 10마리마다 미사일 추가
-        if (gameState.enemiesKilled % GAME_CONFIG.ENEMIES_PER_MISSILE === 0 && 
-            gameState.missileCount < GAME_CONFIG.MAX_MISSILES) {
-            gameState.missileCount++;
-            updateMissileCount(gameState.missileCount);
-        }
-    }
-
-    // 플레이어 피격 처리
-    function handlePlayerHit() {
-        gameState.lives--;
-        updateLives(gameState.lives);
-        
-        if (gameState.lives <= 0) {
-            handleGameOver();
-        }
-    }
-
-    // 점수 추가
-    function addScore(points) {
-        gameState.score += points;
-        updateScore(gameState.score);
-        
-        // 최고점수 갱신 체크
-        if (gameState.score > gameState.highScore) {
-            gameState.highScore = gameState.score;
-            saveHighScore();
-            updateHighScore();
-        }
-    }
-
-    // 게임 오버 처리
-    function handleGameOver() {
-        stopGameLoop();
-        gameState.isGameRunning = false;
-        gameState.currentScreen = 'gameover';
-        
-        // 최종 점수 표시
-        const finalScoreElement = document.getElementById('game-final-score');
-        const totalKillsElement = document.getElementById('total-kills');
-        
-        if (finalScoreElement) finalScoreElement.textContent = gameState.score;
-        if (totalKillsElement) totalKillsElement.textContent = gameState.enemiesKilled;
-        
-        showScreen('gameover');
-    }
-
-    // UI 업데이트 함수들
-    function updateScore(newScore) {
-        const scoreElement = document.getElementById('current-score');
-        if (scoreElement) {
-            scoreElement.textContent = newScore;
-        }
-    }
-
-    function updateMissileCount(count) {
-        const missileElement = document.getElementById('missile-count');
-        if (missileElement) {
-            missileElement.textContent = count;
-        }
-    }
-
-    function updateLives(lives) {
-        const livesElement = document.getElementById('life-count');
-        if (livesElement) {
-            livesElement.textContent = lives;
-        }
-    }
-
-    function updateHighScore() {
-        const highScoreElement = document.getElementById('high-score');
-        if (highScoreElement) {
-            highScoreElement.textContent = gameState.highScore;
-        }
-    }
-
-    // 최고점수 저장/로드
-    function saveHighScore() {
-        try {
-            localStorage.setItem('galaxyReunionHighScore', gameState.highScore.toString());
-        } catch (error) {
-            console.error('최고점수 저장 실패:', error);
-        }
-    }
-
-    function loadHighScore() {
-        try {
-            const savedScore = localStorage.getItem('galaxyReunionHighScore');
-            if (savedScore) {
-                gameState.highScore = parseInt(savedScore, 10) || 0;
-                updateHighScore();
-            }
-        } catch (error) {
-            console.error('최고점수 로드 실패:', error);
-        }
-    }
-
-    // 게임 렌더링
-    function renderGame() {
-        // 캔버스 지우기
-        ctx.fillStyle = '#0a0a0a';
-        ctx.fillRect(0, 0, GAME_CONFIG.CANVAS_WIDTH, GAME_CONFIG.CANVAS_HEIGHT);
-        
-        // 배경 별 그리기
-        drawStars();
-        
-        // 플레이어 그리기
-        drawPlayer();
-        
-        // 발사체 그리기
-        drawProjectiles();
-        
-        // 미사일 그리기
-        drawMissiles();
-        
-        // 적 그리기
-        drawEnemies();
-        
-        // 적 발사체 그리기
-        drawEnemyProjectiles();
-    }
-
-    // 배경 별 그리기
-    function drawStars() {
-        ctx.fillStyle = '#ffffff';
-        
-        // 간단한 별 패턴 (정적)
-        for (let i = 0; i < 50; i++) {
-            const x = (i * 37) % GAME_CONFIG.CANVAS_WIDTH;
-            const y = (i * 73) % GAME_CONFIG.CANVAS_HEIGHT;
-            const size = 1 + (i % 3);
-            
-            ctx.fillRect(x, y, size, size);
-        }
-    }
-
-    // 플레이어 그리기 (픽셀 아트 스타일)
-    function drawPlayer() {
-        const p = gameState.player;
-        
-        // 플레이어 우주선 - 녹색 삼각형
-        ctx.fillStyle = '#44ff44';
-        
-        // 삼각형 모양으로 그리기
-        ctx.beginPath();
-        ctx.moveTo(p.x + p.width / 2, p.y); // 위쪽 점
-        ctx.lineTo(p.x, p.y + p.height); // 왼쪽 아래
-        ctx.lineTo(p.x + p.width, p.y + p.height); // 오른쪽 아래
-        ctx.closePath();
-        ctx.fill();
-        
-        // 엔진 불꽃 효과
-        ctx.fillStyle = '#ffaa00';
-        ctx.fillRect(p.x + p.width / 2 - 2, p.y + p.height, 4, 6);
-    }
-
-    // 레이저 발사체 그리기
-    function drawProjectiles() {
-        ctx.fillStyle = '#00bfff';
-        
-        gameState.projectiles.forEach(projectile => {
-            if (projectile.active) {
-                ctx.fillRect(projectile.x, projectile.y, projectile.width, projectile.height);
-            }
-        });
-    }
-
-    // 미사일 그리기
-    function drawMissiles() {
-        ctx.fillStyle = '#ffaa00';
-        
-        gameState.missiles.forEach(missile => {
-            if (missile.active) {
-                // 미사일 몸체
-                ctx.fillRect(missile.x, missile.y + 4, missile.width, missile.height - 4);
-                
-                // 미사일 머리 (뾰족하게)
                 ctx.beginPath();
-                ctx.moveTo(missile.x + missile.width / 2, missile.y);
-                ctx.lineTo(missile.x, missile.y + 4);
-                ctx.lineTo(missile.x + missile.width, missile.y + 4);
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, rouletteRadius, startAngle, endAngle);
                 ctx.closePath();
+                ctx.fillStyle = segment.color;
                 ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                const textAngle = startAngle + (endAngle - startAngle) / 2;
+                const textRadius = rouletteRadius * 0.7;
+                const textX = centerX + Math.cos(textAngle) * textRadius;
+                const textY = centerY + Math.sin(textAngle) * textRadius;
+                
+                ctx.save();
+                ctx.translate(textX, textY);
+                ctx.rotate(textAngle);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold ' + Math.max(14, canvas.width / 25) + 'px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(segment.label, 0, 0);
+                ctx.restore();
             }
-        });
-    }
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 25, 0, 2 * Math.PI);
+            ctx.fillStyle = '#FFD700';
+            ctx.fill();
+            ctx.strokeStyle = '#FFA500';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
 
-    // 적 우주선 그리기
-    function drawEnemies() {
-        ctx.fillStyle = '#ff4444';
-        
-        gameState.enemies.forEach(enemy => {
-            if (enemy.active) {
-                // 적 우주선 - 빨간색 역삼각형
-                ctx.beginPath();
-                ctx.moveTo(enemy.x + enemy.width / 2, enemy.y + enemy.height); // 아래쪽 점
-                ctx.lineTo(enemy.x, enemy.y); // 왼쪽 위
-                ctx.lineTo(enemy.x + enemy.width, enemy.y); // 오른쪽 위
-                ctx.closePath();
-                ctx.fill();
-            }
-        });
-    }
+        function startSpin() {
+            if (gameState.isSpinning || gameState.spinsLeft <= 0) return;
+            
+            gameState.isSpinning = true;
+            gameState.spinsLeft--;
+            gameState.gameMode = 'spinning';
+            
+            const randomRotation = 1800 + Math.random() * 720;
+            gameState.targetAngle = gameState.currentAngle + randomRotation;
+            gameState.angularVelocity = 20;
+            
+            updateUI();
+            animateRoulette();
+        }
 
-    // 적 발사체 그리기
-    function drawEnemyProjectiles() {
-        ctx.fillStyle = '#ff6666';
-        
-        gameState.enemyProjectiles.forEach(projectile => {
-            if (projectile.active) {
-                ctx.fillRect(projectile.x, projectile.y, projectile.width, projectile.height);
+        function animateRoulette() {
+            if (gameState.angularVelocity > 0.1) {
+                gameState.currentAngle += gameState.angularVelocity;
+                gameState.angularVelocity *= 0.98;
+                
+                if (gameState.currentAngle >= 360) {
+                    gameState.currentAngle %= 360;
+                }
+                
+                renderRoulette();
+                animationId = requestAnimationFrame(animateRoulette);
+            } else {
+                gameState.isSpinning = false;
+                gameState.angularVelocity = 0;
+                checkResult();
             }
+        }
+
+        function checkResult() {
+            const normalizedAngle = (360 - gameState.currentAngle) % 360;
+            const segmentIndex = Math.floor(normalizedAngle / 40);
+            const resultSegment = rouletteConfig.segments[segmentIndex];
+            
+            gameState.lastResult = resultSegment.id;
+            gameState.currentScore += resultSegment.score;
+            
+            if (gameState.currentScore > gameState.highScore) {
+                gameState.highScore = gameState.currentScore;
+                saveHighScore();
+            }
+            
+            updateUI();
+            
+            setTimeout(() => {
+                let title, message;
+                
+                if (resultSegment.id === 9) {
+                    title = '🎉 잭팟!';
+                    message = '축하합니다! 최고 점수를 획득했습니다!';
+                    document.getElementById('game-container').classList.add('jackpot-effect');
+                } else if (resultSegment.score === 0) {
+                    title = '💥 실패!';
+                    message = '아쉽지만 점수를 얻지 못했습니다.';
+                } else {
+                    title = '🎯 성공!';
+                    message = resultSegment.score + '점을 획득했습니다!';
+                }
+                
+                showResult(title, message, resultSegment.score);
+            }, 500);
+        }
+
+        function showResult(title, message, score) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-score').textContent = score > 0 ? '+' + score : '0';
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('result-modal').style.display = 'flex';
+        }
+
+        function saveHighScore() {
+            localStorage.setItem('rouletteHighScore', gameState.highScore);
+        }
+
+        function handleSpinButtonClick() {
+            startSpin();
+        }
+
+        function handleResetButtonClick() {
+            gameState.currentScore = 0;
+            gameState.spinsLeft = 5;
+            gameState.isGameOver = false;
+            gameState.currentAngle = 0;
+            gameState.gameMode = 'ready';
+            document.getElementById('game-container').classList.remove('jackpot-effect');
+            document.getElementById('result-modal').style.display = 'none';
+            updateUI();
+            renderRoulette();
+        }
+
+        function handleResultModalClose() {
+            document.getElementById('result-modal').style.display = 'none';
+            document.getElementById('game-container').classList.remove('jackpot-effect');
+        }
+
+        window.addEventListener('load', initGame);
+        
+        window.addEventListener('resize', () => {
+            const isMobile = window.innerWidth <= 768;
+            const canvasSize = isMobile ? 300 : 400;
+            
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+            canvas.style.width = canvasSize + 'px';
+            canvas.style.height = canvasSize + 'px';
+            
+            rouletteConfig.canvasSize = { width: canvasSize, height: canvasSize };
+            rouletteConfig.centerX = canvasSize / 2;
+            rouletteConfig.centerY = canvasSize / 2;
+            rouletteConfig.rouletteRadius = canvasSize * 0.4;
+            
+            renderRoulette();
         });
-    }
+        
+        document.getElementById('spin-button').addEventListener('click', handleSpinButtonClick);
+        document.getElementById('reset-button').addEventListener('click', handleResetButtonClick);
     </script>
 </body>
 </html>
