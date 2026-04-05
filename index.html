@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>리뉴얼 갤러그</title>
+    <title>웹 두더지 게임</title>
     <style>
         :root {
-            --bg-space: #000014;
-            --player-color: #00FF41;
-            --enemy-color: #FF4136;
-            --missile-color: #FFDC00;
-            --ui-color: #FFFFFF;
-            --neon-glow: 0 0 10px currentColor;
+            --bg-color: #2E8B57;
+            --hole-color: #8B4513;
+            --mole-color: #D2691E;
+            --golden-mole-color: #FFD700;
+            --text-color: #FFFFFF;
+            --accent-color: #FF4500;
+            --button-bg: #228B22;
+            --button-hover: #32CD32;
+            --shadow-dark: rgba(0, 0, 0, 0.3);
+            --shadow-light: rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -21,1118 +25,1113 @@
         }
 
         body {
-            font-family: 'Courier New', monospace;
-            background: var(--bg-space);
-            color: var(--ui-color);
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Comic Sans MS', cursive, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-color) 0%, #32CD32 100%);
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
         }
 
         #game-container {
-            position: relative;
             width: 100%;
             max-width: 800px;
-            height: 600px;
-            background: linear-gradient(180deg, #000014 0%, #000028 100%);
-            border: 2px solid var(--player-color);
-            box-shadow: 0 0 20px var(--player-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
         }
 
-        #game-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            z-index: 1;
+        .screen {
+            display: none;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px var(--shadow-dark);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         #main-menu {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: rgba(0, 0, 20, 0.95);
-            z-index: 10;
+            display: block;
         }
 
-        .game-title {
-            font-size: 3rem;
-            font-weight: bold;
-            color: var(--player-color);
-            text-shadow: var(--neon-glow);
-            margin-bottom: 2rem;
-            animation: titleGlow 2s ease-in-out infinite alternate;
+        #main-menu h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            color: var(--text-color);
+            text-shadow: 3px 3px 0px var(--shadow-dark);
+            margin-bottom: 30px;
+            animation: bounce 2s infinite;
         }
 
-        @keyframes titleGlow {
-            from { text-shadow: 0 0 10px var(--player-color); }
-            to { text-shadow: 0 0 25px var(--player-color), 0 0 35px var(--player-color); }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
         }
 
-        .high-score {
+        .best-score {
             font-size: 1.2rem;
-            margin-bottom: 3rem;
-            color: var(--missile-color);
+            color: var(--accent-color);
+            margin-bottom: 30px;
+            font-weight: bold;
         }
 
-        #start-button, #restart-button {
+        .game-button {
+            background: var(--button-bg);
+            color: var(--text-color);
+            border: none;
             padding: 15px 30px;
-            font-size: 1.5rem;
-            font-family: inherit;
-            background: transparent;
-            color: var(--ui-color);
-            border: 2px solid var(--player-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        #start-button:hover, #restart-button:hover {
-            background: var(--player-color);
-            color: var(--bg-space);
-            box-shadow: var(--neon-glow);
-            transform: scale(1.05);
-        }
-
-        #game-hud {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        #score-display {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--ui-color);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }
-
-        #kill-count-display {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--missile-color);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }
-
-        #level-display {
-            position: absolute;
-            top: 60px;
-            right: 20px;
             font-size: 1.2rem;
+            font-family: inherit;
             font-weight: bold;
-            color: var(--player-color);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--shadow-dark);
+            transition: all 0.3s ease;
+            margin: 10px;
+            min-width: 150px;
         }
 
-        #lives-display {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
+        .game-button:hover {
+            background: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow-dark);
         }
 
-        .life-icon {
-            width: 20px;
-            height: 15px;
-            background: var(--player-color);
-            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-            box-shadow: 0 0 5px var(--player-color);
+        .game-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px var(--shadow-dark);
         }
 
-        #game-over-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: rgba(255, 65, 54, 0.9);
-            z-index: 15;
-            animation: gameOverSlide 0.5s ease-in-out;
+        #game-screen {
+            padding: 20px;
         }
 
-        @keyframes gameOverSlide {
-            from {
-                opacity: 0;
-                transform: translateY(-100%);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .game-over-title {
-            font-size: 4rem;
-            font-weight: bold;
-            color: var(--ui-color);
-            text-shadow: 0 0 20px #FF4136;
-            margin-bottom: 2rem;
-            animation: gameOverGlow 1s ease-in-out infinite alternate;
-        }
-
-        @keyframes gameOverGlow {
-            from { text-shadow: 0 0 20px #FF4136; }
-            to { text-shadow: 0 0 40px #FF4136, 0 0 60px #FF4136; }
-        }
-
-        .final-stats {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 3rem;
-            font-size: 1.5rem;
-            gap: 10px;
-        }
-
-        .stat-item {
+        .hud {
             display: flex;
             justify-content: space-between;
-            width: 300px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--ui-color);
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
-        .buttons-container {
-            display: flex;
+        .hud-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: var(--text-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .hud-item.score {
+            color: var(--accent-color);
+            font-size: 1.3rem;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
+            max-width: 500px;
+            margin: 0 auto 30px auto;
+            aspect-ratio: 1;
         }
 
-        .main-menu-btn {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            font-family: inherit;
-            background: transparent;
-            color: var(--ui-color);
-            border: 2px solid var(--ui-color);
+        .hole-container {
+            position: relative;
+            background: var(--hole-color);
+            border-radius: 50%;
+            box-shadow: 
+                inset 0 8px 16px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            transition: transform 0.1s ease;
         }
 
-        .main-menu-btn:hover {
-            background: var(--ui-color);
-            color: var(--bg-space);
-            transform: scale(1.05);
+        .hole-container:active {
+            transform: scale(0.95);
         }
 
-        @media (max-width: 850px) {
+        .mole {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(100%);
+            width: 80px;
+            height: 60px;
+            background: var(--mole-color);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            transition: transform 0.2s ease-out;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .mole.visible {
+            transform: translateX(-50%) translateY(0);
+            transition: transform 0.2s ease-out;
+        }
+
+        .mole::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            width: 8px;
+            height: 8px;
+            background: #000;
+            border-radius: 50%;
+            box-shadow: 20px 0 0 #000, 10px 15px 0 -2px #FF69B4;
+        }
+
+        .mole.golden {
+            background: var(--golden-mole-color);
+            width: 90px;
+            height: 70px;
+            animation: shimmer 1s infinite alternate;
+        }
+
+        .mole.golden::before {
+            box-shadow: 24px 0 0 #000, 12px 18px 0 -2px #FF69B4;
+        }
+
+        @keyframes shimmer {
+            0% { 
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+                filter: brightness(1);
+            }
+            100% { 
+                box-shadow: 0 0 40px rgba(255, 215, 0, 1);
+                filter: brightness(1.2);
+            }
+        }
+
+        .mole.hit {
+            animation: hitEffect 0.3s ease-out;
+        }
+
+        @keyframes hitEffect {
+            0% { transform: translateX(-50%) translateY(0) scale(1); }
+            50% { transform: translateX(-50%) translateY(-10px) scale(1.2); }
+            100% { transform: translateX(-50%) translateY(100%) scale(0.8); }
+        }
+
+        #result-screen h2 {
+            font-size: 2.5rem;
+            color: var(--text-color);
+            margin-bottom: 20px;
+        }
+
+        .final-score {
+            font-size: 3rem;
+            color: var(--accent-color);
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .new-record {
+            color: var(--golden-mole-color);
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .game-paused {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .game-over {
+            filter: grayscale(50%);
+        }
+
+        @keyframes scorePopup {
+            0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-50px); }
+        }
+
+        @media (max-width: 768px) {
             #game-container {
-                width: 95vw;
-                height: 71.25vw;
-                max-height: 90vh;
+                padding: 10px;
             }
-            
-            .game-title {
-                font-size: 2rem;
+
+            .screen {
+                padding: 20px;
+                border-radius: 15px;
             }
-            
-            .game-over-title {
+
+            #main-menu h1 {
                 font-size: 2.5rem;
+                margin-bottom: 20px;
             }
-            
-            #score-display, #kill-count-display {
-                font-size: 1.2rem;
+
+            .hud {
+                justify-content: center;
             }
-            
-            .final-stats {
-                font-size: 1.2rem;
+
+            .hud-item {
+                padding: 8px 15px;
+                font-size: 1rem;
+                min-width: 100px;
             }
-            
-            .stat-item {
-                width: 250px;
+
+            #game-board {
+                gap: 15px;
+                max-width: 350px;
+            }
+
+            .mole {
+                width: 60px;
+                height: 45px;
+            }
+
+            .mole.golden {
+                width: 70px;
+                height: 55px;
+            }
+
+            .game-button {
+                padding: 12px 25px;
+                font-size: 1rem;
+                min-width: 120px;
             }
         }
 
         @media (max-width: 480px) {
-            .game-title {
-                font-size: 1.5rem;
+            .screen {
+                padding: 15px;
             }
-            
-            .game-over-title {
+
+            #main-menu h1 {
                 font-size: 2rem;
             }
-            
-            #start-button, #restart-button, .main-menu-btn {
-                padding: 10px 20px;
-                font-size: 1rem;
+
+            #game-board {
+                gap: 10px;
+                max-width: 280px;
             }
-            
-            #score-display, #kill-count-display {
-                font-size: 1rem;
-                top: 10px;
+
+            .mole {
+                width: 50px;
+                height: 38px;
             }
-            
-            #score-display {
-                left: 10px;
+
+            .mole.golden {
+                width: 60px;
+                height: 46px;
             }
-            
-            #kill-count-display {
-                right: 10px;
-            }
-            
-            .life-icon {
-                width: 15px;
-                height: 12px;
-            }
-            
-            .stat-item {
-                width: 200px;
-                font-size: 1rem;
+
+            .hud-item {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+                min-width: 90px;
             }
         }
 
-        .hidden {
-            display: none !important;
-        }
-
-        .show {
-            display: flex !important;
-        }
-
-        .game-start {
-            animation: fadeOut 0.5s ease-in-out forwards;
-        }
-
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
+        @media (max-width: 320px) {
+            #game-container {
+                padding: 5px;
             }
-            to {
-                opacity: 0;
-                visibility: hidden;
-            }
-        }
 
-        #game-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                radial-gradient(1px 1px at 20px 30px, #fff, transparent),
-                radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.8), transparent),
-                radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.6), transparent),
-                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.4), transparent),
-                radial-gradient(1px 1px at 160px 30px, rgba(255,255,255,0.7), transparent);
-            background-repeat: repeat;
-            background-size: 200px 100px;
-            animation: stars 20s linear infinite;
-            z-index: 0;
-        }
-
-        @keyframes stars {
-            from {
-                transform: translateY(0);
+            .screen {
+                padding: 10px;
             }
-            to {
-                transform: translateY(100px);
+
+            #main-menu h1 {
+                font-size: 1.8rem;
+            }
+
+            #game-board {
+                gap: 8px;
+                max-width: 250px;
+            }
+
+            .mole {
+                width: 40px;
+                height: 30px;
+            }
+
+            .mole.golden {
+                width: 48px;
+                height: 36px;
             }
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="main-menu">
-            <h1 class="game-title">GALLAG RENEWAL</h1>
-            <div class="high-score">HIGH SCORE: <span id="high-score-display">0</span></div>
-            <button id="start-button">START GAME</button>
-        </div>
-
-        <canvas id="game-canvas" width="800" height="600"></canvas>
-
-        <div id="game-hud" class="hidden">
-            <div id="score-display">SCORE: <span id="score-value">0</span></div>
-            <div id="kill-count-display">KILLS: <span id="kill-count-value">0</span></div>
-            <div id="level-display">LEVEL: <span id="level-value">1</span></div>
-            <div id="lives-display">
-                <div class="life-icon"></div>
-                <div class="life-icon"></div>
-                <div class="life-icon"></div>
+        <div id="main-menu" class="screen active">
+            <h1>🎯 웹 두더지 게임</h1>
+            <div class="best-score">
+                🏆 최고 기록: <span id="best-score-display">0</span>점
+            </div>
+            <button id="start-button" class="game-button">게임 시작</button>
+            <div style="margin-top: 20px; color: var(--text-color); font-size: 0.9rem;">
+                <p>일반 두더지: 클릭 (10점)</p>
+                <p>황금 두더지: 더블클릭 (50점)</p>
             </div>
         </div>
 
-        <div id="game-over-screen">
-            <h1 class="game-over-title">GAME OVER</h1>
-            <div class="final-stats">
-                <div class="stat-item">
-                    <span>Final Score:</span>
-                    <span id="final-score-display">0</span>
+        <div id="game-screen" class="screen">
+            <div class="hud">
+                <div class="hud-item score">
+                    점수: <span id="score-display">0</span>
                 </div>
-                <div class="stat-item">
-                    <span>Total Kills:</span>
-                    <span id="final-kills-display">0</span>
+                <div class="hud-item">
+                    시간: <span id="time-display">60</span>초
                 </div>
-                <div class="stat-item">
-                    <span>Level Reached:</span>
-                    <span id="final-level-display">1</span>
+                <div class="hud-item">
+                    잡은 두더지: <span id="mole-count-display">0</span>마리
                 </div>
             </div>
-            <div class="buttons-container">
-                <button id="restart-button">RESTART</button>
-                <button class="main-menu-btn" id="main-menu-button">MAIN MENU</button>
+
+            <div id="game-board">
+                <div class="hole-container" data-hole-index="0"></div>
+                <div class="hole-container" data-hole-index="1"></div>
+                <div class="hole-container" data-hole-index="2"></div>
+                <div class="hole-container" data-hole-index="3"></div>
+                <div class="hole-container" data-hole-index="4"></div>
+                <div class="hole-container" data-hole-index="5"></div>
+                <div class="hole-container" data-hole-index="6"></div>
+                <div class="hole-container" data-hole-index="7"></div>
+                <div class="hole-container" data-hole-index="8"></div>
             </div>
+
+            <button id="pause-button" class="game-button">일시정지</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <h2>🎮 게임 종료!</h2>
+            <div class="final-score" id="final-score-display">0</div>
+            <div id="new-record-message" class="new-record" style="display: none;">
+                🎉 새로운 기록입니다! 🎉
+            </div>
+            <div style="color: var(--text-color); margin: 20px 0;">
+                <p>잡은 두더지: <span id="final-mole-count">0</span>마리</p>
+                <p>게임 시간: 60초</p>
+            </div>
+            <button id="restart-button" class="game-button">다시 하기</button>
+            <button id="menu-button" class="game-button">메인 메뉴</button>
         </div>
     </div>
 
     <script>
-        const GAME_STATES = {
-            MENU: 'MENU',
-            PLAYING: 'PLAYING',
-            GAME_OVER: 'GAME_OVER',
-            PAUSED: 'PAUSED'
-        };
-
-        const GAME_CONFIG = {
-            CANVAS_WIDTH: 800,
-            CANVAS_HEIGHT: 600,
-            PLAYER_SPEED: 5,
-            MISSILE_SPEED: 8,
-            ENEMY_SPAWN_RATE: 1000,
-            SHOT_COOLDOWN: 200,
-            KILLS_FOR_NEW_SHIP: 10,
-            KILLS_FOR_LEVEL_UP: 20,
-            MAX_SHIPS: 3,
-            SCORE_PER_KILL: 100,
-            COMBO_BONUS: 10
-        };
+    (function() {
+        'use strict';
 
         const gameState = {
-            currentState: GAME_STATES.MENU,
-            isGameRunning: false,
-            isGameOver: false,
+            isPlaying: false,
             isPaused: false,
+            isGameOver: false,
             score: 0,
-            killCount: 0,
-            lives: 3,
-            level: 1,
-            combo: 0,
-            highScore: parseInt(localStorage.getItem('gallagaHighScore') || '0'),
-            playerShips: [
-                { x: 400, y: 550, width: 20, height: 15, isActive: true }
-            ],
-            enemies: [],
-            playerMissiles: [],
-            enemyMissiles: [],
-            canvasWidth: 800,
-            canvasHeight: 600,
-            gameSpeed: 1,
-            lastEnemySpawn: 0,
-            enemySpawnRate: 1000,
-            lastShotTime: 0,
-            shotCooldown: 200
+            timeLeft: 60,
+            molesCaught: 0,
+            molesAppeared: 0,
+            currentMoles: [],
+            spawnTimer: null,
+            gameTimer: null,
+            spawnInterval: {min: 1500, max: 3000},
+            moleLifetime: 1000,
+            goldenMoleLifetime: 1500,
+            goldenMoleThreshold: 10,
+            lastClickTime: 0,
+            doubleClickThreshold: 300
         };
 
-        const keys = {
-            left: false,
-            right: false,
-            up: false,
-            down: false,
-            space: false
-        };
+        const domElements = {};
+        let isInitialized = false;
 
-        let canvas, ctx;
-
-        function initGame() {
+        function initializeGame() {
             try {
-                canvas = document.getElementById('game-canvas');
-                if (!canvas) {
-                    throw new Error('Canvas 요소를 찾을 수 없습니다.');
+                domElements.gameContainer = document.getElementById('game-container');
+                domElements.mainMenu = document.getElementById('main-menu');
+                domElements.gameScreen = document.getElementById('game-screen');
+                domElements.resultScreen = document.getElementById('result-screen');
+                domElements.scoreDisplay = document.getElementById('score-display');
+                domElements.timeDisplay = document.getElementById('time-display');
+                domElements.moleCountDisplay = document.getElementById('mole-count-display');
+                domElements.gameBoard = document.getElementById('game-board');
+                domElements.startButton = document.getElementById('start-button');
+                domElements.pauseButton = document.getElementById('pause-button');
+                domElements.restartButton = document.getElementById('restart-button');
+                domElements.menuButton = document.getElementById('menu-button');
+                domElements.bestScoreDisplay = document.getElementById('best-score-display');
+                domElements.finalScoreDisplay = document.getElementById('final-score-display');
+                domElements.newRecordMessage = document.getElementById('new-record-message');
+                domElements.finalMoleCount = document.getElementById('final-mole-count');
+
+                const requiredElements = ['gameContainer', 'mainMenu', 'gameScreen', 'gameBoard', 'startButton'];
+                for (const element of requiredElements) {
+                    if (!domElements[element]) {
+                        throw new Error(`필수 DOM 요소를 찾을 수 없습니다: ${element}`);
+                    }
                 }
-                
-                ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    throw new Error('Canvas Context를 가져올 수 없습니다.');
+
+                domElements.holes = document.querySelectorAll('.hole-container');
+                if (domElements.holes.length !== 9) {
+                    throw new Error('9개의 구멍 컨테이너가 필요합니다.');
                 }
-                
-                canvas.width = gameState.canvasWidth;
-                canvas.height = gameState.canvasHeight;
-                
+
                 setupEventListeners();
-                updateUI();
-                gameLoop();
-                
+                loadHighScore();
+                isInitialized = true;
                 console.log('게임 초기화 완료');
+
             } catch (error) {
-                console.error('게임 초기화 중 오류:', error);
+                console.error('게임 초기화 실패:', error);
+                alert('게임 초기화에 실패했습니다. 페이지를 새로고침해주세요.');
             }
         }
 
         function setupEventListeners() {
-            try {
-                document.addEventListener('keydown', handleKeyDown);
-                document.addEventListener('keyup', handleKeyUp);
-                
-                const startButton = document.getElementById('start-button');
-                if (startButton) {
-                    startButton.addEventListener('click', handleStartGame);
-                }
-                
-                const restartButton = document.getElementById('restart-button');
-                if (restartButton) {
-                    restartButton.addEventListener('click', handleRestartGame);
-                }
-                
-                const mainMenuButton = document.getElementById('main-menu-button');
-                if (mainMenuButton) {
-                    mainMenuButton.addEventListener('click', handleMainMenu);
-                }
-                
-                setupTouchControls();
-            } catch (error) {
-                console.error('이벤트 리스너 설정 중 오류:', error);
+            if (domElements.startButton) {
+                domElements.startButton.addEventListener('click', handleStartGame);
             }
-        }
 
-        function setupTouchControls() {
-            let touchStartX = 0;
-            let touchStartY = 0;
-            let isTouching = false;
+            if (domElements.pauseButton) {
+                domElements.pauseButton.addEventListener('click', handlePauseGame);
+            }
 
-            document.addEventListener('touchstart', function(event) {
-                if (gameState.currentState !== GAME_STATES.PLAYING) return;
-                
-                touchStartX = event.touches[0].clientX;
-                touchStartY = event.touches[0].clientY;
-                isTouching = true;
-                event.preventDefault();
-            }, { passive: false });
+            if (domElements.restartButton) {
+                domElements.restartButton.addEventListener('click', handleRestartGame);
+            }
 
-            document.addEventListener('touchmove', function(event) {
-                if (gameState.currentState !== GAME_STATES.PLAYING || !isTouching) return;
-                
-                const touchX = event.touches[0].clientX;
-                const touchY = event.touches[0].clientY;
-                const deltaX = touchX - touchStartX;
-                const deltaY = touchY - touchStartY;
-                
-                const threshold = 30;
-                
-                keys.left = deltaX < -threshold;
-                keys.right = deltaX > threshold;
-                keys.up = deltaY < -threshold;
-                keys.down = deltaY > threshold;
-                
-                event.preventDefault();
-            }, { passive: false });
+            if (domElements.menuButton) {
+                domElements.menuButton.addEventListener('click', handleReturnToMenu);
+            }
 
-            document.addEventListener('touchend', function(event) {
-                if (gameState.currentState !== GAME_STATES.PLAYING) return;
-                
-                keys.left = false;
-                keys.right = false;
-                keys.up = false;
-                keys.down = false;
-                keys.space = true;
-                
-                setTimeout(() => {
-                    keys.space = false;
-                }, 100);
-                
-                isTouching = false;
-                event.preventDefault();
-            }, { passive: false });
+            domElements.gameBoard.addEventListener('click', handleMoleClick);
+
+            document.addEventListener('keydown', function(event) {
+                if (event.code === 'Space') {
+                    event.preventDefault();
+                    if (gameState.isPlaying && !gameState.isGameOver) {
+                        handlePauseGame();
+                    }
+                }
+            });
+
+            window.addEventListener('beforeunload', cleanup);
         }
 
         function handleStartGame() {
             try {
-                gameState.currentState = GAME_STATES.PLAYING;
-                gameState.isGameRunning = true;
+                gameState.isPlaying = true;
+                gameState.isPaused = false;
                 gameState.isGameOver = false;
-                resetGameState();
-                updateUI();
+                gameState.score = 0;
+                gameState.timeLeft = 60;
+                gameState.molesCaught = 0;
+                gameState.molesAppeared = 0;
+                gameState.currentMoles = [];
+
+                hideAllScreens();
+                domElements.gameScreen.style.display = 'block';
+
+                updateScoreDisplay(gameState.score);
+                updateTimeDisplay(gameState.timeLeft);
+                updateMoleCountDisplay(gameState.molesCaught);
+
+                startGameLoop();
+                startMoleSpawning();
+
+                console.log('게임 시작');
+
             } catch (error) {
-                console.error('게임 시작 중 오류:', error);
+                console.error('게임 시작 실패:', error);
+                handleGameOver();
+            }
+        }
+
+        function handlePauseGame() {
+            try {
+                if (gameState.isGameOver) return;
+
+                gameState.isPaused = !gameState.isPaused;
+
+                if (gameState.isPaused) {
+                    clearTimeout(gameState.spawnTimer);
+                    clearInterval(gameState.gameTimer);
+                    domElements.gameContainer.classList.add('game-paused');
+                    
+                    if (domElements.pauseButton) {
+                        domElements.pauseButton.textContent = '재개';
+                    }
+
+                } else {
+                    domElements.gameContainer.classList.remove('game-paused');
+                    startGameLoop();
+                    startMoleSpawning();
+                    
+                    if (domElements.pauseButton) {
+                        domElements.pauseButton.textContent = '일시정지';
+                    }
+                }
+
+            } catch (error) {
+                console.error('일시정지 처리 실패:', error);
             }
         }
 
         function handleRestartGame() {
-            handleStartGame();
-        }
-
-        function handleMainMenu() {
             try {
-                gameState.currentState = GAME_STATES.MENU;
-                gameState.isGameRunning = false;
-                gameState.isGameOver = false;
-                updateUI();
+                cleanup();
+                handleStartGame();
             } catch (error) {
-                console.error('메인 메뉴 이동 중 오류:', error);
+                console.error('게임 재시작 실패:', error);
             }
         }
 
-        function resetGameState() {
-            gameState.score = 0;
-            gameState.killCount = 0;
-            gameState.lives = 3;
-            gameState.level = 1;
-            gameState.combo = 0;
-            
-            gameState.playerShips = [
-                { x: 400, y: 550, width: 20, height: 15, isActive: true }
-            ];
-            
-            gameState.enemies = [];
-            gameState.playerMissiles = [];
-            gameState.enemyMissiles = [];
-            
-            gameState.lastEnemySpawn = 0;
-            gameState.lastShotTime = 0;
-            gameState.enemySpawnRate = 1000;
-        }
-
-        function handleKeyDown(event) {
+        function handleReturnToMenu() {
             try {
-                switch(event.code) {
-                    case 'KeyW':
-                    case 'ArrowUp':
-                        keys.up = true;
-                        event.preventDefault();
-                        break;
-                    case 'KeyS':
-                    case 'ArrowDown':
-                        keys.down = true;
-                        event.preventDefault();
-                        break;
-                    case 'KeyA':
-                    case 'ArrowLeft':
-                        keys.left = true;
-                        event.preventDefault();
-                        break;
-                    case 'KeyD':
-                    case 'ArrowRight':
-                        keys.right = true;
-                        event.preventDefault();
-                        break;
-                    case 'Space':
-                        keys.space = true;
-                        event.preventDefault();
-                        break;
-                    case 'Escape':
-                        if (gameState.currentState === GAME_STATES.PLAYING) {
-                            togglePause();
-                        }
-                        break;
-                }
+                cleanup();
+                hideAllScreens();
+                domElements.mainMenu.style.display = 'block';
+                loadHighScore();
             } catch (error) {
-                console.error('키 입력 처리 중 오류:', error);
+                console.error('메인 메뉴 이동 실패:', error);
             }
         }
 
-        function handleKeyUp(event) {
+        function handleGameOver() {
             try {
-                switch(event.code) {
-                    case 'KeyW':
-                    case 'ArrowUp':
-                        keys.up = false;
-                        break;
-                    case 'KeyS':
-                    case 'ArrowDown':
-                        keys.down = false;
-                        break;
-                    case 'KeyA':
-                    case 'ArrowLeft':
-                        keys.left = false;
-                        break;
-                    case 'KeyD':
-                    case 'ArrowRight':
-                        keys.right = false;
-                        break;
-                    case 'Space':
-                        keys.space = false;
-                        break;
-                }
-            } catch (error) {
-                console.error('키 해제 처리 중 오류:', error);
-            }
-        }
-
-        function togglePause() {
-            gameState.isPaused = !gameState.isPaused;
-            if (gameState.isPaused) {
-                gameState.currentState = GAME_STATES.PAUSED;
-            } else {
-                gameState.currentState = GAME_STATES.PLAYING;
-            }
-        }
-
-        function updateGameState() {
-            try {
-                if (gameState.currentState !== GAME_STATES.PLAYING) return;
-                
-                const currentTime = Date.now();
-                
-                updatePlayerMovement();
-                handlePlayerShooting(currentTime);
-                spawnEnemies(currentTime);
-                updatePlayerMissiles();
-                updateEnemies();
-                updateEnemyMissiles();
-                checkCollisions();
-                cleanupObjects();
-                checkGameOver();
-                updateHUD();
-            } catch (error) {
-                console.error('게임 상태 업데이트 중 오류:', error);
-            }
-        }
-
-        function updatePlayerMovement() {
-            const speed = 5;
-            
-            gameState.playerShips.forEach(ship => {
-                if (!ship.isActive) return;
-                
-                if (keys.left && ship.x > ship.width / 2) {
-                    ship.x -= speed;
-                }
-                if (keys.right && ship.x < gameState.canvasWidth - ship.width / 2) {
-                    ship.x += speed;
-                }
-                if (keys.up && ship.y > ship.height / 2) {
-                    ship.y -= speed;
-                }
-                if (keys.down && ship.y < gameState.canvasHeight - ship.height / 2) {
-                    ship.y += speed;
-                }
-            });
-        }
-
-        function handlePlayerShooting(currentTime) {
-            if (keys.space && currentTime - gameState.lastShotTime > gameState.shotCooldown) {
-                gameState.playerShips.forEach(ship => {
-                    if (ship.isActive) {
-                        gameState.playerMissiles.push({
-                            x: ship.x,
-                            y: ship.y - ship.height / 2,
-                            width: 4,
-                            height: 8,
-                            speed: 8
-                        });
-                    }
-                });
-                gameState.lastShotTime = currentTime;
-            }
-        }
-
-        function spawnEnemies(currentTime) {
-            const adjustedSpawnRate = Math.max(500, gameState.enemySpawnRate - (gameState.level * 50));
-            
-            if (currentTime - gameState.lastEnemySpawn > adjustedSpawnRate) {
-                const enemyX = Math.random() * (gameState.canvasWidth - 36) + 18;
-                gameState.enemies.push({
-                    x: enemyX,
-                    y: -12,
-                    width: 18,
-                    height: 12,
-                    speed: 2 + Math.random() * 2 + (gameState.level * 0.5),
-                    health: 1
-                });
-                gameState.lastEnemySpawn = currentTime;
-            }
-        }
-
-        function updatePlayerMissiles() {
-            for (let i = gameState.playerMissiles.length - 1; i >= 0; i--) {
-                const missile = gameState.playerMissiles[i];
-                missile.y -= missile.speed;
-                
-                if (missile.y < -missile.height) {
-                    gameState.playerMissiles.splice(i, 1);
-                }
-            }
-        }
-
-        function updateEnemies() {
-            for (let i = gameState.enemies.length - 1; i >= 0; i--) {
-                const enemy = gameState.enemies[i];
-                enemy.y += enemy.speed;
-                
-                if (enemy.y > gameState.canvasHeight + enemy.height) {
-                    gameState.enemies.splice(i, 1);
-                    gameState.combo = 0;
-                }
-            }
-        }
-
-        function updateEnemyMissiles() {
-            for (let i = gameState.enemyMissiles.length - 1; i >= 0; i--) {
-                const missile = gameState.enemyMissiles[i];
-                missile.y += missile.speed;
-                
-                if (missile.y > gameState.canvasHeight + missile.height) {
-                    gameState.enemyMissiles.splice(i, 1);
-                }
-            }
-        }
-
-        function checkCollisions() {
-            for (let i = gameState.playerMissiles.length - 1; i >= 0; i--) {
-                const missile = gameState.playerMissiles[i];
-                
-                for (let j = gameState.enemies.length - 1; j >= 0; j--) {
-                    const enemy = gameState.enemies[j];
-                    
-                    if (isColliding(missile, enemy)) {
-                        gameState.enemies.splice(j, 1);
-                        gameState.playerMissiles.splice(i, 1);
-                        
-                        gameState.score += 100;
-                        gameState.killCount++;
-                        gameState.combo++;
-                        
-                        if (gameState.combo > 1) {
-                            gameState.score += gameState.combo * 10;
-                        }
-                        
-                        if (gameState.killCount % GAME_CONFIG.KILLS_FOR_NEW_SHIP === 0 && 
-                            gameState.playerShips.length < GAME_CONFIG.MAX_SHIPS) {
-                            const newShip = {
-                                x: 400 + ((gameState.playerShips.length - 1) * 30),
-                                y: 550,
-                                width: 20,
-                                height: 15,
-                                isActive: true
-                            };
-                            gameState.playerShips.push(newShip);
-                        }
-                        
-                        if (gameState.killCount % GAME_CONFIG.KILLS_FOR_LEVEL_UP === 0) {
-                            gameState.level++;
-                        }
-                        
-                        if (gameState.score > gameState.highScore) {
-                            gameState.highScore = gameState.score;
-                            localStorage.setItem('gallagaHighScore', gameState.highScore.toString());
-                        }
-                        break;
-                    }
-                }
-            }
-            
-            for (let i = 0; i < gameState.playerShips.length; i++) {
-                const ship = gameState.playerShips[i];
-                if (!ship.isActive) continue;
-                
-                for (let j = gameState.enemies.length - 1; j >= 0; j--) {
-                    const enemy = gameState.enemies[j];
-                    
-                    if (isColliding(ship, enemy)) {
-                        ship.isActive = false;
-                        gameState.enemies.splice(j, 1);
-                        gameState.lives--;
-                        gameState.combo = 0;
-                        
-                        const activeShips = gameState.playerShips.filter(s => s.isActive);
-                        if (activeShips.length === 0 || gameState.lives <= 0) {
-                            gameState.currentState = GAME_STATES.GAME_OVER;
-                            gameState.isGameOver = true;
-                            gameState.isGameRunning = false;
-                            updateUI();
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        function isColliding(obj1, obj2) {
-            return obj1.x - obj1.width/2 < obj2.x + obj2.width/2 &&
-                   obj1.x + obj1.width/2 > obj2.x - obj2.width/2 &&
-                   obj1.y - obj1.height/2 < obj2.y + obj2.height/2 &&
-                   obj1.y + obj1.height/2 > obj2.y - obj2.height/2;
-        }
-
-        function cleanupObjects() {
-            gameState.playerMissiles = gameState.playerMissiles.filter(missile => 
-                missile.y > -missile.height && missile.y < gameState.canvasHeight + missile.height
-            );
-            
-            gameState.enemies = gameState.enemies.filter(enemy => 
-                enemy.y > -enemy.height && enemy.y < gameState.canvasHeight + enemy.height
-            );
-            
-            gameState.enemyMissiles = gameState.enemyMissiles.filter(missile => 
-                missile.y > -missile.height && missile.y < gameState.canvasHeight + missile.height
-            );
-        }
-
-        function checkGameOver() {
-            const activeShips = gameState.playerShips.filter(ship => ship.isActive);
-            if (activeShips.length === 0 || gameState.lives <= 0) {
-                gameState.currentState = GAME_STATES.GAME_OVER;
+                gameState.isPlaying = false;
                 gameState.isGameOver = true;
-                gameState.isGameRunning = false;
-                updateUI();
+
+                cleanup();
+                clearAllMoles();
+
+                const highScore = getHighScore();
+                let isNewRecord = false;
+
+                if (gameState.score > highScore) {
+                    saveHighScore(gameState.score);
+                    isNewRecord = true;
+                }
+
+                showGameResult(isNewRecord);
+
+                console.log('게임 종료 - 최종 점수:', gameState.score);
+
+            } catch (error) {
+                console.error('게임 종료 처리 실패:', error);
             }
         }
 
-        function updateHUD() {
+        function handleMoleClick(event) {
             try {
-                const scoreValue = document.getElementById('score-value');
-                if (scoreValue) {
-                    scoreValue.textContent = gameState.score.toLocaleString();
+                const moleElement = event.target.closest('.mole.visible');
+                if (!moleElement || !gameState.isPlaying || gameState.isPaused) {
+                    return;
                 }
+
+                const moleId = moleElement.dataset.moleId;
+                const mole = gameState.currentMoles.find(m => m.id === moleId);
                 
-                const killCountValue = document.getElementById('kill-count-value');
-                if (killCountValue) {
-                    killCountValue.textContent = gameState.killCount;
+                if (!mole) return;
+
+                const currentTime = Date.now();
+                const timeDiff = currentTime - gameState.lastClickTime;
+                gameState.lastClickTime = currentTime;
+
+                const isDoubleClick = timeDiff < gameState.doubleClickThreshold;
+
+                if (mole.isGolden) {
+                    if (isDoubleClick) {
+                        handleMoleHit(mole, true);
+                    } else {
+                        moleElement.style.transform = 'scale(1.1)';
+                        setTimeout(() => {
+                            if (moleElement.style) {
+                                moleElement.style.transform = 'scale(1.0)';
+                            }
+                        }, 100);
+                    }
+                } else {
+                    handleMoleHit(mole, false);
                 }
-                
-                const levelValue = document.getElementById('level-value');
-                if (levelValue) {
-                    levelValue.textContent = gameState.level;
+
+            } catch (error) {
+                console.error('두더지 클릭 처리 실패:', error);
+            }
+        }
+
+        function handleMoleHit(mole, isGolden) {
+            try {
+                const points = isGolden ? 50 : 10;
+                gameState.score += points;
+                gameState.molesCaught++;
+
+                showHitFeedback(mole.element, points);
+                removeMole(mole.id);
+
+                updateScoreDisplay(gameState.score);
+                updateMoleCountDisplay(gameState.molesCaught);
+
+                console.log(`두더지 적중! ${isGolden ? '황금' : '일반'} - 점수: ${points}`);
+
+            } catch (error) {
+                console.error('두더지 적중 처리 실패:', error);
+            }
+        }
+
+        function startGameLoop() {
+            if (gameState.gameTimer) {
+                clearInterval(gameState.gameTimer);
+            }
+
+            gameState.gameTimer = setInterval(function() {
+                try {
+                    if (!gameState.isPlaying || gameState.isPaused || gameState.isGameOver) {
+                        return;
+                    }
+
+                    gameState.timeLeft--;
+                    updateTimeDisplay(gameState.timeLeft);
+
+                    if (gameState.timeLeft <= 0) {
+                        handleGameOver();
+                    }
+
+                } catch (error) {
+                    console.error('게임 루프 에러:', error);
+                    handleGameOver();
                 }
-                
-                const livesDisplay = document.getElementById('lives-display');
-                if (livesDisplay) {
-                    const activeShips = gameState.playerShips.filter(ship => ship.isActive).length;
-                    livesDisplay.innerHTML = '';
-                    for (let i = 0; i < activeShips; i++) {
-                        const lifeIcon = document.createElement('div');
-                        lifeIcon.className = 'life-icon';
-                        livesDisplay.appendChild(lifeIcon);
+            }, 1000);
+        }
+
+        function startMoleSpawning() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+
+            const spawnDelay = Math.random() * 
+                (gameState.spawnInterval.max - gameState.spawnInterval.min) + 
+                gameState.spawnInterval.min;
+
+            gameState.spawnTimer = setTimeout(function() {
+                try {
+                    if (gameState.isPlaying && !gameState.isPaused && !gameState.isGameOver) {
+                        spawnRandomMole();
+                        startMoleSpawning();
+                    }
+                } catch (error) {
+                    console.error('두더지 스폰 에러:', error);
+                }
+            }, spawnDelay);
+        }
+
+        function spawnRandomMole() {
+            try {
+                const availableHoles = [];
+                for (let i = 0; i < 9; i++) {
+                    const hasActiveMole = gameState.currentMoles.some(m => m.holeIndex === i && m.isVisible);
+                    if (!hasActiveMole) {
+                        availableHoles.push(i);
                     }
                 }
+
+                if (availableHoles.length === 0) return;
+
+                const randomHoleIndex = availableHoles[Math.floor(Math.random() * availableHoles.length)];
+                const shouldSpawnGolden = checkGoldenMoleSpawn();
+
+                spawnMole(randomHoleIndex, shouldSpawnGolden);
+
             } catch (error) {
-                console.error('HUD 업데이트 중 오류:', error);
+                console.error('랜덤 두더지 스폰 실패:', error);
             }
         }
 
-        function updateUI() {
+        function spawnMole(holeIndex, isGolden) {
             try {
-                const mainMenu = document.getElementById('main-menu');
-                const gameHud = document.getElementById('game-hud');
-                const gameOverScreen = document.getElementById('game-over-screen');
+                const holeContainer = domElements.holes[holeIndex];
+                if (!holeContainer) return;
+
+                const moleId = 'mole_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const moleElement = document.createElement('div');
                 
-                if (mainMenu) mainMenu.style.display = 'none';
-                if (gameHud) gameHud.classList.add('hidden');
-                if (gameOverScreen) gameOverScreen.style.display = 'none';
+                moleElement.className = isGolden ? 'mole golden visible' : 'mole visible';
+                moleElement.dataset.moleId = moleId;
                 
-                switch (gameState.currentState) {
-                    case GAME_STATES.MENU:
-                        if (mainMenu) {
-                            mainMenu.style.display = 'flex';
-                            const highScoreElement = document.getElementById('high-score-display');
-                            if (highScoreElement) {
-                                highScoreElement.textContent = gameState.highScore.toLocaleString();
-                            }
-                        }
-                        break;
-                    case GAME_STATES.PLAYING:
-                    case GAME_STATES.PAUSED:
-                        if (gameHud) gameHud.classList.remove('hidden');
-                        break;
-                    case GAME_STATES.GAME_OVER:
-                        if (gameOverScreen) {
-                            gameOverScreen.style.display = 'flex';
-                            const finalScoreElement = document.getElementById('final-score-display');
-                            if (finalScoreElement) {
-                                finalScoreElement.textContent = gameState.score.toLocaleString();
-                            }
-                            const finalKillsElement = document.getElementById('final-kills-display');
-                            if (finalKillsElement) {
-                                finalKillsElement.textContent = gameState.killCount;
-                            }
-                            const finalLevelElement = document.getElementById('final-level-display');
-                            if (finalLevelElement) {
-                                finalLevelElement.textContent = gameState.level;
-                            }
-                        }
-                        break;
+                if (isGolden) {
+                    moleElement.style.cssText = `
+                        width: 90px;
+                        height: 70px;
+                        background: linear-gradient(45deg, #FFD700, #FFA500);
+                        border-radius: 50%;
+                        position: absolute;
+                        bottom: 0;
+                        left: 50%;
+                        transform: translateX(-50%) translateY(100%);
+                        cursor: pointer;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 20px rgba(255,215,0,0.6);
+                        transition: transform 0.2s ease-out;
+                        animation: shimmer 1s infinite alternate;
+                    `;
+                } else {
+                    moleElement.style.cssText = `
+                        width: 80px;
+                        height: 60px;
+                        background: linear-gradient(45deg, #D2691E, #8B4513);
+                        border-radius: 50%;
+                        position: absolute;
+                        bottom: 0;
+                        left: 50%;
+                        transform: translateX(-50%) translateY(100%);
+                        cursor: pointer;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                        transition: transform 0.2s ease-out;
+                    `;
                 }
-            } catch (error) {
-                console.error('UI 업데이트 중 오류:', error);
-            }
-        }
 
-        function renderGame() {
-            try {
-                if (!ctx) return;
+                const eyes = document.createElement('div');
+                eyes.style.cssText = `
+                    position: absolute;
+                    top: 20%;
+                    left: 20%;
+                    width: 60%;
+                    height: 30%;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                `;
                 
-                ctx.fillStyle = '#000014';
-                ctx.fillRect(0, 0, gameState.canvasWidth, gameState.canvasHeight);
+                const leftEye = document.createElement('div');
+                const rightEye = document.createElement('div');
+                [leftEye, rightEye].forEach(eye => {
+                    eye.style.cssText = `
+                        width: 8px;
+                        height: 8px;
+                        background: black;
+                        border-radius: 50%;
+                    `;
+                });
                 
-                if (gameState.currentState === GAME_STATES.PLAYING || gameState.currentState === GAME_STATES.PAUSED) {
-                    renderStars();
-                    renderPlayerShips();
-                    renderPlayerMissiles();
-                    renderEnemies();
-                    renderEnemyMissiles();
-                    
-                    if (gameState.currentState === GAME_STATES.PAUSED) {
-                        renderPauseOverlay();
-                    }
-                } else if (gameState.currentState === GAME_STATES.MENU) {
-                    renderMenuBackground();
-                }
-            } catch (error) {
-                console.error('렌더링 중 오류:', error);
-            }
-        }
+                const nose = document.createElement('div');
+                nose.style.cssText = `
+                    position: absolute;
+                    top: 60%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 6px;
+                    height: 6px;
+                    background: #FF69B4;
+                    border-radius: 50%;
+                `;
 
-        function renderStars() {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            for (let i = 0; i < 100; i++) {
-                const x = (i * 137) % gameState.canvasWidth;
-                const y = (i * 73 + Date.now() * 0.02) % gameState.canvasHeight;
-                const size = Math.sin(Date.now() * 0.001 + i) * 0.5 + 1;
-                ctx.fillRect(x, y, size, size);
-            }
-        }
+                eyes.appendChild(leftEye);
+                eyes.appendChild(rightEye);
+                moleElement.appendChild(eyes);
+                moleElement.appendChild(nose);
 
-        function renderPlayerShips() {
-            gameState.playerShips.forEach(ship => {
-                if (!ship.isActive) return;
-                
-                ctx.fillStyle = '#00FF41';
-                ctx.shadowColor = '#00FF41';
-                ctx.shadowBlur = 5;
-                
-                ctx.beginPath();
-                ctx.moveTo(ship.x, ship.y - ship.height / 2);
-                ctx.lineTo(ship.x - ship.width / 2, ship.y + ship.height / 2);
-                ctx.lineTo(ship.x + ship.width / 2, ship.y + ship.height / 2);
-                ctx.closePath();
-                ctx.fill();
-                
-                ctx.shadowBlur = 0;
-                
-                ctx.fillStyle = '#40FF71';
-                ctx.fillRect(ship.x - 2, ship.y + 3, 4, 3);
-            });
-        }
+                const moleObject = {
+                    id: moleId,
+                    holeIndex: holeIndex,
+                    isGolden: isGolden,
+                    isVisible: true,
+                    spawnTime: Date.now(),
+                    element: moleElement
+                };
 
-        function renderPlayerMissiles() {
-            gameState.playerMissiles.forEach(missile => {
-                ctx.fillStyle = '#FFDC00';
-                ctx.shadowColor = '#FFDC00';
-                ctx.shadowBlur = 3;
-                
-                ctx.beginPath();
-                ctx.arc(missile.x, missile.y, missile.width / 2, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.shadowBlur = 0;
-            });
-        }
+                gameState.currentMoles.push(moleObject);
+                gameState.molesAppeared++;
 
-        function renderEnemies() {
-            gameState.enemies.forEach(enemy => {
-                ctx.fillStyle = '#FF4136';
-                ctx.shadowColor = '#FF4136';
-                ctx.shadowBlur = 3;
-                
-                ctx.beginPath();
-                ctx.moveTo(enemy.x, enemy.y + enemy.height / 2);
-                ctx.lineTo(enemy.x - enemy.width / 2, enemy.y - enemy.height / 2);
-                ctx.lineTo(enemy.x + enemy.width / 2, enemy.y - enemy.height / 2);
-                ctx.closePath();
-                ctx.fill();
-                
-                ctx.shadowBlur = 0;
-                
-                ctx.fillStyle = '#FFFFFF';
-                ctx.fillRect(enemy.x - 3, enemy.y - 2, 2, 2);
-                ctx.fillRect(enemy.x + 1, enemy.y - 2, 2, 2);
-            });
-        }
+                holeContainer.appendChild(moleElement);
 
-        function renderEnemyMissiles() {
-            gameState.enemyMissiles.forEach(missile => {
-                ctx.fillStyle = '#FF4136';
-                ctx.shadowColor = '#FF4136';
-                ctx.shadowBlur = 2;
-                
-                ctx.beginPath();
-                ctx.arc(missile.x, missile.y, missile.width / 2, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.shadowBlur = 0;
-            });
-        }
-
-        function renderPauseOverlay() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(0, 0, gameState.canvasWidth, gameState.canvasHeight);
-            
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = '48px "Courier New", monospace';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('PAUSED', gameState.canvasWidth / 2, gameState.canvasHeight / 2);
-            
-            ctx.font = '24px "Courier New", monospace';
-            ctx.fillText('Press ESC to continue', gameState.canvasWidth / 2, gameState.canvasHeight / 2 + 50);
-        }
-
-        function renderMenuBackground() {
-            renderStars();
-        }
-
-        function gameLoop() {
-            try {
-                updateGameState();
-                renderGame();
-                requestAnimationFrame(gameLoop);
-            } catch (error) {
-                console.error('게임 루프 중 오류:', error);
                 setTimeout(() => {
-                    requestAnimationFrame(gameLoop);
-                }, 1000/60);
+                    if (moleElement.style) {
+                        moleElement.style.transform = 'translateX(-50%) translateY(0)';
+                    }
+                }, 50);
+
+                const lifetime = isGolden ? gameState.goldenMoleLifetime : gameState.moleLifetime;
+                setTimeout(() => {
+                    if (gameState.currentMoles.some(m => m.id === moleId)) {
+                        handleMoleMiss(moleId);
+                    }
+                }, lifetime);
+
+                console.log(`두더지 스폰: ${isGolden ? '황금' : '일반'} - 구멍 ${holeIndex}`);
+
+            } catch (error) {
+                console.error('두더지 스폰 실패:', error);
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            initGame();
-        });
-
-        window.addEventListener('error', function(event) {
-            console.error('런타임 오류 발생:', event.error);
-        });
-
-        window.addEventListener('beforeunload', function() {
+        function handleMoleMiss(moleId) {
             try {
-                if (gameState.score > gameState.highScore) {
-                    localStorage.setItem('gallagaHighScore', gameState.score.toString());
+                const mole = gameState.currentMoles.find(m => m.id === moleId);
+                if (!mole) return;
+
+                gameState.score = Math.max(0, gameState.score - 5);
+                updateScoreDisplay(gameState.score);
+
+                removeMole(moleId);
+
+                console.log('두더지 놓침 - 점수 -5');
+
+            } catch (error) {
+                console.error('두더지 놓침 처리 실패:', error);
+            }
+        }
+
+        function removeMole(moleId) {
+            try {
+                const moleIndex = gameState.currentMoles.findIndex(m => m.id === moleId);
+                if (moleIndex === -1) return;
+
+                const mole = gameState.currentMoles[moleIndex];
+                
+                if (mole.element && mole.element.style) {
+                    mole.element.style.transform = 'translateX(-50%) translateY(100%)';
+                    mole.element.style.transition = 'transform 0.3s ease-in';
+                }
+
+                setTimeout(() => {
+                    if (mole.element && mole.element.parentNode) {
+                        mole.element.parentNode.removeChild(mole.element);
+                    }
+                }, 300);
+
+                gameState.currentMoles.splice(moleIndex, 1);
+
+            } catch (error) {
+                console.error('두더지 제거 실패:', error);
+            }
+        }
+
+        function checkGoldenMoleSpawn() {
+            return gameState.molesAppeared > 0 && 
+                   gameState.molesAppeared % gameState.goldenMoleThreshold === 0;
+        }
+
+        function clearAllMoles() {
+            try {
+                const molesCopy = [...gameState.currentMoles];
+                molesCopy.forEach(mole => {
+                    removeMole(mole.id);
+                });
+                gameState.currentMoles = [];
+            } catch (error) {
+                console.error('모든 두더지 제거 실패:', error);
+            }
+        }
+
+        function showHitFeedback(moleElement, points) {
+            try {
+                const scorePopup = document.createElement('div');
+                scorePopup.textContent = '+' + points;
+                scorePopup.style.cssText = `
+                    position: absolute;
+                    top: -30px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    color: ${points > 10 ? '#FFD700' : '#FF4500'};
+                    font-weight: bold;
+                    font-size: 18px;
+                    pointer-events: none;
+                    z-index: 1000;
+                    animation: scorePopup 1s ease-out forwards;
+                `;
+
+                if (!document.querySelector('#score-popup-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'score-popup-style';
+                    style.textContent = `
+                        @keyframes scorePopup {
+                            0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                            100% { opacity: 0; transform: translateX(-50%) translateY(-50px); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+
+                if (moleElement && moleElement.parentNode) {
+                    moleElement.parentNode.appendChild(scorePopup);
+
+                    setTimeout(() => {
+                        if (scorePopup.parentNode) {
+                            scorePopup.parentNode.removeChild(scorePopup);
+                        }
+                    }, 1000);
+                }
+
+            } catch (error) {
+                console.error('적중 피드백 표시 실패:', error);
+            }
+        }
+
+        function updateScoreDisplay(newScore) {
+            if (domElements.scoreDisplay) {
+                domElements.scoreDisplay.textContent = newScore.toLocaleString();
+            }
+        }
+
+        function updateTimeDisplay(timeLeft) {
+            if (domElements.timeDisplay) {
+                domElements.timeDisplay.textContent = timeLeft + 's';
+                
+                if (timeLeft <= 10) {
+                    domElements.timeDisplay.style.color = '#FF4500';
+                } else {
+                    domElements.timeDisplay.style.color = '#FFFFFF';
+                }
+            }
+        }
+
+        function updateMoleCountDisplay(count) {
+            if (domElements.moleCountDisplay) {
+                domElements.moleCountDisplay.textContent = count;
+            }
+        }
+
+        function hideAllScreens() {
+            [domElements.mainMenu, domElements.gameScreen, domElements.resultScreen].forEach(screen => {
+                if (screen) {
+                    screen.style.display = 'none';
+                }
+            });
+        }
+
+        function showGameResult(isNewRecord) {
+            try {
+                hideAllScreens();
+                
+                if (domElements.resultScreen) {
+                    domElements.resultScreen.style.display = 'block';
+                    
+                    if (domElements.finalScoreDisplay) {
+                        domElements.finalScoreDisplay.textContent = gameState.score.toLocaleString();
+                    }
+
+                    if (domElements.newRecordMessage) {
+                        domElements.newRecordMessage.style.display = isNewRecord ? 'block' : 'none';
+                    }
+
+                    if (domElements.finalMoleCount) {
+                        domElements.finalMoleCount.textContent = gameState.molesCaught;
+                    }
+
+                } else {
+                    const message = `게임 종료!\n최종 점수: ${gameState.score.toLocaleString()}\n잡은 두더지: ${gameState.molesCaught}마리` +
+                        (isNewRecord ? '\n🎉 새로운 기록입니다!' : '');
+                    alert(message);
+                    
+                    hideAllScreens();
+                    if (domElements.mainMenu) {
+                        domElements.mainMenu.style.display = 'block';
+                    }
+                }
+
+            } catch (error) {
+                console.error('결과 화면 표시 실패:', error);
+            }
+        }
+
+        function getHighScore() {
+            try {
+                const stored = localStorage.getItem('whack-a-mole-highscore');
+                return stored ? parseInt(stored, 10) : 0;
+            } catch (error) {
+                console.error('최고기록 로드 실패:', error);
+                return 0;
+            }
+        }
+
+        function saveHighScore(score) {
+            try {
+                localStorage.setItem('whack-a-mole-highscore', score.toString());
+                console.log('새로운 최고기록 저장:', score);
+            } catch (error) {
+                console.error('최고기록 저장 실패:', error);
+            }
+        }
+
+        function loadHighScore() {
+            try {
+                const highScore = getHighScore();
+                if (domElements.bestScoreDisplay) {
+                    domElements.bestScoreDisplay.textContent = highScore.toLocaleString();
                 }
             } catch (error) {
-                console.error('게임 종료 처리 중 오류:', error);
+                console.error('최고기록 표시 실패:', error);
             }
-        });
+        }
+
+        function cleanup() {
+            try {
+                if (gameState.spawnTimer) {
+                    clearTimeout(gameState.spawnTimer);
+                    gameState.spawnTimer = null;
+                }
+
+                if (gameState.gameTimer) {
+                    clearInterval(gameState.gameTimer);
+                    gameState.gameTimer = null;
+                }
+
+                clearAllMoles();
+
+                if (domElements.gameContainer) {
+                    domElements.gameContainer.classList.remove('game-paused', 'game-over');
+                }
+
+                console.log('리소스 정리 완료');
+
+            } catch (error) {
+                console.error('리소스 정리 실패:', error);
+            }
+        }
+
+        window.WhackAMoleGame = {
+            handleStartGame: handleStartGame,
+            handlePauseGame: handlePauseGame,
+            handleResumeGame: handlePauseGame,
+            handleRestartGame: handleRestartGame,
+            handleGameOver: handleGameOver,
+            handleMoleClick: handleMoleClick,
+            handleMoleDoubleClick: handleMoleClick,
+            updateScoreDisplay: updateScoreDisplay,
+            updateTimeDisplay: updateTimeDisplay,
+            updateMoleCountDisplay: updateMoleCountDisplay,
+            spawnMole: spawnMole,
+            removeMole: removeMole,
+            checkGoldenMoleSpawn: checkGoldenMoleSpawn,
+            getGameState: function() { return Object.assign({}, gameState); },
+            init: initializeGame,
+            cleanup: cleanup
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeGame);
+        } else {
+            setTimeout(initializeGame, 100);
+        }
+
+        console.log('웹 두더지 게임 엔진 로드 완료');
+
+    })();
     </script>
 </body>
 </html>
