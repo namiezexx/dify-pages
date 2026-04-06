@@ -3,1538 +3,1029 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>디지털채널 두더지 게임</title>
+    <title>교보두더지게임</title>
     <style>
-    :root {
-        --main-bg: #2D5016;
-        --hole-color: #8B4513;
-        --mole-color: #8B4513;
-        --golden-color: #FFD700;
-        --accent-color: #FF6B35;
-        --text-color: #FFFFFF;
-        --button-color: #4CAF50;
-        --button-hover: #45A049;
-        --shadow-color: rgba(0, 0, 0, 0.3);
-    }
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Arial', sans-serif;
-        background: linear-gradient(135deg, var(--main-bg) 0%, #3a6b1f 100%);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow-x: hidden;
-        touch-action: manipulation;
-        user-select: none;
-        -webkit-user-select: none;
-    }
-
-    #game-container {
-        width: 100%;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-        position: relative;
-    }
-
-    /* 화면 전환 시스템 - CSS 클래스 기반으로 통일 */
-    .screen {
-        display: none;
-        opacity: 0;
-        transform: scale(0.95);
-        transition: all 0.5s ease-in-out;
-    }
-
-    .screen.active {
-        display: block;
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    .screen.fade-out {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-
-    /* 메인 화면 */
-    #main-screen {
-        text-align: center;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        padding: 40px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px var(--shadow-color);
-    }
-
-    #main-screen h1 {
-        color: var(--text-color);
-        font-size: 2.5em;
-        margin-bottom: 20px;
-        text-shadow: 2px 2px 4px var(--shadow-color);
-    }
-
-    #main-screen .subtitle {
-        color: var(--text-color);
-        font-size: 1.2em;
-        margin-bottom: 30px;
-        opacity: 0.9;
-    }
-
-    .high-score-display {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
-        padding: 15px;
-        margin: 20px 0;
-        color: var(--text-color);
-        font-size: 1.1em;
-    }
-
-    /* 버튼 스타일 */
-    .btn {
-        background: var(--button-color);
-        color: var(--text-color);
-        border: none;
-        padding: 15px 30px;
-        font-size: 1.1em;
-        border-radius: 25px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        margin: 10px;
-        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-        font-weight: bold;
-        text-transform: uppercase;
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .btn:hover {
-        background: var(--button-hover);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-    }
-
-    .btn:active {
-        transform: translateY(0);
-        background: var(--button-hover);
-    }
-
-    /* 게임 화면 */
-    #game-screen {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        padding: 20px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px var(--shadow-color);
-    }
-
-    /* HUD */
-    #hud {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 15px;
-        padding: 15px 25px;
-        margin-bottom: 20px;
-        color: var(--text-color);
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .hud-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-width: 80px;
-    }
-
-    .hud-label {
-        font-size: 0.8em;
-        opacity: 0.8;
-        margin-bottom: 5px;
-    }
-
-    .hud-value {
-        font-size: 1.4em;
-        font-weight: bold;
-        text-shadow: 1px 1px 2px var(--shadow-color);
-    }
-
-    #timer-display {
-        color: #FF6B6B;
-        animation: pulse 1s infinite alternate;
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        100% { transform: scale(1.05); }
-    }
-
-    #combo-display {
-        color: var(--golden-color);
-    }
-
-    /* 콤보 강조 효과 */
-    .combo-highlight {
-        animation: comboGlow 0.6s ease-in-out;
-        color: var(--accent-color) !important;
-        text-shadow: 0 0 10px var(--accent-color);
-    }
-
-    @keyframes comboGlow {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.2); }
-        100% { transform: scale(1); }
-    }
-
-    /* 게임 그리드 */
-    #game-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-        max-width: 480px;
-        margin: 0 auto 20px auto;
-        padding: 20px;
-        background: rgba(139, 69, 19, 0.2);
-        border-radius: 15px;
-        box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    /* 두더지 구멍 */
-    .mole-hole {
-        width: 80px;
-        height: 60px;
-        background: var(--hole-color);
-        border-radius: 50%;
-        position: relative;
-        cursor: pointer;
-        box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.5);
-        margin: 0 auto;
-        overflow: hidden;
-        border: 3px solid #654321;
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .mole-hole::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 90%;
-        height: 90%;
-        background: radial-gradient(circle, #654321 0%, var(--hole-color) 70%);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-    }
-
-    /* 두더지 기본 스타일 */
-    .mole {
-        position: absolute;
-        bottom: -60px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 40px;
-        height: 60px;
-        background: var(--mole-color);
-        border-radius: 20px 20px 50% 50%;
-        transition: all 0.3s ease-in-out;
-        cursor: pointer;
-        z-index: 10;
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .mole::before {
-        content: '';
-        position: absolute;
-        top: 15px;
-        left: 8px;
-        width: 6px;
-        height: 6px;
-        background: #000;
-        border-radius: 50%;
-        box-shadow: 16px 0 #000;
-    }
-
-    .mole::after {
-        content: '';
-        position: absolute;
-        top: 25px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 4px;
-        height: 4px;
-        background: #FF69B4;
-        border-radius: 50%;
-    }
-
-    /* 황금 두더지 */
-    .golden-mole {
-        background: var(--golden-color);
-        width: 45px;
-        height: 65px;
-        animation: goldShine 1s infinite alternate;
-        box-shadow: 0 0 15px var(--golden-color);
-    }
-
-    .golden-mole::before {
-        top: 18px;
-        left: 9px;
-        width: 7px;
-        height: 7px;
-        box-shadow: 18px 0 #000;
-    }
-
-    .golden-mole::after {
-        width: 0;
-        height: 0;
-        background: transparent;
-        border-left: 8px solid transparent;
-        border-right: 8px solid transparent;
-        border-bottom: 12px solid var(--accent-color);
-        top: 5px;
-        border-radius: 0;
-    }
-
-    /* 황금 두더지 첫 번째 클릭 효과 */
-    .golden-mole-first-hit {
-        animation: firstHitGlow 0.5s ease-in-out;
-    }
-
-    @keyframes firstHitGlow {
-        0% { filter: brightness(1); }
-        50% { filter: brightness(1.5); box-shadow: 0 0 25px var(--golden-color); }
-        100% { filter: brightness(1); }
-    }
-
-    @keyframes goldShine {
-        0% { 
-            filter: brightness(1);
-            transform: translateX(-50%) scale(1);
+        :root {
+            --bg-color: #2E8B57;
+            --hole-color: #8B4513;
+            --mole-color: #8B4513;
+            --golden-color: #FFD700;
+            --golden-accent: #FFA500;
+            --text-color: #FFFFFF;
+            --highlight-color: #FFFF00;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --border-radius: 20px;
+            --hole-size: 80px;
+            --mole-size: 60px;
         }
-        100% { 
-            filter: brightness(1.2);
-            transform: translateX(-50%) scale(1.05);
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    }
 
-    /* 두더지 등장 효과 */
-    .mole.show {
-        bottom: 10px;
-    }
-
-    .golden-mole.show {
-        bottom: 5px;
-    }
-
-    /* 두더지 등장 애니메이션 */
-    .mole-appear {
-        animation: molePopUp 0.3s ease-out forwards;
-    }
-
-    @keyframes molePopUp {
-        0% { 
-            bottom: -60px;
-            transform: translateX(-50%) scale(0.8);
-            opacity: 0;
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-color) 0%, #228B44 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            overflow-x: hidden;
         }
-        100% { 
-            bottom: 10px;
-            transform: translateX(-50%) scale(1);
-            opacity: 1;
-        }
-    }
 
-    /* 황금 두더지 등장 애니메이션 */
-    .golden-mole-appear {
-        animation: goldenMolePopUp 0.3s ease-out forwards;
-    }
-
-    @keyframes goldenMolePopUp {
-        0% { 
-            bottom: -65px;
-            transform: translateX(-50%) scale(0.8);
-            opacity: 0;
-        }
-        100% { 
-            bottom: 5px;
-            transform: translateX(-50%) scale(1);
-            opacity: 1;
-        }
-    }
-
-    /* 두더지 사라짐 애니메이션 */
-    .mole-disappear {
-        animation: moleGoDown 0.3s ease-in forwards;
-    }
-
-    @keyframes moleGoDown {
-        0% { 
-            bottom: 10px;
-            transform: translateX(-50%) scale(1);
-            opacity: 1;
-        }
-        100% { 
-            bottom: -60px;
-            transform: translateX(-50%) scale(0.8);
-            opacity: 0;
-        }
-    }
-
-    /* 황금 두더지 사라짐 애니메이션 */
-    .golden-mole-disappear {
-        animation: goldenMoleGoDown 0.3s ease-in forwards;
-    }
-
-    @keyframes goldenMoleGoDown {
-        0% { 
-            bottom: 5px;
-            transform: translateX(-50%) scale(1);
-            opacity: 1;
-        }
-        100% { 
-            bottom: -65px;
-            transform: translateX(-50%) scale(0.8);
-            opacity: 0;
-        }
-    }
-
-    /* 클릭 피드백 */
-    .mole-hit {
-        animation: hitEffect 0.2s ease-out;
-    }
-
-    @keyframes hitEffect {
-        0% { transform: translateX(-50%) scale(1); }
-        50% { transform: translateX(-50%) scale(1.2); }
-        100% { transform: translateX(-50%) scale(1); }
-    }
-
-    /* 게임 컨트롤 */
-    .game-controls {
-        text-align: center;
-        margin-top: 20px;
-    }
-
-    /* 결과 화면 */
-    #result-screen {
-        text-align: center;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        padding: 40px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px var(--shadow-color);
-    }
-
-    #result-screen h2 {
-        color: var(--text-color);
-        font-size: 2.2em;
-        margin-bottom: 20px;
-        text-shadow: 2px 2px 4px var(--shadow-color);
-    }
-
-    .score-display {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 15px;
-        padding: 20px;
-        margin: 20px 0;
-        color: var(--text-color);
-    }
-
-    #final-score {
-        font-size: 2em;
-        font-weight: bold;
-        color: var(--golden-color);
-        margin-bottom: 10px;
-    }
-
-    #high-score {
-        font-size: 1.2em;
-        opacity: 0.9;
-    }
-
-    #new-record {
-        color: var(--accent-color);
-        font-size: 1.1em;
-        font-weight: bold;
-        margin-top: 10px;
-        animation: recordBlink 0.8s infinite alternate;
-    }
-
-    /* 신기록 애니메이션 */
-    .new-record-animation {
-        animation: newRecordCelebration 2s ease-in-out;
-    }
-
-    @keyframes newRecordCelebration {
-        0% { transform: scale(1); color: var(--accent-color); }
-        25% { transform: scale(1.1); color: var(--golden-color); }
-        50% { transform: scale(1.2); color: var(--accent-color); }
-        75% { transform: scale(1.1); color: var(--golden-color); }
-        100% { transform: scale(1); color: var(--accent-color); }
-    }
-
-    @keyframes recordBlink {
-        0% { opacity: 1; }
-        100% { opacity: 0.6; }
-    }
-
-    /* 반응형 디자인 */
-    @media (max-width: 768px) {
         #game-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            width: 100%;
+            margin: 20px;
+        }
+
+        #game-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--text-color);
+        }
+
+        #game-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px var(--shadow-color);
+            color: var(--highlight-color);
+        }
+
+        .score-board {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .score-item {
+            background: rgba(255, 255, 255, 0.2);
             padding: 10px;
+            border-radius: 10px;
+            text-align: center;
         }
 
-        #main-screen h1 {
-            font-size: 2em;
+        .score-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
         }
 
-        #hud {
-            flex-direction: row;
-            justify-content: space-around;
-            padding: 10px 15px;
+        .score-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--highlight-color);
         }
 
-        .hud-item {
-            min-width: 60px;
-        }
-
-        .hud-value {
-            font-size: 1.2em;
-        }
-
-        #game-grid {
-            gap: 10px;
-            padding: 15px;
-            max-width: 300px;
+        #game-board {
+            display: grid;
+            grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
         }
 
         .mole-hole {
-            width: 60px;
-            height: 45px;
+            position: relative;
+            width: var(--hole-size);
+            height: 60px;
+            background: var(--hole-color);
+            border-radius: 50%;
+            box-shadow: 
+                inset 0 5px 15px rgba(0, 0, 0, 0.6),
+                0 2px 5px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            justify-self: center;
+            overflow: hidden;
+        }
+
+        .mole-hole:hover {
+            transform: scale(1.05);
         }
 
         .mole {
-            width: 30px;
-            height: 45px;
-            bottom: -45px;
+            position: absolute;
+            width: var(--mole-size);
+            height: var(--mole-size);
+            background: var(--mole-color);
+            border-radius: 50%;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .mole::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 8px;
+            height: 8px;
+            background: #000;
+            border-radius: 50%;
+            box-shadow: 15px 0 0 #000;
+        }
+
+        .mole::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 8px;
+            width: 12px;
+            height: 15px;
+            background: var(--mole-color);
+            border-radius: 50% 50% 0 0;
+            box-shadow: 32px 0 0 var(--mole-color);
+        }
+
+        .mole.active {
+            bottom: 10px;
+            animation: moleWiggle 0.5s ease-in-out;
         }
 
         .golden-mole {
-            width: 35px;
-            height: 50px;
+            background: var(--golden-color);
+            box-shadow: 
+                0 2px 8px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(255, 215, 0, 0.6);
+            animation: shimmer 0.5s infinite alternate;
         }
 
-        .mole.show {
-            bottom: 8px;
+        .golden-mole::after {
+            background: var(--golden-color);
+            box-shadow: 32px 0 0 var(--golden-color);
         }
 
-        .golden-mole.show {
-            bottom: 3px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        #main-screen, #result-screen {
-            padding: 20px;
+        .mole.clicked {
+            transform: translateX(-50%) scale(0.9);
         }
 
-        #main-screen h1 {
-            font-size: 1.8em;
+        @keyframes moleWiggle {
+            0%, 100% { transform: translateX(-50%) rotate(0deg); }
+            25% { transform: translateX(-50%) rotate(-2deg); }
+            75% { transform: translateX(-50%) rotate(2deg); }
+        }
+
+        @keyframes shimmer {
+            0% { 
+                box-shadow: 
+                    0 2px 8px rgba(0, 0, 0, 0.4),
+                    0 0 20px rgba(255, 215, 0, 0.6);
+            }
+            100% { 
+                box-shadow: 
+                    0 2px 8px rgba(0, 0, 0, 0.4),
+                    0 0 30px rgba(255, 215, 0, 0.9),
+                    0 0 40px rgba(255, 165, 0, 0.5);
+            }
+        }
+
+        #game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
         .btn {
-            padding: 12px 20px;
-            font-size: 1em;
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            min-width: 100px;
         }
 
-        #game-grid {
-            max-width: 250px;
-            gap: 8px;
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
 
-        .mole-hole {
-            width: 50px;
-            height: 38px;
+        .btn:active {
+            transform: translateY(0);
         }
 
-        .mole {
-            width: 25px;
-            height: 38px;
-            bottom: -38px;
+        #start-btn {
+            background: linear-gradient(145deg, #FF6B6B, #FF5252);
         }
 
-        .golden-mole {
-            width: 28px;
-            height: 42px;
+        #pause-btn {
+            background: linear-gradient(145deg, #FFA726, #FF9800);
         }
-    }
 
-    /* 숨김 클래스 */
-    .hidden {
-        display: none !important;
-    }
+        #restart-btn {
+            background: linear-gradient(145deg, #42A5F5, #2196F3);
+        }
 
-    /* 로딩 상태 표시 */
-    .loading {
-        opacity: 0.5;
-        pointer-events: none;
-    }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-    /* 에러 상태 표시 */
-    .error-message {
-        background: rgba(255, 0, 0, 0.2);
-        color: var(--text-color);
-        padding: 10px;
-        border-radius: 5px;
-        margin: 10px 0;
-        text-align: center;
-        border: 1px solid rgba(255, 0, 0, 0.5);
-    }
+        /* 모바일 최적화 */
+        @media (max-width: 480px) {
+            #game-container {
+                margin: 10px;
+                padding: 15px;
+            }
+
+            #game-header h1 {
+                font-size: 2rem;
+            }
+
+            .score-board {
+                gap: 10px;
+            }
+
+            .score-item {
+                padding: 8px;
+            }
+
+            .score-value {
+                font-size: 1.2rem;
+            }
+
+            #game-board {
+                gap: 15px;
+                padding: 15px;
+            }
+
+            :root {
+                --hole-size: 70px;
+                --mole-size: 50px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+                min-width: 80px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            #game-board {
+                gap: 10px;
+                padding: 10px;
+            }
+
+            :root {
+                --hole-size: 60px;
+                --mole-size: 45px;
+            }
+
+            .score-board {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            #game-controls {
+                gap: 10px;
+            }
+        }
+
+        /* 접근성 향상 */
+        @media (prefers-reduced-motion: reduce) {
+            .mole, .btn, .mole-hole {
+                transition: none;
+            }
+            
+            .mole.active {
+                animation: none;
+            }
+            
+            .golden-mole {
+                animation: none;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <!-- 메인 화면 -->
-        <div id="main-screen" class="screen active">
-            <h1>🦫 두더지 게임</h1>
-            <p class="subtitle">디지털채널에서 만나는 클래식 아케이드!</p>
-            
-            <div class="high-score-display">
-                <div>🏆 최고 기록</div>
-                <div id="high-score">0점</div>
-            </div>
-            
-            <button id="start-btn" class="btn">게임 시작</button>
-        </div>
-
-        <!-- 게임 화면 -->
-        <div id="game-screen" class="screen">
-            <!-- HUD -->
-            <div id="hud">
-                <div class="hud-item">
-                    <div class="hud-label">점수</div>
-                    <div id="score-display" class="hud-value">0</div>
+        <header id="game-header">
+            <h1>교보두더지게임</h1>
+            <div class="score-board">
+                <div class="score-item">
+                    <div class="score-label">현재 점수</div>
+                    <div class="score-value" id="current-score" aria-live="polite">0</div>
                 </div>
-                <div class="hud-item">
-                    <div class="hud-label">시간</div>
-                    <div id="timer-display" class="hud-value">60</div>
+                <div class="score-item">
+                    <div class="score-label">최고 점수</div>
+                    <div class="score-value" id="high-score" aria-live="polite">0</div>
                 </div>
-                <div class="hud-item">
-                    <div class="hud-label">잡은 수</div>
-                    <div id="moles-caught-display" class="hud-value">0</div>
-                </div>
-                <div class="hud-item">
-                    <div class="hud-label">콤보</div>
-                    <div id="combo-display" class="hud-value">0</div>
+                <div class="score-item">
+                    <div class="score-label">잡은 수</div>
+                    <div class="score-value" id="mole-count" aria-live="polite">0</div>
                 </div>
             </div>
+        </header>
 
-            <!-- 게임 그리드 -->
-            <div id="game-grid">
-                <div class="mole-hole" data-hole="0"></div>
-                <div class="mole-hole" data-hole="1"></div>
-                <div class="mole-hole" data-hole="2"></div>
-                <div class="mole-hole" data-hole="3"></div>
-                <div class="mole-hole" data-hole="4"></div>
-                <div class="mole-hole" data-hole="5"></div>
-                <div class="mole-hole" data-hole="6"></div>
-                <div class="mole-hole" data-hole="7"></div>
-                <div class="mole-hole" data-hole="8"></div>
-            </div>
+        <main id="game-board" role="main" aria-label="게임 보드">
+            <div class="mole-hole" data-hole-index="0" role="button" tabindex="0" aria-label="두더지 구멍 1"></div>
+            <div class="mole-hole" data-hole-index="1" role="button" tabindex="0" aria-label="두더지 구멍 2"></div>
+            <div class="mole-hole" data-hole-index="2" role="button" tabindex="0" aria-label="두더지 구멍 3"></div>
+            <div class="mole-hole" data-hole-index="3" role="button" tabindex="0" aria-label="두더지 구멍 4"></div>
+            <div class="mole-hole" data-hole-index="4" role="button" tabindex="0" aria-label="두더지 구멍 5"></div>
+            <div class="mole-hole" data-hole-index="5" role="button" tabindex="0" aria-label="두더지 구멍 6"></div>
+            <div class="mole-hole" data-hole-index="6" role="button" tabindex="0" aria-label="두더지 구멍 7"></div>
+            <div class="mole-hole" data-hole-index="7" role="button" tabindex="0" aria-label="두더지 구멍 8"></div>
+            <div class="mole-hole" data-hole-index="8" role="button" tabindex="0" aria-label="두더지 구멍 9"></div>
+        </main>
 
-            <!-- 게임 컨트롤 -->
-            <div class="game-controls">
-                <button id="pause-btn" class="btn">일시정지</button>
-            </div>
-        </div>
-
-        <!-- 결과 화면 -->
-        <div id="result-screen" class="screen">
-            <h2>🎯 게임 종료!</h2>
-            
-            <div class="score-display">
-                <div id="final-score">0점</div>
-                <div id="high-score-result">최고 기록: 0점</div>
-                <div id="new-record" class="hidden">🎉 신기록 달성!</div>
-            </div>
-            
-            <div>
-                <button id="restart-btn" class="btn">다시 하기</button>
-                <button id="main-menu-btn" class="btn">메인 메뉴</button>
-            </div>
-        </div>
+        <footer id="game-controls" role="navigation" aria-label="게임 컨트롤">
+            <button id="start-btn" class="btn" aria-label="게임 시작">게임 시작</button>
+            <button id="pause-btn" class="btn" disabled aria-label="게임 일시정지">일시정지</button>
+            <button id="restart-btn" class="btn" disabled aria-label="게임 재시작">재시작</button>
+        </footer>
     </div>
 
     <script>
-    // 디지털채널 두더지 게임 - 메인 게임 엔진 (통합 및 최적화 버전)
-    // 상태머신 패턴을 적용한 DOM 기반 아케이드 게임
+    /**
+     * 교보두더지게임 JavaScript 엔진
+     * DOM 기반 3x3 격자 시스템으로 구현된 아케이드 액션 게임
+     * 상태머신 패턴을 적용하여 게임 상태를 체계적으로 관리
+     */
 
-    (function() {
-        'use strict';
+    // 게임 상태 관리 객체 (State Machine Pattern)
+    const gameState = {
+        isPlaying: false,           // 게임 진행 상태
+        isPaused: false,            // 일시정지 상태
+        score: 0,                   // 현재 점수
+        highScore: 0,               // 최고 점수 (로컬스토리지에서 관리)
+        moleCount: 0,               // 잡은 일반 두더지 수
+        goldenMoleCount: 0,         // 잡은 황금 두더지 수
+        activeMoles: [],            // 현재 활성화된 두더지 배열
+        gameInterval: null,         // 두더지 생성 인터벌 ID
+        nextMoleId: 1               // 다음 두더지 고유 ID 생성기
+    };
 
-        // 글로벌 게임 상태 객체 (인터페이스 계약 준수)
-        const gameState = {
-            score: 0,
-            timeLeft: 60,
-            isPlaying: false,
-            isPaused: false,
-            molesCaught: 0,
-            goldenMolesSpawned: 0,
-            combo: 0,
-            currentMoles: [],
-            highScore: 0,
-            gameLoop: null,
-            timerInterval: null,
-            moleSpawnTimer: null,
-            screenTransitionLock: false
-        };
+    // 게임 설정 상수
+    const GAME_CONFIG = {
+        GRID_SIZE: 9,                           // 3x3 격자 총 구멍 수
+        NORMAL_MOLE_SCORE: 10,                  // 일반 두더지 점수
+        GOLDEN_MOLE_SCORE: 50,                  // 황금 두더지 점수
+        GOLDEN_MOLE_TRIGGER: 10,                // 황금 두더지 출현 조건 (10마리마다)
+        MOLE_SPAWN_MIN: 1500,                   // 두더지 최소 출현 간격 (밀리초)
+        MOLE_SPAWN_MAX: 3000,                   // 두더지 최대 출현 간격 (밀리초)
+        MOLE_LIFESPAN: 2000,                    // 두더지 생존 시간 (2초)
+        GOLDEN_MOLE_CLICK_REQUIRED: 2,          // 황금 두더지 필요 클릭 수
+        NORMAL_MOLE_CLICK_REQUIRED: 1           // 일반 두더지 필요 클릭 수
+    };
 
-        // 두더지 객체 생성자 함수
-        function createMoleObject(holeIndex, type = 'normal') {
-            return {
-                id: 'mole_' + Date.now() + '_' + Math.random(),
-                type: type,
-                hole: holeIndex,
-                clickCount: 0,
-                isActive: true,
-                spawnTime: Date.now(),
-                element: null,
-                hideTimer: null
-            };
-        }
-
-        // 게임 상태 열거형
-        const GAME_STATES = {
-            MENU: 'menu',
-            PLAYING: 'playing',
-            PAUSED: 'paused',
-            GAME_OVER: 'game_over'
-        };
-
-        let currentGameState = GAME_STATES.MENU;
-
-        // DOM 요소 캐싱 (성능 최적화)
-        let domElements = {};
-
-        // DOM 요소 초기화 함수 (예외 처리 강화)
-        function initializeDOMElements() {
+    /**
+     * 메인 게임 컨트롤러 모듈
+     * 모든 게임 로직을 캡슐화하고 외부 인터페이스를 제공
+     */
+    const GameController = (function() {
+        
+        /**
+         * 게임 초기화 함수
+         * DOM 로드 완료 시점에 실행되어 게임 환경을 설정
+         */
+        function initGame() {
             try {
-                domElements = {
-                    gameContainer: document.getElementById('game-container'),
-                    mainScreen: document.getElementById('main-screen'),
-                    gameScreen: document.getElementById('game-screen'),
-                    resultScreen: document.getElementById('result-screen'),
-                    
-                    scoreDisplay: document.getElementById('score-display'),
-                    timerDisplay: document.getElementById('timer-display'),
-                    molesCaughtDisplay: document.getElementById('moles-caught-display'),
-                    comboDisplay: document.getElementById('combo-display'),
-                    
-                    gameGrid: document.getElementById('game-grid'),
-                    
-                    startBtn: document.getElementById('start-btn'),
-                    pauseBtn: document.getElementById('pause-btn'),
-                    restartBtn: document.getElementById('restart-btn'),
-                    mainMenuBtn: document.getElementById('main-menu-btn'),
-                    
-                    finalScore: document.getElementById('final-score'),
-                    highScoreDisplay: document.getElementById('high-score'),
-                    highScoreResult: document.getElementById('high-score-result'),
-                    newRecord: document.getElementById('new-record')
-                };
-
-                // 구멍 요소들 수집 (0~8번)
-                domElements.holes = [];
-                for (let i = 0; i < 9; i++) {
-                    const hole = document.querySelector(`[data-hole="${i}"]`);
-                    if (hole) {
-                        domElements.holes[i] = hole;
-                    } else {
-                        throw new Error(`구멍 요소 ${i}번을 찾을 수 없습니다.`);
-                    }
-                }
-
-                // 필수 요소 검증
-                const requiredElements = ['gameContainer', 'mainScreen', 'gameScreen', 'resultScreen', 'gameGrid'];
-                for (let elementName of requiredElements) {
-                    if (!domElements[elementName]) {
-                        throw new Error(`필수 요소 ${elementName}을 찾을 수 없습니다.`);
-                    }
-                }
-
-                return true;
-            } catch (error) {
-                console.error('DOM 요소 초기화 실패:', error);
-                showErrorMessage('게임 초기화에 실패했습니다. 페이지를 새로고침해 주세요.');
-                return false;
-            }
-        }
-
-        // 에러 메시지 표시 함수
-        function showErrorMessage(message) {
-            try {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.textContent = message;
+                // 로컬스토리지에서 최고점수 불러오기
+                loadHighScore();
                 
-                const container = document.getElementById('game-container') || document.body;
-                container.appendChild(errorDiv);
+                // UI 초기 상태 설정
+                updateScoreDisplay();
+                updateMoleCountDisplay();
                 
-                setTimeout(() => {
-                    if (errorDiv.parentNode) {
-                        errorDiv.parentNode.removeChild(errorDiv);
-                    }
-                }, 5000);
-            } catch (error) {
-                console.error('에러 메시지 표시 실패:', error);
-            }
-        }
-
-        // localStorage 안전 접근 함수 (오류 처리 강화)
-        function safeLocalStorageGet(key, defaultValue = null) {
-            try {
-                if (typeof Storage === 'undefined') {
-                    console.warn('localStorage가 지원되지 않습니다.');
-                    return defaultValue;
-                }
-                const value = localStorage.getItem(key);
-                return value !== null ? value : defaultValue;
-            } catch (error) {
-                console.error('localStorage 읽기 실패:', error);
-                return defaultValue;
-            }
-        }
-
-        function safeLocalStorageSet(key, value) {
-            try {
-                if (typeof Storage === 'undefined') {
-                    console.warn('localStorage가 지원되지 않습니다.');
-                    return false;
-                }
-                localStorage.setItem(key, value);
-                return true;
-            } catch (error) {
-                console.error('localStorage 저장 실패:', error);
-                return false;
-            }
-        }
-
-        // 최고 점수 로드 함수 (안정성 향상)
-        function loadHighScore() {
-            try {
-                const savedScore = safeLocalStorageGet('mole_game_high_score', '0');
-                gameState.highScore = parseInt(savedScore, 10) || 0;
+                // 이벤트 리스너 등록 (이벤트 위임 패턴 적용)
+                bindEventListeners();
                 
-                if (domElements.highScoreDisplay) {
-                    domElements.highScoreDisplay.textContent = gameState.highScore + '점';
-                }
-            } catch (error) {
-                console.error('최고 점수 로드 실패:', error);
-                gameState.highScore = 0;
-            }
-        }
-
-        // 최고 점수 저장 함수
-        function saveHighScore() {
-            try {
-                if (gameState.score > gameState.highScore) {
-                    gameState.highScore = gameState.score;
-                    const success = safeLocalStorageSet('mole_game_high_score', gameState.highScore.toString());
-                    return success;
-                }
-                return false;
-            } catch (error) {
-                console.error('최고 점수 저장 실패:', error);
-                return false;
-            }
-        }
-
-        // UI 업데이트 함수들 (안전성 강화)
-        function updateScoreDisplay(score) {
-            if (domElements.scoreDisplay) {
-                domElements.scoreDisplay.textContent = score;
-            }
-        }
-
-        function updateTimerDisplay(timeLeft) {
-            if (domElements.timerDisplay) {
-                domElements.timerDisplay.textContent = timeLeft;
-            }
-        }
-
-        function updateMolesCaughtDisplay(count) {
-            if (domElements.molesCaughtDisplay) {
-                domElements.molesCaughtDisplay.textContent = count;
-            }
-        }
-
-        function updateComboDisplay(combo) {
-            if (domElements.comboDisplay) {
-                domElements.comboDisplay.textContent = combo;
+                // 게임보드 초기화 상태 확인
+                validateGameBoard();
                 
-                // 콤보가 5 이상일 때 시각적 강조
-                if (combo >= 5) {
-                    domElements.comboDisplay.classList.add('combo-highlight');
-                } else {
-                    domElements.comboDisplay.classList.remove('combo-highlight');
-                }
+                console.log('교보두더지게임 초기화 완료');
+            } catch (error) {
+                console.error('게임 초기화 중 오류 발생:', error);
+                alert('게임 초기화에 실패했습니다. 페이지를 새로고침해주세요.');
             }
         }
-
-        // 화면 전환 함수들 (CSS 클래스 기반으로 통일)
-        function showScreen(targetScreen) {
-            if (gameState.screenTransitionLock) return;
+        
+        /**
+         * 게임보드 유효성 검사
+         * 필수 DOM 요소들이 올바르게 구성되었는지 확인
+         */
+        function validateGameBoard() {
+            const gameBoard = document.getElementById('game-board');
+            if (!gameBoard) {
+                throw new Error('게임보드 요소를 찾을 수 없습니다.');
+            }
             
-            try {
-                gameState.screenTransitionLock = true;
-                
-                // 모든 화면 숨김
-                const screens = [domElements.mainScreen, domElements.gameScreen, domElements.resultScreen];
-                screens.forEach(screen => {
-                    if (screen && screen.classList.contains('active')) {
-                        screen.classList.add('fade-out');
-                        setTimeout(() => {
-                            screen.classList.remove('active', 'fade-out');
-                        }, 250);
-                    }
-                });
-                
-                // 대상 화면 표시
-                setTimeout(() => {
-                    if (targetScreen) {
-                        targetScreen.classList.add('active');
-                    }
-                    gameState.screenTransitionLock = false;
-                }, 300);
-                
-            } catch (error) {
-                console.error('화면 전환 실패:', error);
-                gameState.screenTransitionLock = false;
+            const holes = gameBoard.querySelectorAll('.mole-hole');
+            if (holes.length !== GAME_CONFIG.GRID_SIZE) {
+                throw new Error(`두더지 구멍이 ${GAME_CONFIG.GRID_SIZE}개가 아닙니다. 현재: ${holes.length}개`);
+            }
+            
+            // 각 구멍에 data-hole-index 속성 확인
+            holes.forEach((hole, index) => {
+                if (!hole.hasAttribute('data-hole-index')) {
+                    hole.setAttribute('data-hole-index', index.toString());
+                }
+            });
+        }
+        
+        /**
+         * 이벤트 리스너 바인딩
+         * 게임 컨트롤과 두더지 클릭 이벤트를 등록
+         */
+        function bindEventListeners() {
+            // 게임 컨트롤 버튼 이벤트
+            const startBtn = document.getElementById('start-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+            const restartBtn = document.getElementById('restart-btn');
+            
+            if (startBtn) startBtn.addEventListener('click', handleStartGame);
+            if (pauseBtn) pauseBtn.addEventListener('click', handlePauseGame);
+            if (restartBtn) restartBtn.addEventListener('click', handleRestartGame);
+            
+            // 이벤트 위임을 통한 두더지 클릭 이벤트 처리
+            const gameBoard = document.getElementById('game-board');
+            if (gameBoard) {
+                gameBoard.addEventListener('click', handleMoleClick);
+                gameBoard.addEventListener('keydown', handleKeyboardInput);
             }
         }
-
-        function showMainScreen() {
-            showScreen(domElements.mainScreen);
-            currentGameState = GAME_STATES.MENU;
-        }
-
-        function showGameScreen() {
-            showScreen(domElements.gameScreen);
-            currentGameState = GAME_STATES.PLAYING;
-        }
-
-        function showGameOverScreen() {
-            showScreen(domElements.resultScreen);
-            currentGameState = GAME_STATES.GAME_OVER;
-
-            try {
-                // 최종 점수 표시
-                if (domElements.finalScore) {
-                    domElements.finalScore.textContent = gameState.score + '점';
-                }
-
-                // 신기록 확인 및 표시
-                const isNewRecord = saveHighScore();
-                if (domElements.newRecord) {
-                    if (isNewRecord) {
-                        domElements.newRecord.classList.remove('hidden');
-                    } else {
-                        domElements.newRecord.classList.add('hidden');
-                    }
-                }
-
-                // 최고 점수 업데이트
-                if (domElements.highScoreDisplay) {
-                    domElements.highScoreDisplay.textContent = gameState.highScore + '점';
-                }
-                if (domElements.highScoreResult) {
-                    domElements.highScoreResult.textContent = '최고 기록: ' + gameState.highScore + '점';
-                }
-
-                // 신기록 달성 시 특별 효과
-                if (isNewRecord) {
-                    showNewRecordEffect();
-                }
-            } catch (error) {
-                console.error('결과 화면 표시 실패:', error);
+        
+        /**
+         * 키보드 입력 처리 (접근성 개선)
+         */
+        function handleKeyboardInput(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleMoleClick(event);
             }
         }
-
-        // 신기록 달성 효과
-        function showNewRecordEffect() {
+        
+        /**
+         * 게임 시작 이벤트 핸들러
+         * 게임 상태를 시작 모드로 전환하고 두더지 생성 루프 가동
+         */
+        function handleStartGame() {
             try {
-                if (domElements.newRecord) {
-                    domElements.newRecord.classList.add('new-record-animation');
-                    setTimeout(() => {
-                        if (domElements.newRecord) {
-                            domElements.newRecord.classList.remove('new-record-animation');
-                        }
-                    }, 2000);
-                }
-            } catch (error) {
-                console.error('신기록 효과 표시 실패:', error);
-            }
-        }
-
-        // 게임 상태 초기화 함수 (안전성 강화)
-        function resetGameState() {
-            try {
-                // 기존 타이머들 정리
-                if (gameState.gameLoop) {
-                    cancelAnimationFrame(gameState.gameLoop);
-                }
-                if (gameState.timerInterval) {
-                    clearInterval(gameState.timerInterval);
-                }
-                if (gameState.moleSpawnTimer) {
-                    clearTimeout(gameState.moleSpawnTimer);
-                }
-
-                // 기존 두더지들 제거
-                clearAllMoles();
-
-                // 상태 초기화
-                gameState.score = 0;
-                gameState.timeLeft = 60;
-                gameState.isPlaying = false;
-                gameState.isPaused = false;
-                gameState.molesCaught = 0;
-                gameState.goldenMolesSpawned = 0;
-                gameState.combo = 0;
-                gameState.currentMoles = [];
-                gameState.gameLoop = null;
-                gameState.timerInterval = null;
-                gameState.moleSpawnTimer = null;
-
-                // UI 업데이트
-                updateScoreDisplay(0);
-                updateTimerDisplay(60);
-                updateMolesCaughtDisplay(0);
-                updateComboDisplay(0);
-
-                // 일시정지 버튼 텍스트 리셋
-                if (domElements.pauseBtn) {
-                    domElements.pauseBtn.textContent = '일시정지';
-                }
-            } catch (error) {
-                console.error('게임 상태 초기화 실패:', error);
-            }
-        }
-
-        // 모든 두더지 제거 함수 (안전성 강화)
-        function clearAllMoles() {
-            try {
-                gameState.currentMoles.forEach(mole => {
-                    try {
-                        if (mole.element && mole.element.parentNode) {
-                            mole.element.parentNode.removeChild(mole.element);
-                        }
-                        if (mole.hideTimer) {
-                            clearTimeout(mole.hideTimer);
-                        }
-                    } catch (error) {
-                        console.error('개별 두더지 제거 실패:', error);
-                    }
-                });
-                gameState.currentMoles = [];
-
-                // DOM에서 남은 두더지 요소들 정리
-                if (domElements.gameGrid) {
-                    const remainingMoles = domElements.gameGrid.querySelectorAll('.mole, .golden-mole');
-                    remainingMoles.forEach(element => {
-                        try {
-                            if (element.parentNode) {
-                                element.parentNode.removeChild(element);
-                            }
-                        } catch (error) {
-                            console.error('남은 두더지 제거 실패:', error);
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('모든 두더지 제거 실패:', error);
-            }
-        }
-
-        // 랜덤 빈 구멍 선택 함수
-        function getRandomEmptyHole() {
-            try {
-                const occupiedHoles = gameState.currentMoles.map(mole => mole.hole);
-                const emptyHoles = [];
-                
-                for (let i = 0; i < 9; i++) {
-                    if (!occupiedHoles.includes(i)) {
-                        emptyHoles.push(i);
-                    }
+                if (gameState.isPlaying) {
+                    console.log('게임이 이미 진행 중입니다.');
+                    return;
                 }
                 
-                return emptyHoles.length > 0 ? 
-                       emptyHoles[Math.floor(Math.random() * emptyHoles.length)] : -1;
+                startGame();
+                updateButtonStates();
+                console.log('게임이 시작되었습니다.');
             } catch (error) {
-                console.error('빈 구멍 선택 실패:', error);
-                return -1;
+                console.error('게임 시작 중 오류:', error);
+                alert('게임 시작에 실패했습니다.');
             }
         }
-
-        // 황금 두더지 등장 조건 체크 함수
-        function checkGoldenMoleCondition() {
+        
+        /**
+         * 일시정지 이벤트 핸들러
+         * 게임을 일시정지하거나 재개
+         */
+        function handlePauseGame() {
             try {
-                const regularMolesCaught = gameState.molesCaught - gameState.goldenMolesSpawned;
-                return regularMolesCaught > 0 && regularMolesCaught % 10 === 0;
+                if (!gameState.isPlaying) {
+                    console.log('게임이 시작되지 않았습니다.');
+                    return;
+                }
+                
+                if (gameState.isPaused) {
+                    resumeGame();
+                } else {
+                    pauseGame();
+                }
+                
+                updateButtonStates();
             } catch (error) {
-                console.error('황금 두더지 조건 체크 실패:', error);
-                return false;
+                console.error('게임 일시정지 처리 중 오류:', error);
             }
         }
-
-        // 두더지 생성 함수 (안전성 강화)
-        function spawnMole() {
+        
+        /**
+         * 재시작 이벤트 핸들러
+         * 게임을 완전히 초기화하고 새로 시작
+         */
+        function handleRestartGame() {
             try {
-                if (!gameState.isPlaying || gameState.isPaused) return;
-
-                const holeIndex = getRandomEmptyHole();
-                if (holeIndex === -1 || !domElements.holes[holeIndex]) return;
-
-                const shouldSpawnGolden = checkGoldenMoleCondition();
-                const moleType = shouldSpawnGolden ? 'golden' : 'normal';
+                stopGame();
+                resetGameData();
+                startGame();
+                updateButtonStates();
+                console.log('게임이 재시작되었습니다.');
+            } catch (error) {
+                console.error('게임 재시작 중 오류:', error);
+                alert('게임 재시작에 실패했습니다.');
+            }
+        }
+        
+        /**
+         * 두더지 클릭 이벤트 핸들러
+         * 이벤트 위임 패턴을 사용하여 동적으로 생성된 두더지 클릭 처리
+         */
+        function handleMoleClick(event) {
+            try {
+                // 클릭된 요소가 두더지인지 확인
+                if (!event.target.classList.contains('mole') && 
+                    !event.target.classList.contains('golden-mole')) {
+                    return;
+                }
                 
-                const mole = createMoleObject(holeIndex, moleType);
+                const moleElement = event.target;
+                const moleId = parseInt(moleElement.getAttribute('data-mole-id'));
                 
-                // DOM 요소 생성
-                const moleElement = document.createElement('div');
-                moleElement.className = moleType === 'golden' ? 'mole golden-mole' : 'mole';
-                moleElement.dataset.moleId = mole.id;
+                if (isNaN(moleId)) {
+                    console.error('유효하지 않은 두더지 ID');
+                    return;
+                }
                 
-                // 구멍에 두더지 추가
-                const hole = domElements.holes[holeIndex];
+                // 두더지 클릭 처리
+                catchMole(moleId, moleElement);
+                
+            } catch (error) {
+                console.error('두더지 클릭 처리 중 오류:', error);
+            }
+        }
+        
+        /**
+         * 게임 시작 핵심 로직
+         * 상태를 시작 모드로 설정하고 두더지 생성 루프 가동
+         */
+        function startGame() {
+            gameState.isPlaying = true;
+            gameState.isPaused = false;
+            
+            // 두더지 자동 생성 인터벌 시작
+            startMoleSpawnLoop();
+        }
+        
+        /**
+         * 게임 일시정지
+         */
+        function pauseGame() {
+            gameState.isPaused = true;
+            
+            // 두더지 생성 인터벌 정지
+            if (gameState.gameInterval) {
+                clearInterval(gameState.gameInterval);
+                gameState.gameInterval = null;
+            }
+        }
+        
+        /**
+         * 게임 재개
+         */
+        function resumeGame() {
+            gameState.isPaused = false;
+            
+            // 두더지 생성 인터벌 재시작
+            startMoleSpawnLoop();
+        }
+        
+        /**
+         * 게임 정지
+         */
+        function stopGame() {
+            gameState.isPlaying = false;
+            gameState.isPaused = false;
+            
+            // 모든 활성 두더지 제거
+            clearAllMoles();
+            
+            // 두더지 생성 인터벌 정지
+            if (gameState.gameInterval) {
+                clearInterval(gameState.gameInterval);
+                gameState.gameInterval = null;
+            }
+        }
+        
+        /**
+         * 게임 데이터 초기화
+         */
+        function resetGameData() {
+            gameState.score = 0;
+            gameState.moleCount = 0;
+            gameState.goldenMoleCount = 0;
+            gameState.nextMoleId = 1;
+            
+            updateScoreDisplay();
+            updateMoleCountDisplay();
+        }
+        
+        /**
+         * 두더지 자동 생성 루프 시작
+         * 랜덤한 간격으로 두더지를 생성하는 인터벌 설정
+         */
+        function startMoleSpawnLoop() {
+            if (gameState.gameInterval) {
+                clearInterval(gameState.gameInterval);
+            }
+            
+            // 첫 번째 두더지 즉시 생성
+            setTimeout(spawnRandomMole, 500);
+            
+            // 주기적으로 두더지 생성
+            gameState.gameInterval = setInterval(() => {
+                if (gameState.isPlaying && !gameState.isPaused) {
+                    spawnRandomMole();
+                }
+            }, getRandomSpawnInterval());
+        }
+        
+        /**
+         * 랜덤 두더지 생성
+         * 빈 구멍에 일반 또는 황금 두더지를 생성
+         */
+        function spawnRandomMole() {
+            try {
+                // 사용 가능한 구멍 찾기
+                const availableHoles = getAvailableHoles();
+                
+                if (availableHoles.length === 0) {
+                    console.log('사용 가능한 구멍이 없습니다.');
+                    return;
+                }
+                
+                // 랜덤 구멍 선택
+                const randomHoleIndex = availableHoles[Math.floor(Math.random() * availableHoles.length)];
+                
+                // 황금 두더지 출현 조건 확인 (10마리마다)
+                const shouldSpawnGolden = (gameState.moleCount > 0) && 
+                                        (gameState.moleCount % GAME_CONFIG.GOLDEN_MOLE_TRIGGER === 0) && 
+                                        (gameState.goldenMoleCount * GAME_CONFIG.GOLDEN_MOLE_TRIGGER < gameState.moleCount);
+                
+                spawnMole(randomHoleIndex, shouldSpawnGolden);
+                
+            } catch (error) {
+                console.error('두더지 생성 중 오류:', error);
+            }
+        }
+        
+        /**
+         * 사용 가능한 구멍 인덱스 배열 반환
+         */
+        function getAvailableHoles() {
+            const occupiedHoles = gameState.activeMoles.map(mole => mole.holeIndex);
+            const allHoles = Array.from({length: GAME_CONFIG.GRID_SIZE}, (_, i) => i);
+            return allHoles.filter(index => !occupiedHoles.includes(index));
+        }
+        
+        /**
+         * 특정 구멍에 두더지 생성
+         * @param {number} holeIndex - 구멍 인덱스 (0-8)
+         * @param {boolean} isGolden - 황금 두더지 여부
+         */
+        function spawnMole(holeIndex, isGolden = false) {
+            try {
+                const moleId = gameState.nextMoleId++;
+                const hole = document.querySelector(`[data-hole-index="${holeIndex}"]`);
+                
+                if (!hole) {
+                    console.error(`구멍을 찾을 수 없습니다: index ${holeIndex}`);
+                    return;
+                }
+                
+                // 두더지 DOM 요소 생성
+                const moleElement = createMoleElement(moleId, isGolden);
                 hole.appendChild(moleElement);
-                mole.element = moleElement;
                 
-                // 등장 애니메이션 적용 (CSS 클래스 기반)
-                setTimeout(() => {
-                    if (moleElement && moleElement.parentNode) {
-                        const appearClass = moleType === 'golden' ? 'golden-mole-appear' : 'mole-appear';
-                        moleElement.classList.add(appearClass, 'show');
-                    }
-                }, 50);
-                
-                // 터치 이벤트 최적화 (preventDefault 강화)
-                const clickHandler = function(event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    handleMoleClick(event);
+                // 게임 상태에 두더지 정보 추가
+                const moleData = {
+                    id: moleId,
+                    holeIndex: holeIndex,
+                    isGolden: isGolden,
+                    clickCount: 0,
+                    element: moleElement
                 };
-
-                moleElement.addEventListener('click', clickHandler);
-                moleElement.addEventListener('touchstart', clickHandler, {passive: false});
-                moleElement.addEventListener('touchend', function(event) {
-                    event.preventDefault();
-                }, {passive: false});
                 
-                // 배열에 추가
-                gameState.currentMoles.push(mole);
+                gameState.activeMoles.push(moleData);
                 
-                // 자동 숨김 타이머
-                const hideDelay = 2000 + Math.random() * 2000;
-                mole.hideTimer = setTimeout(() => {
-                    hideMole(mole.id);
-                }, hideDelay);
+                // 두더지 등장 애니메이션
+                requestAnimationFrame(() => {
+                    moleElement.classList.add('active');
+                });
                 
-                // 황금 두더지 카운트 증가
-                if (moleType === 'golden') {
-                    gameState.goldenMolesSpawned++;
-                }
-
-                // 다음 두더지 생성 예약
-                const nextSpawnDelay = 1000 + Math.random() * 2000;
-                gameState.moleSpawnTimer = setTimeout(spawnMole, nextSpawnDelay);
+                // 두더지 자동 제거 타이머 설정
+                setTimeout(() => {
+                    removeMole(moleId);
+                }, GAME_CONFIG.MOLE_LIFESPAN);
                 
             } catch (error) {
-                console.error('두더지 생성 실패:', error);
+                console.error('두더지 생성 중 오류:', error);
             }
         }
-
-        // 두더지 숨김 함수 (안전성 강화)
-        function hideMole(moleId) {
+        
+        /**
+         * 두더지 DOM 요소 생성
+         * @param {number} moleId - 두더지 고유 ID
+         * @param {boolean} isGolden - 황금 두더지 여부
+         */
+        function createMoleElement(moleId, isGolden) {
+            const moleElement = document.createElement('div');
+            
+            // 기본 클래스 설정
+            moleElement.className = isGolden ? 'mole golden-mole' : 'mole';
+            
+            // 데이터 속성 설정
+            moleElement.setAttribute('data-mole-id', moleId.toString());
+            moleElement.setAttribute('data-is-golden', isGolden.toString());
+            moleElement.setAttribute('data-click-count', '0');
+            
+            // 접근성 속성
+            moleElement.setAttribute('role', 'button');
+            moleElement.setAttribute('tabindex', '0');
+            moleElement.setAttribute('aria-label', isGolden ? '황금 두더지' : '일반 두더지');
+            
+            return moleElement;
+        }
+        
+        /**
+         * 두더지 클릭 처리 핵심 로직
+         * @param {number} moleId - 클릭된 두더지 ID
+         * @param {Element} moleElement - 두더지 DOM 요소
+         */
+        function catchMole(moleId, moleElement) {
             try {
-                const moleIndex = gameState.currentMoles.findIndex(m => m.id === moleId);
-                if (moleIndex === -1) return;
-
-                const mole = gameState.currentMoles[moleIndex];
+                // 게임이 진행 중이 아니면 무시
+                if (!gameState.isPlaying || gameState.isPaused) {
+                    return;
+                }
                 
-                if (mole.element && mole.element.parentNode) {
-                    // 사라짐 애니메이션 적용 (CSS 클래스 기반)
-                    const disappearClass = mole.type === 'golden' ? 'golden-mole-disappear' : 'mole-disappear';
-                    mole.element.classList.add(disappearClass);
-                    mole.element.classList.remove('show');
+                // 활성 두더지 목록에서 찾기
+                const moleIndex = gameState.activeMoles.findIndex(mole => mole.id === moleId);
+                
+                if (moleIndex === -1) {
+                    console.log('이미 제거된 두더지입니다.');
+                    return;
+                }
+                
+                const moleData = gameState.activeMoles[moleIndex];
+                moleData.clickCount++;
+                
+                // 클릭 피드백 애니메이션
+                applyClickFeedback(moleElement);
+                
+                // 두더지 종류에 따른 처리
+                const requiredClicks = moleData.isGolden ? 
+                    GAME_CONFIG.GOLDEN_MOLE_CLICK_REQUIRED : 
+                    GAME_CONFIG.NORMAL_MOLE_CLICK_REQUIRED;
+                
+                // 필요한 클릭 수에 도달했는지 확인
+                if (moleData.clickCount >= requiredClicks) {
+                    // 점수 추가
+                    const scoreGained = moleData.isGolden ? 
+                        GAME_CONFIG.GOLDEN_MOLE_SCORE : 
+                        GAME_CONFIG.NORMAL_MOLE_SCORE;
+                    
+                    gameState.score += scoreGained;
+                    
+                    // 잡은 두더지 수 업데이트
+                    if (moleData.isGolden) {
+                        gameState.goldenMoleCount++;
+                    } else {
+                        gameState.moleCount++;
+                    }
+                    
+                    // 최고점수 업데이트
+                    if (gameState.score > gameState.highScore) {
+                        gameState.highScore = gameState.score;
+                        saveHighScore();
+                    }
+                    
+                    // UI 업데이트
+                    updateScoreDisplay();
+                    updateMoleCountDisplay();
+                    
+                    // 두더지 제거
+                    removeMole(moleId);
+                    
+                    console.log(`${moleData.isGolden ? '황금' : '일반'} 두더지 잡음! +${scoreGained}점`);
+                } else {
+                    // 황금 두더지의 경우 클릭 카운트 표시 업데이트
+                    moleElement.setAttribute('data-click-count', moleData.clickCount.toString());
+                }
+                
+            } catch (error) {
+                console.error('두더지 잡기 처리 중 오류:', error);
+            }
+        }
+        
+        /**
+         * 클릭 피드백 애니메이션 적용
+         * @param {Element} moleElement - 두더지 DOM 요소
+         */
+        function applyClickFeedback(moleElement) {
+            moleElement.classList.add('clicked');
+            
+            setTimeout(() => {
+                moleElement.classList.remove('clicked');
+            }, 100);
+        }
+        
+        /**
+         * 두더지 제거
+         * @param {number} moleId - 제거할 두더지 ID
+         */
+        function removeMole(moleId) {
+            try {
+                const moleIndex = gameState.activeMoles.findIndex(mole => mole.id === moleId);
+                
+                if (moleIndex === -1) {
+                    return; // 이미 제거됨
+                }
+                
+                const moleData = gameState.activeMoles[moleIndex];
+                const moleElement = moleData.element;
+                
+                // 퇴장 애니메이션
+                if (moleElement && moleElement.parentNode) {
+                    moleElement.classList.remove('active');
                     
                     setTimeout(() => {
-                        if (mole.element && mole.element.parentNode) {
-                            mole.element.parentNode.removeChild(mole.element);
+                        if (moleElement.parentNode) {
+                            moleElement.parentNode.removeChild(moleElement);
                         }
                     }, 300);
                 }
                 
-                // 타이머 정리
-                if (mole.hideTimer) {
-                    clearTimeout(mole.hideTimer);
-                }
-                
-                // 배열에서 제거
-                gameState.currentMoles.splice(moleIndex, 1);
-                
-                // 콤보 리셋 (놓친 경우)
-                if (mole.clickCount === 0) {
-                    gameState.combo = 0;
-                    updateComboDisplay(gameState.combo);
-                }
-            } catch (error) {
-                console.error('두더지 숨김 실패:', error);
-            }
-        }
-
-        // 두더지 클릭 처리 함수 (안전성 강화)
-        function handleMoleClick(event) {
-            try {
-                if (!gameState.isPlaying || gameState.isPaused) return;
-                
-                const moleElement = event.currentTarget;
-                const moleId = moleElement.dataset.moleId;
-                
-                const moleIndex = gameState.currentMoles.findIndex(m => m.id === moleId);
-                if (moleIndex === -1) return;
-                
-                const mole = gameState.currentMoles[moleIndex];
-                if (!mole.isActive) return;
-                
-                // 클릭 피드백 애니메이션
-                moleElement.classList.add('mole-hit');
-                setTimeout(() => {
-                    if (moleElement && moleElement.parentNode) {
-                        moleElement.classList.remove('mole-hit');
-                    }
-                }, 200);
-                
-                mole.clickCount++;
-                
-                // 일반 두더지: 1번 클릭으로 잡기
-                if (mole.type === 'normal') {
-                    handleMoleCaught(mole, 1);
-                }
-                // 황금 두더지: 2번 클릭 필요
-                else if (mole.type === 'golden') {
-                    if (mole.clickCount === 1) {
-                        // 첫 번째 클릭 - 시각적 피드백
-                        moleElement.classList.add('golden-mole-first-hit');
-                        
-                        // 0.8초 내에 두 번째 클릭 필요
-                        setTimeout(() => {
-                            if (mole.clickCount < 2 && mole.isActive) {
-                                hideMole(mole.id);
-                                gameState.combo = 0;
-                                updateComboDisplay(gameState.combo);
-                            }
-                        }, 800);
-                    } else if (mole.clickCount >= 2) {
-                        // 두 번째 클릭 성공
-                        handleMoleCaught(mole, 5);
-                    }
-                }
-            } catch (error) {
-                console.error('두더지 클릭 처리 실패:', error);
-            }
-        }
-
-        // 두더지 포획 처리 함수
-        function handleMoleCaught(mole, points) {
-            try {
-                // 점수 추가
-                gameState.score += points;
-                
-                // 콤보 증가
-                gameState.combo++;
-                
-                // 콤보 보너스 (5회 연속 성공 시 +2점)
-                if (gameState.combo % 5 === 0) {
-                    gameState.score += 2;
-                }
-                
-                // 잡은 두더지 수 증가
-                gameState.molesCaught++;
-                
-                // 두더지 비활성화 및 제거
-                mole.isActive = false;
-                hideMole(mole.id);
-                
-                // UI 업데이트
-                updateScoreDisplay(gameState.score);
-                updateMolesCaughtDisplay(gameState.molesCaught);
-                updateComboDisplay(gameState.combo);
-                
-                // 성공 효과음 재생
-                playSuccessSound(mole.type);
-            } catch (error) {
-                console.error('두더지 포획 처리 실패:', error);
-            }
-        }
-
-        // 성공 효과음 함수 (Web Audio API 활용)
-        function playSuccessSound(moleType) {
-            try {
-                if (typeof AudioContext === 'undefined' && typeof webkitAudioContext === 'undefined') {
-                    return; // 오디오 컨텍스트 미지원
-                }
-
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = moleType === 'golden' ? 800 : 400;
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.1);
-            } catch (error) {
-                // 오디오 재생 실패 시 무시
-                console.warn('사운드 재생 실패:', error);
-            }
-        }
-
-        // 타이머 업데이트 함수
-        function updateTimer() {
-            try {
-                if (!gameState.isPlaying || gameState.isPaused) return;
-                
-                gameState.timeLeft--;
-                updateTimerDisplay(gameState.timeLeft);
-                
-                if (gameState.timeLeft <= 0) {
-                    endGame();
-                }
-            } catch (error) {
-                console.error('타이머 업데이트 실패:', error);
-            }
-        }
-
-        // 게임 시작 함수 (예외 처리 강화)
-        function handleStartGame() {
-            try {
-                if (gameState.screenTransitionLock) return;
-                
-                resetGameState();
-                showGameScreen();
-                
-                gameState.isPlaying = true;
-                
-                // 타이머 시작
-                gameState.timerInterval = setInterval(updateTimer, 1000);
-                
-                // 첫 번째 두더지 생성
-                setTimeout(spawnMole, 1000);
-                
-                // 게임 루프 시작
-                gameLoop();
+                // 활성 두더지 목록에서 제거
+                gameState.activeMoles.splice(moleIndex, 1);
                 
             } catch (error) {
-                console.error('게임 시작 실패:', error);
-                showErrorMessage('게임을 시작할 수 없습니다. 페이지를 새로고침해 주세요.');
+                console.error('두더지 제거 중 오류:', error);
             }
         }
-
-        // 메인 게임 루프
-        function gameLoop() {
+        
+        /**
+         * 모든 활성 두더지 제거
+         */
+        function clearAllMoles() {
             try {
-                if (!gameState.isPlaying) return;
+                // 복사본을 만들어서 안전하게 제거
+                const molesToRemove = [...gameState.activeMoles];
                 
-                gameState.gameLoop = requestAnimationFrame(gameLoop);
-            } catch (error) {
-                console.error('게임 루프 실패:', error);
-            }
-        }
-
-        // 게임 일시정지 함수
-        function handlePauseGame() {
-            try {
-                if (!gameState.isPlaying) return;
-                
-                gameState.isPaused = !gameState.isPaused;
-                
-                if (domElements.pauseBtn) {
-                    domElements.pauseBtn.textContent = gameState.isPaused ? '계속' : '일시정지';
-                }
-                
-                currentGameState = gameState.isPaused ? GAME_STATES.PAUSED : GAME_STATES.PLAYING;
-            } catch (error) {
-                console.error('일시정지 처리 실패:', error);
-            }
-        }
-
-        // 게임 종료 함수
-        function endGame() {
-            try {
-                gameState.isPlaying = false;
-                gameState.isPaused = false;
-                
-                // 타이머 정리
-                if (gameState.timerInterval) {
-                    clearInterval(gameState.timerInterval);
-                    gameState.timerInterval = null;
-                }
-                
-                if (gameState.moleSpawnTimer) {
-                    clearTimeout(gameState.moleSpawnTimer);
-                    gameState.moleSpawnTimer = null;
-                }
-                
-                if (gameState.gameLoop) {
-                    cancelAnimationFrame(gameState.gameLoop);
-                    gameState.gameLoop = null;
-                }
-                
-                // 모든 두더지 제거
-                clearAllMoles();
-                
-                // 결과 화면 표시
-                setTimeout(() => {
-                    showGameOverScreen();
-                }, 500);
-                
-            } catch (error) {
-                console.error('게임 종료 실패:', error);
-            }
-        }
-
-        // 재시작 함수
-        function handleRestartGame() {
-            try {
-                handleStartGame();
-            } catch (error) {
-                console.error('재시작 실패:', error);
-            }
-        }
-
-        // 메인 메뉴 이동 함수
-        function handleMainMenu() {
-            try {
-                resetGameState();
-                showMainScreen();
-            } catch (error) {
-                console.error('메인 메뉴 이동 실패:', error);
-            }
-        }
-
-        // 이벤트 리스너 등록 함수 (터치 이벤트 최적화)
-        function attachEventListeners() {
-            try {
-                // 버튼 이벤트 리스너들 (터치 이벤트 최적화)
-                const addButtonListener = (element, handler) => {
-                    if (element) {
-                        element.addEventListener('click', handler);
-                        element.addEventListener('touchstart', function(event) {
-                            event.preventDefault();
-                            handler(event);
-                        }, {passive: false});
-                    }
-                };
-
-                addButtonListener(domElements.startBtn, handleStartGame);
-                addButtonListener(domElements.pauseBtn, handlePauseGame);
-                addButtonListener(domElements.restartBtn, handleRestartGame);
-                addButtonListener(domElements.mainMenuBtn, handleMainMenu);
-                
-                // 키보드 이벤트 (스페이스바로 일시정지)
-                document.addEventListener('keydown', function(event) {
-                    if (event.code === 'Space' && gameState.isPlaying) {
-                        event.preventDefault();
-                        handlePauseGame();
-                    }
+                molesToRemove.forEach(mole => {
+                    removeMole(mole.id);
                 });
                 
-                // 페이지 가시성 변경 시 자동 일시정지
-                document.addEventListener('visibilitychange', function() {
-                    if (document.hidden && gameState.isPlaying && !gameState.isPaused) {
-                        handlePauseGame();
-                    }
-                });
-                
-                // 터치 스크롤 방지
-                document.addEventListener('touchmove', function(event) {
-                    if (currentGameState === GAME_STATES.PLAYING) {
-                        event.preventDefault();
-                    }
-                }, {passive: false});
+                gameState.activeMoles = [];
                 
             } catch (error) {
-                console.error('이벤트 리스너 등록 실패:', error);
+                console.error('모든 두더지 제거 중 오류:', error);
             }
         }
-
-        // 게임 초기화 함수 (안전성 강화)
-        function initializeGame() {
+        
+        /**
+         * 랜덤 스폰 간격 생성
+         * @returns {number} 밀리초 단위 간격
+         */
+        function getRandomSpawnInterval() {
+            return Math.random() * (GAME_CONFIG.MOLE_SPAWN_MAX - GAME_CONFIG.MOLE_SPAWN_MIN) + GAME_CONFIG.MOLE_SPAWN_MIN;
+        }
+        
+        /**
+         * 점수 UI 업데이트
+         */
+        function updateScoreDisplay() {
             try {
-                // DOM 요소 초기화
-                if (!initializeDOMElements()) {
-                    throw new Error('필수 DOM 요소를 찾을 수 없습니다.');
+                const currentScoreElement = document.getElementById('current-score');
+                const highScoreElement = document.getElementById('high-score');
+                
+                if (currentScoreElement) {
+                    currentScoreElement.textContent = gameState.score.toString();
                 }
                 
-                // 최고 점수 로드
-                loadHighScore();
-                
-                // 이벤트 리스너 등록
-                attachEventListeners();
-                
-                // 초기 화면 설정
-                showMainScreen();
-                
-                console.log('디지털채널 두더지 게임 초기화 완료');
-                
+                if (highScoreElement) {
+                    highScoreElement.textContent = gameState.highScore.toString();
+                }
             } catch (error) {
-                console.error('게임 초기화 실패:', error);
-                showErrorMessage('게임을 초기화할 수 없습니다. 페이지를 새로고침해 주세요.');
+                console.error('점수 표시 업데이트 중 오류:', error);
             }
         }
-
-        // 반응형 리사이즈 처리
-        function handleResize() {
-            // CSS가 반응형을 처리하므로 추가 로직 불필요
+        
+        /**
+         * 두더지 카운트 UI 업데이트
+         */
+        function updateMoleCountDisplay() {
+            try {
+                const moleCountElement = document.getElementById('mole-count');
+                
+                if (moleCountElement) {
+                    const totalCaught = gameState.moleCount + gameState.goldenMoleCount;
+                    moleCountElement.textContent = totalCaught.toString();
+                }
+            } catch (error) {
+                console.error('두더지 카운트 표시 업데이트 중 오류:', error);
+            }
         }
-
-        window.addEventListener('resize', handleResize);
-
-        // DOM 로드 완료 시 게임 초기화
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeGame);
-        } else {
-            initializeGame();
+        
+        /**
+         * 버튼 상태 업데이트
+         */
+        function updateButtonStates() {
+            try {
+                const startBtn = document.getElementById('start-btn');
+                const pauseBtn = document.getElementById('pause-btn');
+                const restartBtn = document.getElementById('restart-btn');
+                
+                if (startBtn) {
+                    startBtn.disabled = gameState.isPlaying;
+                    startBtn.textContent = gameState.isPlaying ? '게임 중' : '게임 시작';
+                }
+                
+                if (pauseBtn) {
+                    pauseBtn.disabled = !gameState.isPlaying;
+                    pauseBtn.textContent = gameState.isPaused ? '재개' : '일시정지';
+                }
+                
+                if (restartBtn) {
+                    restartBtn.disabled = !gameState.isPlaying;
+                }
+            } catch (error) {
+                console.error('버튼 상태 업데이트 중 오류:', error);
+            }
         }
-
-        // 전역 스코프에 디버그용 함수 노출 (개발 환경에서만)
-        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-            window.MoleGameDebug = {
-                getGameState: () => gameState,
-                spawnMole: spawnMole,
-                endGame: endGame,
-                resetGame: handleRestartGame,
-                showError: showErrorMessage
-            };
+        
+        /**
+         * 최고점수 저장 (로컬스토리지)
+         */
+        function saveHighScore() {
+            try {
+                localStorage.setItem('mole-game-high-score', gameState.highScore.toString());
+            } catch (error) {
+                console.error('최고점수 저장 중 오류:', error);
+            }
         }
-
+        
+        /**
+         * 최고점수 불러오기 (로컬스토리지)
+         */
+        function loadHighScore() {
+            try {
+                const saved = localStorage.getItem('mole-game-high-score');
+                if (saved) {
+                    gameState.highScore = parseInt(saved) || 0;
+                }
+            } catch (error) {
+                console.error('최고점수 불러오기 중 오류:', error);
+                gameState.highScore = 0;
+            }
+        }
+        
+        // 외부 인터페이스 반환 (모듈 패턴)
+        return {
+            init: initGame,
+            start: handleStartGame,
+            pause: handlePauseGame,
+            restart: handleRestartGame,
+            getState: () => ({ ...gameState }) // 상태 복사본 반환
+        };
     })();
+
+    /**
+     * 페이지 로드 시 게임 초기화
+     * DOM Content Loaded 이벤트를 통해 안전한 초기화 보장
+     */
+    function handleGameInit() {
+        try {
+            GameController.init();
+            console.log('교보두더지게임이 성공적으로 초기화되었습니다.');
+        } catch (error) {
+            console.error('게임 초기화 실패:', error);
+            alert('게임을 불러오는 중 오류가 발생했습니다. 페이지를 새로고침해주세요.');
+        }
+    }
+
+    // DOM 로드 완료 후 게임 초기화 실행
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', handleGameInit);
+    } else {
+        // 이미 로드된 경우 즉시 실행
+        handleGameInit();
+    }
+
+    // 전역 객체에 게임 컨트롤러 노출 (디버깅 및 확장성을 위해)
+    window.MoleGame = GameController;
     </script>
 </body>
 </html>
